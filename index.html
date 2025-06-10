@@ -298,13 +298,13 @@
                         inQuote = !inQuote;
                     }
                 } else if (char === ',' && !inQuote) {
-                    result.push(currentField);
+                    result.push(currentField.trim()); // Trim spaces around fields
                     currentField = '';
                 } else {
                     currentField += char;
                 }
             }
-            result.push(currentField); // Add the last field
+            result.push(currentField.trim()); // Add the last field and trim
             return result;
         }
 
@@ -469,6 +469,8 @@
             }
             if (rankClass) tr.classList.add(rankClass);
 
+            // Ensure these keys match the exact headers from your CSV file.
+            // You can verify these by looking at the `Parsed Headers:` log in your browser's console.
             const cells = [
                 rowData.post_id,
                 rowData.combatant_id,
@@ -478,7 +480,7 @@
                 rowData.name_english,
                 rowData.name_arabic,
                 rowData.nickname,
-                rowData.description_online,
+                rowData.description_online, // This field specifically needs correct parsing
                 rowData.rank_role,
                 rowData.organization,
                 rowData.activity,
@@ -490,7 +492,8 @@
 
             cells.forEach((cellContent, index) => {
                 const td = document.createElement('td');
-                td.textContent = cellContent;
+                // Ensure textContent is always a string to avoid issues
+                td.textContent = cellContent !== undefined && cellContent !== null ? cellContent : '';
 
                 // Apply specific classes based on content or column index
                 if (index === 3) td.classList.add('location'); // Location column
