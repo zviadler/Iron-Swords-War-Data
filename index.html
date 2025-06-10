@@ -61,3 +61,404 @@
             border: 1px solid #cbd5e0;
             border-radius: 0.25rem; /* Slightly rounded inputs */
             font-size: 0.875rem; /* Smaller font size for inputs */
+            min-width: 8rem; /* Minimum width for inputs */
+            flex-grow: 1; /* Allow inputs to grow */
+        }
+
+        .table-container {
+            overflow-x: auto; /* Enable horizontal scrolling for tables */
+            max-height: 70vh; /* Max height for vertical scrolling */
+            overflow-y: auto;
+            width: 100%; /* Ensure container takes full width */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem; /* Smaller font size for table content */
+            min-width: 1200px; /* Minimum width to prevent squishing on small screens */
+        }
+
+        th, td {
+            padding: 0.5rem 0.375rem;
+            border: 1px solid #e2e8f0; /* Light border for cells */
+            text-align: center;
+            vertical-align: top;
+        }
+
+        th {
+            background: #4a5568; /* Darker header background */
+            color: white;
+            font-weight: bold;
+            position: sticky; /* Sticky header */
+            top: 0;
+            z-index: 10;
+            font-size: 0.625rem; /* Even smaller font for headers */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f7fafc; /* Zebra striping */
+        }
+
+        tr:hover {
+            background-color: #edf2f7; /* Hover effect */
+        }
+
+        /* Color coding by rank */
+        .high-ranking { background-color: #fed7d7 !important; } /* Reddish for high ranking */
+        .field-commander { background-color: #feebc8 !important; } /* Orange for field commander */
+        .regular-mujahid { background-color: #f0fff4 !important; } /* Greenish for regular */
+
+        /* Text directions and sizes */
+        .arabic { font-family: 'Arial Unicode MS', Arial, sans-serif; direction: rtl; }
+        .english { direction: ltr; text-align: left; }
+        .quote { font-style: italic; color: #4a5568; max-width: 200px; word-wrap: break-word; font-size: 0.7rem; }
+        .family-casualties { color: #e53e3e; font-weight: bold; } /* Red for family casualties */
+
+        /* Organization colors */
+        .org-hamas { color: #059669; font-weight: bold; }
+        .org-dflp { color: #dc2626; font-weight: bold; }
+        .org-mujahideen { color: #7c2d12; font-weight: bold; }
+        .org-fatah { color: #1e40af; font-weight: bold; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid for stats */
+            gap: 1rem;
+            padding: 1.25rem;
+            background: #f7fafc;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem; /* Larger font for numbers */
+            font-weight: bold;
+            color: #2b6cb0; /* Blue color for numbers */
+            margin-bottom: 0.3125rem;
+        }
+
+        .export-btn {
+            background: #48bb78; /* Green button */
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s ease-in-out; /* Smooth transition */
+        }
+
+        .export-btn:hover {
+            background: #38a169; /* Darker green on hover */
+        }
+
+        /* Column specific widths/breaks */
+        .location { max-width: 80px; word-wrap: break-word; }
+        .name-col { max-width: 120px; word-wrap: break-word; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column; /* Stack controls vertically on small screens */
+                align-items: stretch; /* Stretch controls to full width */
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.125rem;
+            }
+            select, input[type="text"] {
+                width: 100%;
+                min-width: unset; /* Remove min-width on small screens */
+            }
+            .table-container {
+                max-height: 60vh; /* Adjust height for mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
+            <p class="text-sm mt-1">נתונים מתעדכנים באופן רציף</p>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label for="locationFilter" class="text-gray-700 text-sm">מיקום:</label>
+                <select id="locationFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="orgFilter" class="text-gray-700 text-sm">ארגון:</label>
+                <select id="orgFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="rankFilter" class="text-gray-700 text-sm">דרגה:</label>
+                <select id="rankFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchBox" class="text-gray-700 text-sm">חיפוש:</label>
+                <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." onkeyup="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+            </div>
+            
+            <button class="export-btn" onclick="exportToCSV()">ייצא ל-CSV</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>מס' פוסט</th>
+                        <th>מס' לוחם</th>
+                        <th>תאריך</th>
+                        <th>מיקום</th>
+                        <th>פירוט מיקום</th>
+                        <th>שם באנגלית</th>
+                        <th>שם בערבית</th>
+                        <th>כינוי</th>
+                        <th>תיאור ברשת</th>
+                        <th>דרגה/תפקיד</th>
+                        <th>ארגון</th>
+                        <th>פעילות</th>
+                        <th>בני משפחה</th>
+                        <th>מס' קורבנות</th>
+                        <th>לוחמים נוספים</th>
+                        <th>הערות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be populated dynamically by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCombatants">0</div>
+                <div>סה"כ לוחמים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCasualties">0</div>
+                <div>סה"כ קורבנות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="familyCasualties">0</div>
+                <div>בני משפחה</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highRanking">0</div>
+                <div>בכירים</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalTableData = []; // Stores the raw data from CSV
+        let allLocations = new Set();
+        let allOrganizations = new Set();
+        let allRanks = new Set();
+
+        // Function to parse a CSV line, robustly handling quoted fields
+        function parseCsvLine(line) {
+            const result = [];
+            let inQuote = false;
+            let currentField = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuote && i + 1 < line.length && line[i + 1] === '"') {
+                        // Escaped quote: "" becomes "
+                        currentField += '"';
+                        i++; // Skip the next quote
+                    } else {
+                        inQuote = !inQuote;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    result.push(currentField.trim()); // Trim spaces around fields
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            result.push(currentField.trim()); // Add the last field and trim
+            return result;
+        }
+
+        /**
+         * Converts a raw CSV header string to a consistent, normalized key name.
+         * This helps in reliably mapping CSV columns to JavaScript object properties.
+         * For example, "מס' פוסט" might become "post_id".
+         * @param {string} header - The raw header string from the CSV.
+         * @returns {string} The normalized key name.
+         */
+        function normalizeHeader(header) {
+            // Trim whitespace, convert to lowercase, and replace spaces with underscores.
+            // Map specific Hebrew headers to English keys for consistency in JS.
+            const normalized = header.trim().toLowerCase();
+            switch (normalized) {
+                case 'מס\' פוסט': return 'post_id';
+                case 'מס\' לוחם': return 'combatant_id';
+                case 'תאריך': return 'date';
+                case 'מיקום': return 'location';
+                case 'פירוט מיקום': return 'location_details';
+                case 'שם באנגלית': return 'name_english';
+                case 'שם בערבית': return 'name_arabic';
+                case 'כינוי': return 'nickname';
+                case 'תיאור ברשת': return 'description_online';
+                case 'דרגה/תפקיד': return 'rank_role';
+                case 'ארגון': return 'organization';
+                case 'פעילות': return 'activity';
+                case 'בני משפחה': return 'family_casualties_info';
+                case 'מס\' קורבנות': return 'casualties_count';
+                case 'לוחמים נוספים': return 'additional_combatants';
+                case 'הערות': return 'notes';
+                default: return normalized.replace(/ /g, '_').replace(/[^a-z0-9_]/g, ''); // Fallback for other headers
+            }
+        }
+
+        /**
+         * Loads data from the data.csv file.
+         * Parses the CSV content and populates the originalTableData array.
+         * Also populates filter options based on the data.
+         */
+        async function loadData() {
+            console.log('--- Starting loadData function ---');
+            try {
+                // Fetch the CSV file
+                console.log('Attempting to fetch data.csv...');
+                const response = await fetch('data.csv');
+                console.log('Fetch response received:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const csvText = await response.text();
+                console.log('CSV text loaded successfully. First 200 chars:', csvText.substring(0, 200));
+
+                // Parse CSV text into an array of objects
+                // Assumes the first row is headers
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== ''); // Handle both \n and \r\n
+                console.log('CSV lines parsed. Number of non-empty lines:', lines.length);
+                console.log('First line (raw headers):', lines[0]);
+                if (lines.length > 1) {
+                    console.log('Second line (first data row):', lines[1]);
+                }
+
+
+                if (lines.length <= 1) { // Check if there are headers and at least one data row
+                    console.warn("CSV file is empty or contains only headers. No data to display.");
+                    document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
+                        '<tr><td colspan="16" class="text-gray-500 font-bold text-center">אין נתונים להצגה בטבלה. וודא שקובץ data.csv מכיל שורות נתונים.</td></tr>';
+                    return;
+                }
+                
+                // Normalize headers before using them as keys
+                const rawHeaders = parseCsvLine(lines[0]);
+                const headers = rawHeaders.map(header => normalizeHeader(header));
+                console.log('Normalized Headers for object keys:', headers);
+
+                originalTableData = lines.slice(1).map((line, lineIndex) => {
+                    const values = parseCsvLine(line); // Use the new robust parser
+
+                    let row = {};
+                    headers.forEach((header, i) => {
+                        // Ensure all headers have a corresponding value
+                        row[header] = values[i] ? values[i].trim() : '';
+                    });
+                    
+                    console.log(`Parsed Row ${lineIndex + 1}:`, row); // Log each parsed row
+                    
+                    // Collect unique values for filters
+                    if (row.location) allLocations.add(row.location);
+                    if (row.organization) allOrganizations.add(row.organization);
+                    if (row.rank_role) allRanks.add(row.rank_role);
+                    
+                    return row;
+                });
+
+                console.log('originalTableData after parsing:', originalTableData);
+
+                populateFilters();
+                filterTable(); // Initial display of data
+                console.log('--- loadData function finished successfully ---');
+            } catch (error) {
+                console.error('Error loading or parsing CSV:', error);
+                // Display a user-friendly message if data fails to load
+                document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
+                    '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
+                console.log('--- loadData function finished with error ---');
+            }
+        }
+
+        /**
+         * Populates the select filter options based on unique values found in the data.
+         */
+        function populateFilters() {
+            const addOptions = (selectId, dataSet) => {
+                const selectElement = document.getElementById(selectId);
+                selectElement.innerHTML = '<option value="">הכל</option>'; // Keep "All" option
+                // Sort options alphabetically for better user experience
+                Array.from(dataSet).sort().forEach(item => {
+                    if (item) { // Ensure item is not empty
+                        const option = document.createElement('option');
+                        option.value = item;
+                        option.textContent = item;
+                        selectElement.appendChild(option);
+                    }
+                });
+            };
+
+            addOptions('locationFilter', allLocations);
+            addOptions('orgFilter', allOrganizations);
+            addOptions('rankFilter', allRanks);
+            console.log('Filters populated.');
+        }
+
+        /**
+         * Filters the table rows based on selected filter criteria and search box input.
+         * Updates the displayed table and recalculates statistics.
+         */
+        function filterTable() {
+            console.log('--- Starting filterTable function ---');
+            const locationFilter = document.getElementById('locationFilter').value.toLowerCase();
+            const orgFilter = document.getElementById('orgFilter').value.toLowerCase();
+            const rankFilter = document.getElementById('rankFilter').value.toLowerCase();
+            const searchBox = document.getElementById('searchBox').value.toLowerCase();
+            
+            const tbody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = ''; // Clear current table rows
+
+            let visibleRowsData = [];
+
+            originalTableData.forEach(rowData => {
+                // Access data using normalized keys
+                const location = rowData.location ? rowData.location.toLowerCase() : '';
+                const organization = rowData.organization ? rowData.organization.toLowerCase() : '';
+                const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                const nameEng = rowData.name_english ? rowData.name_english.toLowerCase() : '';
+                const nameAr = rowData.name_arabic ? ro
