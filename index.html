@@ -909,8 +909,192 @@
 
             let visibleRowsData = [];
 
-
-
             originalTableData.forEach(rowData => {
+                const location = rowData.location ? rowData.location.toLowerCase() : '';
+                const organization = rowData.organization ? rowData.organization.toLowerCase() : '';
+                const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                const nameEng = rowData.name_english ? rowData.name_english.toLowerCase() : '';
+                const nameAr = rowData.name_arabic ? rowData.name_arabic.toLowerCase() : '';
+                const description = rowData.description_online ? rowData.description_online.toLowerCase() : '';
 
-     
+                const locationMatch = !locationFilter || location.includes(locationFilter);
+                const orgMatch = !orgFilter || organization.includes(orgFilter);
+                const rankMatch = !rankFilter || rank.includes(rankFilter);
+                const searchMatch = !searchBox || 
+                                    nameEng.includes(searchBox) || 
+                                    nameAr.includes(searchBox) || 
+                                    location.includes(searchBox) ||
+                                    organization.includes(searchBox) ||
+                                    description.includes(searchBox);
+                
+                if (locationMatch && orgMatch && rankMatch && searchMatch) {
+                    const rowElement = createTableRow(rowData);
+                    tbody.appendChild(rowElement);
+                    visibleRowsData.push(rowData);
+                }
+            });
+            console.log(`Displayed ${visibleRowsData.length} rows after filtering.`);
+            updateStats(visibleRowsData);
+            console.log('--- filterTable function finished ---');
+        }
+
+        /**
+         * Creates a table row (<tr>) element from a data object.
+         * Applies appropriate CSS classes for styling and color coding.
+         * @param {object} rowData - An object containing the data for a single row.
+         * @returns {HTMLTableRowElement} The created table row element.
+         */
+        function createTableRow(rowData) {
+            const tr = document.createElement('tr');
+            let rankClass = '';
+            const lowerRank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+            if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
+                rankClass = 'high-ranking';
+            } else if (lowerRank.includes('commander')) {
+                rankClass = 'field-commander';
+            } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
+                rankClass = 'regular-mujahid';
+            }
+            if (rankClass) tr.classList.add(rankClass);
+
+            const cells = [
+                rowData.post_id,
+                rowData.combatant_id,
+                rowData.date,
+                rowData.location,
+                rowData.location_details,
+                rowData.name_english,
+                rowData.name_arabic,
+                rowData.nickname,
+                rowData.description_online,
+                rowData.rank_role,
+                rowData.organization,
+                rowData.activity,
+                rowData.family_casualties_info,
+                rowData.casualties_count,
+                rowData.additional_combatants,
+                rowData.notes
+            ];
+
+            cells.forEach((cellContent, index) => {
+                const td = document.createElement('td');
+                td.textContent = cellContent;
+
+                // Apply specific classes based on content or column index
+                if (index === 3) td.classList.add('location'); // Location column
+                if (index === 5) td.classList.add('name-col', 'english'); // English name
+                if (index === 6) td.classList.add('name-col', 'arabic'); // Arabic name
+                if (index === 8) td.classList.add('quote'); // Description online
+                if (index === 10) { // Organization column
+                    const org = rowData.organization ? rowData.organization.toLowerCase() : '';
+                    if (org.includes('hamas')) td.classList.add('org-hamas');
+                    else if (org.includes('dflp')) td.classList.add('org-dflp');
+                    else if (org.includes('mujahideen')) td.classList.add('org-mujahideen');
+                    else if (org.includes('fatah')) td.classList.add('org-fatah');
+                }
+                if (index === 12 && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
+                    td.classList.add('family-casualties');
+                }
+                tr.appendChild(td);
+            });
+            return tr;
+        }
+
+        /**
+         * Updates the statistics displayed in the stat cards.
+         * Calculates stats based on the currently visible (filtered) data.
+         * @param {Array<object>} data - An array of data objects (rows) currently displayed in the table.
+         */
+        function updateStats(data) {
+            console.log('Updating stats...');
+            let totalCombatants = 0;
+            let totalCasualties = 0;
+            let familyCasualties = 0;
+            let highRanking = 0;
+            
+            data.forEach(rowData => {
+                const combatantNumbers = rowData.combatant_id || '';
+                const casualtyCount = parseInt(rowData.casualties_count) || 0;
+                const familyInfo = rowData.family_casualties_info || '';
+                const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                
+                // Count combatants (handle ranges like 264-265 or comma separated)
+                if (combatantNumbers.includes(',') && combatantNumbers.includes('-')) {
+                    // Example: "264-265, 266" - treat each as a separate combatant entry
+                    totalCombatants += combatantNumbers.split(',').reduce((acc, current) => {
+                        if (current.includes('-')) {
+                            const range = current.split('-');
+                            return acc + (parseInt(range[1]) - parseInt(range[0]) + 1);
+                        }
+                        return acc + 1;
+                    }, 0);
+                } else if (combatantNumbers.includes('-')) {
+                    const range = combatantNumbers.split('-');
+                    if (range.length === 2 && !isNaN(parseInt(range[0])) && !isNaN(parseInt(range[1]))) {
+                        totalCombatants += parseInt(range[1]) - parseInt(range[0]) + 1;
+                    } else {
+                        totalCombatants += 1; // Fallback for malformed range
+                    }
+                } else if (combatantNumbers.includes(',')) {
+                     totalCombatants += combatantNumbers.split(',').length;
+                }
+                else if (combatantNumbers) { // Ensure it's not empty
+                    totalCombatants += 1;
+                }
+                
+                totalCasualties += casualtyCount;
+                
+                if (familyInfo && familyInfo !== '-') {
+                    // Assuming family casualties are total casualties minus the combatants themselves
+                    // This logic might needs adjustment based on exact data meaning.
+                    // For now, we'll count any listed family info as leading to family casualties.
+                    familyCasualties += casualtyCount; // Simple count if family info is present
+                }
+                
+                if (rank.includes('leader') || rank.includes('commander') || rank.includes('prominent')) {
+                    highRanking += 1;
+                }
+            });
+            
+            document.getElementById('totalCombatants').textContent = totalCombatants;
+            document.getElementById('totalCasualties').textContent = totalCasualties;
+            document.getElementById('familyCasualties').textContent = familyCasualties;
+            document.getElementById('highRanking').textContent = highRanking;
+            console.log('Stats updated:', { totalCombatants, totalCasualties, familyCasualties, highRanking });
+        }
+
+        /**
+         * Exports the currently visible table data to a CSV file.
+         */
+        function exportToCSV() {
+            const table = document.getElementById('dataTable');
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            const rows = table.querySelectorAll('tbody tr');
+            
+            let csvContent = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n'; // Add headers
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => {
+                    return '"' + cell.textContent.replace(/"/g, '""') + '"'; // Quote and escape double quotes
+                }).join(',');
+                csvContent += rowData + '\n';
+            });
+            
+            // Create a Blob and download the CSV file
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'combatants_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Load data and initialize table on page load
+        window.onload = loadData;
+    </script>
+</body>
+</html>
