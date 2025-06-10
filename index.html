@@ -309,6 +309,38 @@
         }
 
         /**
+         * Converts a raw CSV header string to a consistent, normalized key name.
+         * This helps in reliably mapping CSV columns to JavaScript object properties.
+         * For example, "מס' פוסט" might become "post_id".
+         * @param {string} header - The raw header string from the CSV.
+         * @returns {string} The normalized key name.
+         */
+        function normalizeHeader(header) {
+            // Trim whitespace, convert to lowercase, and replace spaces with underscores.
+            // Map specific Hebrew headers to English keys for consistency in JS.
+            const normalized = header.trim().toLowerCase();
+            switch (normalized) {
+                case 'מס\' פוסט': return 'post_id';
+                case 'מס\' לוחם': return 'combatant_id';
+                case 'תאריך': return 'date';
+                case 'מיקום': return 'location';
+                case 'פירוט מיקום': return 'location_details';
+                case 'שם באנגלית': return 'name_english';
+                case 'שם בערבית': return 'name_arabic';
+                case 'כינוי': return 'nickname';
+                case 'תיאור ברשת': return 'description_online';
+                case 'דרגה/תפקיד': return 'rank_role';
+                case 'ארגון': return 'organization';
+                case 'פעילות': return 'activity';
+                case 'בני משפחה': return 'family_casualties_info';
+                case 'מס\' קורבנות': return 'casualties_count';
+                case 'לוחמים נוספים': return 'additional_combatants';
+                case 'הערות': return 'notes';
+                default: return normalized.replace(/ /g, '_').replace(/[^a-z0-9_]/g, ''); // Fallback for other headers
+            }
+        }
+
+        /**
          * Loads data from the data.csv file.
          * Parses the CSV content and populates the originalTableData array.
          * Also populates filter options based on the data.
@@ -332,7 +364,7 @@
                 // Assumes the first row is headers
                 const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== ''); // Handle both \n and \r\n
                 console.log('CSV lines parsed. Number of non-empty lines:', lines.length);
-                console.log('First line (headers):', lines[0]);
+                console.log('First line (raw headers):', lines[0]);
                 if (lines.length > 1) {
                     console.log('Second line (first data row):', lines[1]);
                 }
@@ -345,8 +377,10 @@
                     return;
                 }
                 
-                const headers = parseCsvLine(lines[0]).map(header => header.trim());
-                console.log('Parsed Headers:', headers);
+                // Normalize headers before using them as keys
+                const rawHeaders = parseCsvLine(lines[0]);
+                const headers = rawHeaders.map(header => normalizeHeader(header));
+                console.log('Normalized Headers for object keys:', headers);
 
                 originalTableData = lines.slice(1).map((line, lineIndex) => {
                     const values = parseCsvLine(line); // Use the new robust parser
@@ -422,6 +456,7 @@
             let visibleRowsData = [];
 
             originalTableData.forEach(rowData => {
+                // Access data using normalized keys
                 const location = rowData.location ? rowData.location.toLowerCase() : '';
                 const organization = rowData.organization ? rowData.organization.toLowerCase() : '';
                 const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
@@ -469,8 +504,7 @@
             }
             if (rankClass) tr.classList.add(rankClass);
 
-            // Ensure these keys match the exact headers from your CSV file.
-            // You can verify these by looking at the `Parsed Headers:` log in your browser's console.
+            // Ensure these keys match the exact normalized headers from your CSV file.
             const cells = [
                 rowData.post_id,
                 rowData.combatant_id,
@@ -480,7 +514,7 @@
                 rowData.name_english,
                 rowData.name_arabic,
                 rowData.nickname,
-                rowData.description_online, // This field specifically needs correct parsing
+                rowData.description_online, 
                 rowData.rank_role,
                 rowData.organization,
                 rowData.activity,
