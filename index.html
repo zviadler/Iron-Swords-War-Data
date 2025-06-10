@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מאגר זיהוי לוחמים</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to ensure full responsiveness and aesthetic appeal */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            direction: rtl;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 0.5rem; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            overflow: hidden;
+            margin: 1.25rem; /* Margin around the container */
+            width: 100%;
+            max-width: 1600px; /* Max width for larger screens */
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c5282, #3182ce); /* Blue gradient */
+            color: white;
+            padding: 1.25rem;
+            text-align: center;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .controls {
+            padding: 1rem;
+            background: #f7fafc; /* Lighter background for controls */
+            border-bottom: 1px solid #e2e8f0; /* Subtle bottom border */
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 0.625rem; /* Space between filter groups */
+            align-items: center;
+            justify-content: center; /* Center controls */
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.3125rem; /* Space between label and input */
+        }
+
+        select, input[type="text"] {
+            padding: 0.3125rem 0.625rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.25rem; /* Slightly rounded inputs */
+            font-size: 0.875rem; /* Smaller font size for inputs */
+            min-width: 8rem; /* Minimum width for inputs */
+            flex-grow: 1; /* Allow inputs to grow */
+        }
+
+        .table-container {
+            overflow-x: auto; /* Enable horizontal scrolling for tables */
+            max-height: 70vh; /* Max height for vertical scrolling */
+            overflow-y: auto;
+            width: 100%; /* Ensure container takes full width */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem; /* Smaller font size for table content */
+            min-width: 1200px; /* Minimum width to prevent squishing on small screens */
+        }
+
+        th, td {
+            padding: 0.5rem 0.375rem;
+            border: 1px solid #e2e8f0; /* Light border for cells */
+            text-align: center;
+            vertical-align: top;
+        }
+
+        th {
+            background: #4a5568; /* Darker header background */
+            color: white;
+            font-weight: bold;
+            position: sticky; /* Sticky header */
+            top: 0;
+            z-index: 10;
+            font-size: 0.625rem; /* Even smaller font for headers */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f7fafc; /* Zebra striping */
+        }
+
+        tr:hover {
+            background-color: #edf2f7; /* Hover effect */
+        }
+
+        /* Color coding by rank */
+        .high-ranking { background-color: #fed7d7 !important; } /* Reddish for high ranking */
+        .field-commander { background-color: #feebc8 !important; } /* Orange for field commander */
+        .regular-mujahid { background-color: #f0fff4 !important; } /* Greenish for regular */
+
+        /* Text directions and sizes */
+        .arabic { font-family: 'Arial Unicode MS', Arial, sans-serif; direction: rtl; }
+        .english { direction: ltr; text-align: left; }
+        .quote { font-style: italic; color: #4a5568; max-width: 200px; word-wrap: break-word; font-size: 0.7rem; }
+        .family-casualties { color: #e53e3e; font-weight: bold; } /* Red for family casualties */
+
+        /* Organization colors */
+        .org-hamas { color: #059669; font-weight: bold; }
+        .org-dflp { color: #dc2626; font-weight: bold; }
+        .org-mujahideen { color: #7c2d12; font-weight: bold; }
+        .org-fatah { color: #1e40af; font-weight: bold; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid for stats */
+            gap: 1rem;
+            padding: 1.25rem;
+            background: #f7fafc;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem; /* Larger font for numbers */
+            font-weight: bold;
+            color: #2b6cb0; /* Blue color for numbers */
+            margin-bottom: 0.3125rem;
+        }
+
+        .export-btn {
+            background: #48bb78; /* Green button */
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s ease-in-out; /* Smooth transition */
+        }
+
+        .export-btn:hover {
+            background: #38a169; /* Darker green on hover */
+        }
+
+        /* Column specific widths/breaks */
+        .location { max-width: 80px; word-wrap: break-word; }
+        .name-col { max-width: 120px; word-wrap: break-word; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column; /* Stack controls vertically on small screens */
+                align-items: stretch; /* Stretch controls to full width */
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.125rem;
+            }
+            select, input[type="text"] {
+                width: 100%;
+                min-width: unset; /* Remove min-width on small screens */
+            }
+            .table-container {
+                max-height: 60vh; /* Adjust height for mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
+            <p class="text-sm mt-1">נתונים מתעדכנים באופן רציף</p>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label for="locationFilter" class="text-gray-700 text-sm">מיקום:</label>
+                <select id="locationFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="orgFilter" class="text-gray-700 text-sm">ארגון:</label>
+                <select id="orgFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="rankFilter" class="text-gray-700 text-sm">דרגה:</label>
+                <select id="rankFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchBox" class="text-gray-700 text-sm">חיפוש:</label>
+                <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." onkeyup="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+            </div>
+            
+            <button class="export-btn" onclick="exportToCSV()">ייצא ל-CSV</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>מס' פוסט</th>
+                        <th>מס' לוחם</th>
+                        <th>תאריך</th>
+                        <th>מיקום</th>
+                        <th>פירוט מיקום</th>
+                        <th>שם באנגלית</th>
+                        <th>שם בערבית</th>
+                        <th>כינוי</th>
+                        <th>תיאור ברשת</th>
+                        <th>דרגה/תפקיד</th>
+                        <th>ארגון</th>
+                        <th>פעילות</th>
+                        <th>בני משפחה</th>
+                        <th>מס' קורבנות</th>
+                        <th>לוחמים נוספים</th>
+                        <th>הערות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be populated dynamically by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCombatants">0</div>
+                <div>סה"כ לוחמים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCasualties">0</div>
+                <div>סה"כ קורבנות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="familyCasualties">0</div>
+                <div>בני משפחה</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highRanking">0</div>
+                <div>בכירים</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalTableData = []; // Stores the raw data from CSV
+        let allLocations = new Set();
+        let allOrganizations = new Set();
+        let allRanks = new Set();
+
+        /**
+         * Loads data from the data.csv file.
+         * Parses the CSV content and populates the originalTableData array.
+         * Also populates filter options based on the data.
+         */
+        async function loadData() {
+            try {
+                // Fetch the CSV file
+                const response = await fetch('data.csv');
+                const csvText = await response.text();
+
+                // Parse CSV text into an array of objects
+                // Assumes the first row is headers
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) {
+                    console.warn("CSV file is empty or malformed.");
+                    return;
+                }
+                const headers = lines[0].split(',').map(header => header.trim());
+                originalTableData = lines.slice(1).map(line => {
+                    const values = line.split(',');
+                    let row = {};
+                    headers.forEach((header, i) => {
+                        row[header] = values[i] ? values[i].trim().replace(/^"|"$/g, '').replace(/""/g, '"') : ''; // Handle quoted fields
+                    });
+                    
+                    // Collect unique values for filters
+                    if (row.location) allLocations.add(row.location);
+                    if (row.organization) allOrganizations.add(row.organization);
+                    if (row.rank_role) allRanks.add(row.rank_role);
+                    
+                    return row;
+                });
+
+                populateFilters();
+                filterTable(); // Initial display of data
+            } catch (error) {
+                console.error('Error loading or parsing CSV:', error);
+                // Display a user-friendly message if data fails to load
+                document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
+                    '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
+            }
+        }
+
+        /**
+         * Populates the select filter options based on unique values found in the data.
+         */
+        function populateFilters() {
+            const addOptions = (selectId, dataSet) => {
+                const selectElement = document.getElementById(selectId);
+                selectElement.innerHTML = '<option value="">הכל</option>'; // Keep "All" option
+                // Sort options alphabetically for better user experience
+                Array.from(dataSet).sort().forEach(item => {
+                    if (item) { // Ensure item is not empty
+                        const option = document.createElement('option');
+                        option.value = item;
+                        option.textContent = item;
+                        selectElement.appendChild(option);
+                    }
+                });
+            };
+
+            addOptions('locationFilter', allLocations);
+            addOptions('orgFilter', allOrganizations);
+            addOptions('rankFilter', allRanks);
+        }
+
+        /**
+         * Filters the table rows based on selected filter criteria and search box input.
+         * Updates the displayed table and recalculates statistics.
+         */
+        function filterTable() {
+            const locationFilter = document.getElementById('locationFilter').value.toLowerCase();
+            const orgFilter = document.getElementById('orgFilter').value.toLowerCase();
+            const rankFilter = document.getElementById('rankFilter').value.toLowerCase();
+            const searchBox = document.getElementById('searchBox').value.toLowerCase();
+            
+            const tbody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = ''; // Clear current table rows
+
+            let visibleRowsData = [];
+
+            originalTableData.forEach(rowData => {
+                const location = rowData.location ? rowData.location.toLowerCase() : '';
+                const organization = rowData.organization ? rowData.organization.toLowerCase() : '';
+                const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                const nameEng = rowData.name_english ? rowData.name_english.toLowerCase() : '';
+                const nameAr = rowData.name_arabic ? rowData.name_arabic.toLowerCase() : '';
+                const description = rowData.description_online ? rowData.description_online.toLowerCase() : '';
+
+                const locationMatch = !locationFilter || location.includes(locationFilter);
+                const orgMatch = !orgFilter || organization.includes(orgFilter);
+                const rankMatch = !rankFilter || rank.includes(rankFilter);
+                const searchMatch = !searchBox || 
+                                    nameEng.includes(searchBox) || 
+                                    nameAr.includes(searchBox) || 
+                                    location.includes(searchBox) ||
+                                    organization.includes(searchBox) ||
+                                    description.includes(searchBox);
+                
+                if (locationMatch && orgMatch && rankMatch && searchMatch) {
+                    const rowElement = createTableRow(rowData);
+                    tbody.appendChild(rowElement);
+                    visibleRowsData.push(rowData);
+                }
+            });
+            
+            updateStats(visibleRowsData);
+        }
+
+        /**
+         * Creates a table row (<tr>) element from a data object.
+         * Applies appropriate CSS classes for styling and color coding.
+         * @param {object} rowData - An object containing the data for a single row.
+         * @returns {HTMLTableRowElement} The created table row element.
+         */
+        function createTableRow(rowData) {
+            const tr = document.createElement('tr');
+            let rankClass = '';
+            const lowerRank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+            if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
+                rankClass = 'high-ranking';
+            } else if (lowerRank.includes('commander')) {
+                rankClass = 'field-commander';
+            } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
+                rankClass = 'regular-mujahid';
+            }
+            if (rankClass) tr.classList.add(rankClass);
+
+            const cells = [
+                rowData.post_id,
+                rowData.combatant_id,
+                rowData.date,
+                rowData.location,
+                rowData.location_details,
+                rowData.name_english,
+                rowData.name_arabic,
+                rowData.nickname,
+                rowData.description_online,
+                rowData.rank_role,
+                rowData.organization,
+                rowData.activity,
+                rowData.family_casualties_info,
+                rowData.casualties_count,
+                rowData.additional_combatants,
+                rowData.notes
+            ];
+
+            cells.forEach((cellContent, index) => {
+                const td = document.createElement('td');
+                td.textContent = cellContent;
+
+                // Apply specific classes based on content or column index
+                if (index === 3) td.classList.add('location'); // Location column
+                if (index === 5) td.classList.add('name-col', 'english'); // English name
+                if (index === 6) td.classList.add('name-col', 'arabic'); // Arabic name
+                if (index === 8) td.classList.add('quote'); // Description online
+                if (index === 10) { // Organization column
+                    const org = rowData.organization ? rowData.organization.toLowerCase() : '';
+                    if (org.includes('hamas')) td.classList.add('org-hamas');
+                    else if (org.includes('dflp')) td.classList.add('org-dflp');
+                    else if (org.includes('mujahideen')) td.classList.add('org-mujahideen');
+                    else if (org.includes('fatah')) td.classList.add('org-fatah');
+                }
+                if (index === 12 && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
+                    td.classList.add('family-casualties');
+                }
+                tr.appendChild(td);
+            });
+            return tr;
+        }
+
+        /**
+         * Updates the statistics displayed in the stat cards.
+         * Calculates stats based on the currently visible (filtered) data.
+         * @param {Array<object>} data - An array of data objects (rows) currently displayed in the table.
+         */
+        function updateStats(data) {
+            let totalCombatants = 0;
+            let totalCasualties = 0;
+            let familyCasualties = 0;
+            let highRanking = 0;
+            
+            data.forEach(rowData => {
+                const combatantNumbers = rowData.combatant_id || '';
+                const casualtyCount = parseInt(rowData.casualties_count) || 0;
+                const familyInfo = rowData.family_casualties_info || '';
+                const rank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                
+                // Count combatants (handle ranges like 264-265 or comma separated)
+                if (combatantNumbers.includes(',') && combatantNumbers.includes('-')) {
+                    // Example: "264-265, 266" - treat each as a separate combatant entry
+                    totalCombatants += combatantNumbers.split(',').reduce((acc, current) => {
+                        if (current.includes('-')) {
+                            const range = current.split('-');
+                            return acc + (parseInt(range[1]) - parseInt(range[0]) + 1);
+                        }
+                        return acc + 1;
+                    }, 0);
+                } else if (combatantNumbers.includes('-')) {
+                    const range = combatantNumbers.split('-');
+                    if (range.length === 2 && !isNaN(parseInt(range[0])) && !isNaN(parseInt(range[1]))) {
+                        totalCombatants += parseInt(range[1]) - parseInt(range[0]) + 1;
+                    } else {
+                        totalCombatants += 1; // Fallback for malformed range
+                    }
+                } else if (combatantNumbers.includes(',')) {
+                     totalCombatants += combatantNumbers.split(',').length;
+                }
+                else if (combatantNumbers) { // Ensure it's not empty
+                    totalCombatants += 1;
+                }
+                
+                totalCasualties += casualtyCount;
+                
+                if (familyInfo && familyInfo !== '-') {
+                    // Assuming family casualties are total casualties minus the combatants themselves
+                    // This logic might need adjustment based on exact data meaning.
+                    // For now, we'll count any listed family info as leading to family casualties.
+                    familyCasualties += casualtyCount; // Simple count if family info is present
+                }
+                
+                if (rank.includes('leader') || rank.includes('commander') || rank.includes('prominent')) {
+                    highRanking += 1;
+                }
+            });
+            
+            document.getElementById('totalCombatants').textContent = totalCombatants;
+            document.getElementById('totalCasualties').textContent = totalCasualties;
+            document.getElementById('familyCasualties').textContent = familyCasualties;
+            document.getElementById('highRanking').textContent = highRanking;
+        }
+
+        /**
+         * Exports the currently visible table data to a CSV file.
+         */
+        function exportToCSV() {
+            const table = document.getElementById('dataTable');
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            const rows = table.querySelectorAll('tbody tr');
+            
+            let csvContent = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n'; // Add headers
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => {
+                    return '"' + cell.textContent.replace(/"/g, '""') + '"'; // Quote and escape double quotes
+                }).join(',');
+                csvContent += rowData + '\n';
+            });
+            
+            // Create a Blob and download the CSV file
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'combatants_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Load data and initialize table on page load
+        window.onload = loadData;
+    </script>
+</body>
+</html>
