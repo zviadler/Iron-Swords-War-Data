@@ -288,25 +288,56 @@
          * Also populates filter options based on the data.
          */
         async function loadData() {
+            console.log('--- Starting loadData function ---');
             try {
                 // Fetch the CSV file
+                console.log('Attempting to fetch data.csv...');
                 const response = await fetch('data.csv');
+                console.log('Fetch response received:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const csvText = await response.text();
+                console.log('CSV text loaded successfully. First 200 chars:', csvText.substring(0, 200));
 
                 // Parse CSV text into an array of objects
                 // Assumes the first row is headers
-                const lines = csvText.split('\n').filter(line => line.trim() !== '');
-                if (lines.length === 0) {
-                    console.warn("CSV file is empty or malformed.");
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== ''); // Handle both \n and \r\n
+                console.log('CSV lines parsed. Number of non-empty lines:', lines.length);
+                console.log('First line (headers):', lines[0]);
+                console.log('Second line (first data row):', lines[1]);
+
+
+                if (lines.length <= 1) { // Check if there are headers and at least one data row
+                    console.warn("CSV file is empty or contains only headers. No data to display.");
+                    document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
+                        '<tr><td colspan="16" class="text-gray-500 font-bold text-center">אין נתונים להצגה בטבלה. וודא שקובץ data.csv מכיל שורות נתונים.</td></tr>';
                     return;
                 }
+                
                 const headers = lines[0].split(',').map(header => header.trim());
-                originalTableData = lines.slice(1).map(line => {
-                    const values = line.split(',');
+                console.log('Parsed Headers:', headers);
+
+                originalTableData = lines.slice(1).map((line, lineIndex) => {
+                    // A simple split by comma is often insufficient for CSV if commas exist within quoted fields.
+                    // For robust parsing, a dedicated CSV parser library would be ideal, but for simplicity
+                    // and no external dependencies, we'll try to handle quoted fields manually.
+                    // This regex splits on commas that are not inside double quotes.
+                    const values = line.match(/(?:[^,"]+|"[^"]*")+/g) || [];
+
                     let row = {};
                     headers.forEach((header, i) => {
-                        row[header] = values[i] ? values[i].trim().replace(/^"|"$/g, '').replace(/""/g, '"') : ''; // Handle quoted fields
+                        let value = values[i] ? values[i].trim() : '';
+                        // Remove surrounding quotes if present and unescape internal double quotes
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.substring(1, value.length - 1).replace(/""/g, '"');
+                        }
+                        row[header] = value;
                     });
+                    
+                    console.log(`Parsed Row ${lineIndex + 1}:`, row); // Log each parsed row
                     
                     // Collect unique values for filters
                     if (row.location) allLocations.add(row.location);
@@ -316,13 +347,17 @@
                     return row;
                 });
 
+                console.log('originalTableData after parsing:', originalTableData);
+
                 populateFilters();
                 filterTable(); // Initial display of data
+                console.log('--- loadData function finished successfully ---');
             } catch (error) {
                 console.error('Error loading or parsing CSV:', error);
                 // Display a user-friendly message if data fails to load
                 document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
-                    '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
+                    '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
+                console.log('--- loadData function finished with error ---');
             }
         }
 
@@ -347,6 +382,7 @@
             addOptions('locationFilter', allLocations);
             addOptions('orgFilter', allOrganizations);
             addOptions('rankFilter', allRanks);
+            console.log('Filters populated.');
         }
 
         /**
@@ -354,6 +390,7 @@
          * Updates the displayed table and recalculates statistics.
          */
         function filterTable() {
+            console.log('--- Starting filterTable function ---');
             const locationFilter = document.getElementById('locationFilter').value.toLowerCase();
             const orgFilter = document.getElementById('orgFilter').value.toLowerCase();
             const rankFilter = document.getElementById('rankFilter').value.toLowerCase();
@@ -388,8 +425,9 @@
                     visibleRowsData.push(rowData);
                 }
             });
-            
+            console.log(`Displayed ${visibleRowsData.length} rows after filtering.`);
             updateStats(visibleRowsData);
+            console.log('--- filterTable function finished ---');
         }
 
         /**
@@ -460,6 +498,7 @@
          * @param {Array<object>} data - An array of data objects (rows) currently displayed in the table.
          */
         function updateStats(data) {
+            console.log('Updating stats...');
             let totalCombatants = 0;
             let totalCasualties = 0;
             let familyCasualties = 0;
@@ -499,7 +538,7 @@
                 
                 if (familyInfo && familyInfo !== '-') {
                     // Assuming family casualties are total casualties minus the combatants themselves
-                    // This logic might need adjustment based on exact data meaning.
+                    // This logic might needs adjustment based on exact data meaning.
                     // For now, we'll count any listed family info as leading to family casualties.
                     familyCasualties += casualtyCount; // Simple count if family info is present
                 }
@@ -513,6 +552,7 @@
             document.getElementById('totalCasualties').textContent = totalCasualties;
             document.getElementById('familyCasualties').textContent = familyCasualties;
             document.getElementById('highRanking').textContent = highRanking;
+            console.log('Stats updated:', { totalCombatants, totalCasualties, familyCasualties, highRanking });
         }
 
         /**
