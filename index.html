@@ -160,7 +160,7 @@
             margin-bottom: 0.3125rem;
         }
 
-        .export-btn {
+        .btn {
             background: #48bb78; /* Green button */
             color: white;
             border: none;
@@ -173,13 +173,52 @@
             margin-top: 0.5rem; /* Space from other controls */
         }
 
-        .export-btn:hover {
+        .btn:hover {
             background: #38a169; /* Darker green on hover */
+        }
+
+        .btn-secondary {
+            background: #607D8B; /* Grayish blue for secondary button */
+        }
+
+        .btn-secondary:hover {
+            background: #455A64; /* Darker gray blue on hover */
         }
 
         /* Column specific widths/breaks */
         .location { max-width: 80px; word-wrap: break-word; }
         .name-col { max-width: 120px; word-wrap: break-word; }
+
+        /* Loading indicator styles */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 0.5rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #2c5282;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Responsive adjustments for overall layout and controls */
         @media (max-width: 768px) {
@@ -203,7 +242,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container relative"> <!-- Added 'relative' for loading overlay positioning -->
         <div class="header">
             <h1 class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
             <p class="text-sm mt-1">נתונים מתעדכנים באופן רציף</p>
@@ -239,7 +278,8 @@
                 <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." onkeyup="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
             
-            <button class="export-btn" onclick="exportToCSV()">ייצא ל-CSV</button>
+            <button class="btn" onclick="exportToCSV()">ייצא ל-CSV</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">איפוס פילטרים</button>
         </div>
         
         <div class="table-container">
@@ -268,6 +308,12 @@
                     <!-- Table rows will be populated dynamically by JavaScript -->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p class="text-gray-700 text-lg">טוען נתונים...</p>
         </div>
     </div>
     
@@ -367,6 +413,7 @@
          */
         async function loadData() {
             console.log('--- Starting loadData function ---');
+            document.getElementById('loadingOverlay').classList.remove('hidden'); // Show loading indicator
             try {
                 // Fetch the CSV file
                 console.log('Attempting to fetch data.csv...');
@@ -431,6 +478,8 @@
                 document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
                     '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
                 console.log('--- loadData function finished with error ---');
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden'); // Hide loading indicator
             }
         }
 
@@ -497,6 +546,12 @@
                     visibleRowsData.push(rowData);
                 }
             });
+
+            if (visibleRowsData.length === 0) {
+                // Display "No results" message
+                tbody.innerHTML = '<tr><td colspan="16" class="text-gray-500 font-bold text-center">אין נתונים תואמים למסננים שנבחרו.</td></tr>';
+            }
+
             console.log(`Displayed ${visibleRowsData.length} rows after filtering.`);
             updateStats(visibleRowsData);
             console.log('--- filterTable function finished ---');
@@ -655,6 +710,18 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        /**
+         * Resets all filter selections and the search box, then re-filters the table.
+         */
+        function resetFilters() {
+            document.getElementById('locationFilter').value = '';
+            document.getElementById('orgFilter').value = '';
+            document.getElementById('rankFilter').value = '';
+            document.getElementById('searchBox').value = '';
+            filterTable();
+            console.log('Filters have been reset.');
         }
         
         // Load data and initialize table on page load
