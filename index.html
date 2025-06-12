@@ -239,6 +239,62 @@
                 max-height: 60vh; /* Adjust height for mobile */
             }
         }
+        
+        /* New styles for Card View */
+        body.card-view .table-container {
+            overflow-x: hidden; /* Disable horizontal scrolling in card view */
+        }
+
+        body.card-view table,
+        body.card-view thead,
+        body.card-view tbody,
+        body.card-view th,
+        body.card-view td,
+        body.card-view tr {
+            display: block; /* Make table elements behave like blocks */
+        }
+        body.card-view thead tr {
+            position: absolute; /* Hide table headers in card view */
+            top: -9999px;
+            left: -9999px;
+        }
+        body.card-view tr {
+            margin-bottom: 1rem; /* Space between cards */
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; /* Use flexbox for card layout */
+            flex-direction: column; /* Stack items vertically within a card */
+            align-items: flex-start; /* Align text to the start */
+            text-align: right; /* Ensure text is right-aligned */
+        }
+        body.card-view td {
+            border: none; /* Remove cell borders in card view */
+            position: relative;
+            padding-right: 7rem; /* Space for the data-label */
+            text-align: right; /* Align text to the right */
+            width: 100%; /* Full width for each data row in a card */
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        body.card-view td::before {
+            content: attr(data-label); /* Use data-label as a visible label */
+            font-weight: bold;
+            color: #4a5568;
+            position: absolute;
+            right: 0.5rem; /* Position label to the right */
+            top: 0.5rem;
+            width: 6rem; /* Fixed width for labels */
+            text-align: right; /* Align label text to the right */
+        }
+        /* Specific adjustments for card view elements */
+        body.card-view .location,
+        body.card-view .name-col,
+        body.card-view .quote {
+            max-width: unset; /* Remove max-width constraints in card view */
+            word-wrap: normal; /* Allow normal word wrap */
+        }
     </style>
 </head>
 <body>
@@ -280,6 +336,8 @@
             
             <button class="btn" onclick="exportToCSV()">ייצא ל-CSV</button>
             <button class="btn btn-secondary" onclick="resetFilters()">איפוס פילטרים</button>
+            <!-- New button for toggling view mode -->
+            <button class="btn btn-secondary" onclick="toggleViewMode()" id="viewToggleBtn">עבור לתצוגת כרטיסים</button>
         </div>
         
         <div class="table-container">
@@ -557,6 +615,13 @@
             console.log('--- filterTable function finished ---');
         }
 
+        // Define headersList globally or pass it to createTableRow if it's dynamic
+        const headersList = [
+            "מס' פוסט", "מס' לוחם", "תאריך", "מיקום", "פירוט מיקום", "שם באנגלית",
+            "שם בערבית", "כינוי", "תיאור ברשת", "דרגה/תפקיד", "ארגון", "פעילות",
+            "בני משפחה", "מס' קורבנות", "לוחמים נוספים", "הערות"
+        ];
+
         /**
          * Creates a table row (<tr>) element from a data object.
          * Applies appropriate CSS classes for styling and color coding.
@@ -595,9 +660,14 @@
                 rowData.notes
             ];
 
+            const searchTerm = document.getElementById('searchBox')?.value.toLowerCase() || '';
+
             cells.forEach((cellContent, index) => {
                 const td = document.createElement('td');
-                td.textContent = cellContent;
+                // Set the data-label attribute for card view
+                td.setAttribute('data-label', headersList[index]); 
+                // Apply highlighting
+                td.innerHTML = highlight(String(cellContent || ''), searchTerm);
 
                 // Apply specific classes based on content or column index
                 if (index === 3) td.classList.add('location'); // Location column
@@ -618,6 +688,31 @@
             });
             return tr;
         }
+
+        /**
+         * Toggles the view mode between table and card view.
+         * Adds or removes the 'card-view' class from the body and updates the button text.
+         */
+        function toggleViewMode() {
+            const isCardView = document.body.classList.toggle('card-view');
+            const btn = document.getElementById('viewToggleBtn');
+            btn.textContent = isCardView ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים';
+            // Re-render table to apply new styles correctly after view mode change
+            filterTable(); 
+        }
+
+        /**
+         * Highlights occurrences of a search term within a given text.
+         * @param {string} text - The original text content.
+         * @param {string} term - The search term to highlight.
+         * @returns {string} The text with the search term wrapped in <mark> tags.
+         */
+        function highlight(text, term) {
+            if (!term) return text;
+            const re = new RegExp(`(${term})`, 'gi');
+            return text.replace(re, '<mark>$1</mark>');
+        }
+
 
         /**
          * Updates the statistics displayed in the stat cards.
@@ -693,9 +788,12 @@
             let csvContent = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n'; // Add headers
             
             rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => {
-                    return '"' + cell.textContent.replace(/"/g, '""') + '"'; // Quote and escape double quotes
+                // In card view, td elements have data-label. In table view, they don't necessarily.
+                // We need to extract the actual cell values.
+                const cells = Array.from(row.querySelectorAll('td'));
+                const rowData = cells.map(cell => {
+                    // Get the actual text content, not including the pseudo-element content
+                    return '"' + cell.textContent.replace(/"/g, '""') + '"'; 
                 }).join(',');
                 csvContent += rowData + '\n';
             });
