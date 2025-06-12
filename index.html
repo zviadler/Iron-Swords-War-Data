@@ -329,9 +329,31 @@
                 display: none; /* Hide card grid in table view on desktop */
             }
         }
+
+        /* Update: Support for language toggle button and dynamic button translation */
+        .card-view td.family-casualties,
+        td.family-casualties {
+            color: inherit; /* Reset color for family casualties */
+            font-weight: normal; /* Reset font-weight for family casualties */
+        }
+        .language-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background: #edf2f7;
+            padding: 0.4rem 0.7rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+            z-index: 99; /* Ensure it's above other content */
+        }
     </style>
 </head>
 <body>
+    <!-- Language toggle button - positioned fixed at top-left -->
+    <div class="language-toggle" onclick="toggleLanguage()" id="langBtn">English</div>
+
     <div class="container relative"> <!-- Added 'relative' for loading overlay positioning -->
         <div class="site-header">
             <h1>מאגר זיהוי לוחמים</h1>
@@ -368,8 +390,8 @@
                 <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." onkeyup="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
             
-            <button class="btn" onclick="exportToCSV()">ייצא ל-CSV</button>
-            <button class="btn btn-secondary" onclick="resetFilters()">איפוס פילטרים</button>
+            <button class="btn" onclick="exportToCSV()" id="exportBtn">ייצא ל-CSV</button>
+            <button class="btn btn-secondary" onclick="resetFilters()" id="resetBtn">איפוס פילטרים</button>
             <!-- New button for toggling view mode -->
             <button class="btn btn-secondary" onclick="toggleViewMode()" id="viewToggleBtn">עבור לתצוגת כרטיסים</button>
         </div>
@@ -413,33 +435,53 @@
         let allLocations = new Set();
         let allOrganizations = new Set();
         let allRanks = new Set();
+
+        // Initialize currentLang based on browser language or default to Hebrew
+        let currentLang = (navigator.language || navigator.userLanguage).startsWith('he') ? 'he' : 'en';
+        document.documentElement.lang = currentLang;
+        document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        
         let isCardView = false; // Flag to track current view mode
 
-        // Define headersList and headerMap globally
-        const headersList = [
-            "מס' פוסט", "מס' לוחם", "תאריך", "מיקום", "פירוט מיקום", "שם באנגלית",
-            "שם בערבית", "כינוי", "תיאור ברשת", "דרגה/תפקיד", "ארגון", "פעילות",
-            "בני משפחה", "מס' קורבנות", "לוחמים נוספים", "הערות"
+        // Define headers for data properties and their display labels in multiple languages
+        const dataFieldKeys = [
+            'post_id', 'combatant_id', 'date', 'location', 'location_details',
+            'name_english', 'name_arabic', 'nickname', 'description_online',
+            'rank_role', 'organization', 'activity', 'family_casualties_info',
+            'casualties_count', 'additional_combatants', 'notes'
         ];
-        
-        // Mapping from normalized keys to display headers for programmatic access
-        const headerKeyToDisplay = {
-            'post_id': "מס' פוסט",
-            'combatant_id': "מס' לוחם",
-            'date': "תאריך",
-            'location': "מיקום",
-            'location_details': "פירוט מיקום",
-            'name_english': "שם באנגלית",
-            'name_arabic': "שם בערבית",
-            'nickname': "כינוי",
-            'description_online': "תיאור ברשת",
-            'rank_role': "דרגה/תפקיד",
-            'organization': "ארגון",
-            'activity': "פעילות",
-            'family_casualties_info': "בני משפחה",
-            'casualties_count': "מס' קורבנות",
-            'additional_combatants': "לוחמים נוספים",
-            'notes': "הערות"
+
+        // Translation labels for various UI elements
+        const labels = {
+            post_id: { he: "מס' פוסט", en: "Post ID" },
+            combatant_id: { he: "מס' לוחם", en: "Combatant ID" },
+            date: { he: "תאריך", en: "Date" },
+            location: { he: "מיקום", en: "Location" },
+            location_details: { he: "פירוט מיקום", en: "Location Details" },
+            name_english: { he: "שם באנגלית", en: "English Name" },
+            name_arabic: { he: "שם בערבית", en: "Arabic Name" },
+            nickname: { he: "כינוי", en: "Nickname" },
+            description_online: { he: "תיאור ברשת", en: "Online Description" },
+            rank_role: { he: "דרגה/תפקיד", en: "Rank/Role" },
+            organization: { he: "ארגון", en: "Organization" },
+            activity: { he: "פעילות", en: "Activity" },
+            family_casualties_info: { he: "בני משפחה", en: "Family" },
+            casualties_count: { he: "מס' קורבנות", en: "Victims" },
+            additional_combatants: { he: "לוחמים נוספים", en: "Other Fighters" },
+            notes: { he: "הערות", en: "Notes" },
+            toggle_view_card: { he: "עבור לתצוגת כרטיסים", en: "Switch to Card View" },
+            toggle_view_table: { he: "עבור לתצוגת טבלה", en: "Switch to Table View" },
+            search_placeholder: { he: "חפש שם, מיקום או תיאור...", en: "Search name, location or description..." },
+            reset_filters: { he: "איפוס פילטרים", en: "Reset Filters" },
+            export_csv: { he: "ייצא ל-CSV", en: "Export to CSV" },
+            total_combatants: { he: "סה\"כ לוחמים", en: "Total Combatants" },
+            total_casualties: { he: "סה\"כ קורבנות", en: "Total Casualties" },
+            family_members: { he: "בני משפחה", en: "Family Members" },
+            high_ranking: { he: "בכירים", en: "High Ranking" },
+            loading_data: { he: "טוען נתונים...", en: "Loading data..." },
+            no_matching_data: { he: "אין נתונים תואמים למסננים שנבחרו.", en: "No matching data for selected filters." },
+            error_loading_data: { he: "שגיאה בטעינת הנתונים: ", en: "Error loading data: " },
+            csv_file_error: { he: ". וודא שקובץ data.csv קיים ובפורמט תקין.", en: ". Ensure data.csv exists and is in a valid format." }
         };
 
 
@@ -482,7 +524,7 @@
          */
         function normalizeHeader(header) {
             // Trim whitespace, convert to lowercase, and replace spaces with underscores.
-            // Use the headerKeyToDisplay for reverse mapping if needed, or define specific mappings
+            // Map specific Hebrew headers to English keys for consistency in JS.
             const normalized = header.trim().toLowerCase();
             switch (normalized) {
                 case 'מס\' פוסט': return 'post_id';
@@ -513,6 +555,8 @@
         async function loadData() {
             console.log('--- Starting loadData function ---');
             document.getElementById('loadingOverlay').classList.remove('hidden'); // Show loading indicator
+            document.getElementById('loadingOverlay').querySelector('p').textContent = labels.loading_data[currentLang];
+
             try {
                 // Fetch the CSV file
                 console.log('Attempting to fetch data.csv...');
@@ -576,7 +620,7 @@
                 console.error('Error loading or parsing CSV:', error);
                 // Display a user-friendly message if data fails to load
                 const container = document.getElementById('contentArea');
-                container.innerHTML = '<p class="text-red-500 font-bold text-center py-4">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</p>';
+                container.innerHTML = `<p class="text-red-500 font-bold text-center py-4">${labels.error_loading_data[currentLang]}${error.message}${labels.csv_file_error[currentLang]}</p>`;
                 console.log('--- loadData function finished with error ---');
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden'); // Hide loading indicator
@@ -589,7 +633,7 @@
         function populateFilters() {
             const addOptions = (selectId, dataSet) => {
                 const selectElement = document.getElementById(selectId);
-                selectElement.innerHTML = '<option value="">הכל</option>'; // Keep "All" option
+                selectElement.innerHTML = `<option value="">${currentLang === 'he' ? 'הכל' : 'All'}</option>`; // Keep "All" option
                 // Sort options alphabetically for better user experience
                 Array.from(dataSet).sort().forEach(item => {
                     if (item) { // Ensure item is not empty
@@ -644,10 +688,55 @@
 
             currentData = visibleRowsData; // Store filtered data
             renderData(currentData); // Render the data (either table or cards)
-
+            updateTextByLang(); // Update translated texts after rendering
             console.log(`Displayed ${currentData.length} rows after filtering.`);
             updateStats(currentData);
             console.log('--- filterTable function finished ---');
+        }
+
+        /**
+         * Updates all dynamic text elements in the UI based on the current language.
+         */
+        function updateTextByLang() {
+            document.getElementById('langBtn').textContent = currentLang === 'he' ? 'English' : 'עברית';
+            document.getElementById('searchBox')?.setAttribute('placeholder', labels.search_placeholder[currentLang]);
+            
+            const viewToggleBtn = document.getElementById('viewToggleBtn');
+            if (viewToggleBtn) {
+                viewToggleBtn.textContent = isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang];
+            }
+            
+            document.getElementById('resetBtn').textContent = labels.reset_filters[currentLang];
+            document.getElementById('exportBtn').textContent = labels.export_csv[currentLang];
+
+            // Update header text in site-header
+            document.querySelector('.site-header h1').textContent = currentLang === 'he' ? 'מאגר זיהוי לוחמים' : 'Combatant Identification Database';
+            document.querySelector('.site-header p').textContent = currentLang === 'he' ? 'נתונים מתעדכנים באופן רציף' : 'Data updated continuously';
+
+            // Update stats labels
+            document.querySelector('.stat-card:nth-child(1) div:last-child').textContent = labels.total_combatants[currentLang];
+            document.querySelector('.stat-card:nth-child(2) div:last-child').textContent = labels.total_casualties[currentLang];
+            document.querySelector('.stat-card:nth-child(3) div:last-child').textContent = labels.family_members[currentLang];
+            document.querySelector('.stat-card:nth-child(4) div:last-child').textContent = labels.high_ranking[currentLang];
+
+            // Update filter labels
+            document.querySelector('.filters-bar .filter-group:nth-child(1) label').textContent = currentLang === 'he' ? 'מיקום:' : 'Location:';
+            document.querySelector('.filters-bar .filter-group:nth-child(2) label').textContent = currentLang === 'he' ? 'ארגון:' : 'Organization:';
+            document.querySelector('.filters-bar .filter-group:nth-child(3) label').textContent = currentLang === 'he' ? 'דרגה:' : 'Rank:';
+            document.querySelector('.filters-bar .filter-group:nth-child(4) label').textContent = currentLang === 'he' ? 'חיפוש:' : 'Search:';
+
+            // Update filter options (e.g., "All" option)
+            const filterSelects = ['locationFilter', 'orgFilter', 'rankFilter'];
+            filterSelects.forEach(selectId => {
+                const selectElement = document.getElementById(selectId);
+                if (selectElement && selectElement.options.length > 0) {
+                    selectElement.options[0].textContent = currentLang === 'he' ? 'הכל' : 'All';
+                }
+            });
+            
+            // Re-render data to apply new language to dynamic content (table headers, card labels)
+            // This is called inside filterTable() and toggleLanguage() already, so it's handled.
+            // If this was a standalone call, it would be renderData(currentData);
         }
 
         /**
@@ -659,10 +748,10 @@
             const btn = document.getElementById('viewToggleBtn');
             if (isCardView) {
                 document.body.classList.remove('table-view'); // Switch to card view (no table-view class)
-                btn.textContent = 'עבור לתצוגת טבלה';
+                btn.textContent = labels.toggle_view_table[currentLang];
             } else {
                 document.body.classList.add('table-view'); // Switch to table view
-                btn.textContent = 'עבור לתצוגת כרטיסים';
+                btn.textContent = labels.toggle_view_card[currentLang];
             }
             renderData(currentData); // Re-render data based on new view mode
         }
@@ -689,7 +778,7 @@
 
             // Handle empty data
             if (data.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 font-bold text-center py-4">אין נתונים תואמים למסננים שנבחרו.</p>';
+                container.innerHTML = `<p class="text-gray-500 font-bold text-center py-4">${labels.no_matching_data[currentLang]}</p>`;
                 return;
             }
 
@@ -723,7 +812,7 @@
                     else if (org.includes('mujahideen')) orgClass = 'org-mujahideen';
                     else if (org.includes('fatah')) orgClass = 'org-fatah';
                     
-                    // Build card content with highlighting and detailed info
+                    // Build card content with highlighting and detailed info using labels for titles
                     card.innerHTML = `
                         <h2 class="${orgClass}">${highlight(row.name_english || '', searchTerm)} | ${highlight(row.name_arabic || '', searchTerm)}</h2>
                         <div class="sub">${highlight(row.description_online || '', searchTerm)}</div>
@@ -732,19 +821,19 @@
                             <span>📅 ${highlight(row.date || '', searchTerm)}</span>
                         </div>
                         <div class="card-details">
-                            <p><strong>מס' פוסט:</strong> ${highlight(row.post_id || '', searchTerm)}</p>
-                            <p><strong>מס' לוחם:</strong> ${highlight(row.combatant_id || '', searchTerm)}</p>
-                            <p><strong>פירוט מיקום:</strong> ${highlight(row.location_details || '', searchTerm)}</p>
-                            <p><strong>כינוי:</strong> ${highlight(row.nickname || '', searchTerm)}</p>
-                            <p><strong>דרגה/תפקיד:</strong> ${highlight(row.rank_role || '', searchTerm)}</p>
-                            <p><strong>ארגון:</strong> ${highlight(row.organization || '', searchTerm)}</p>
-                            <p><strong>פעילות:</strong> ${highlight(row.activity || '', searchTerm)}</p>
+                            <p><strong>${labels.post_id[currentLang]}:</strong> ${highlight(row.post_id || '', searchTerm)}</p>
+                            <p><strong>${labels.combatant_id[currentLang]}:</strong> ${highlight(row.combatant_id || '', searchTerm)}</p>
+                            <p><strong>${labels.location_details[currentLang]}:</strong> ${highlight(row.location_details || '', searchTerm)}</p>
+                            <p><strong>${labels.nickname[currentLang]}:</strong> ${highlight(row.nickname || '', searchTerm)}</p>
+                            <p><strong>${labels.rank_role[currentLang]}:</strong> ${highlight(row.rank_role || '', searchTerm)}</p>
+                            <p><strong>${labels.organization[currentLang]}:</strong> ${highlight(row.organization || '', searchTerm)}</p>
+                            <p><strong>${labels.activity[currentLang]}:</strong> ${highlight(row.activity || '', searchTerm)}</p>
                             <p class="${(row.family_casualties_info && row.family_casualties_info !== '-') ? 'family-casualties' : ''}">
-                                <strong>בני משפחה:</strong> ${highlight(row.family_casualties_info || '', searchTerm)}
+                                <strong>${labels.family_casualties_info[currentLang]}:</strong> ${highlight(row.family_casualties_info || '', searchTerm)}
                             </p>
-                            <p><strong>מס' קורבנות:</strong> ${highlight(String(row.casualties_count || '0'), searchTerm)}</p>
-                            <p><strong>לוחמים נוספים:</strong> ${highlight(row.additional_combatants || '', searchTerm)}</p>
-                            <p><strong>הערות:</strong> ${highlight(row.notes || '', searchTerm)}</p>
+                            <p><strong>${labels.casualties_count[currentLang]}:</strong> ${highlight(String(row.casualties_count || '0'), searchTerm)}</p>
+                            <p><strong>${labels.additional_combatants[currentLang]}:</strong> ${highlight(row.additional_combatants || '', searchTerm)}</p>
+                            <p><strong>${labels.notes[currentLang]}:</strong> ${highlight(row.notes || '', searchTerm)}</p>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -759,7 +848,7 @@
                     <table class="w-full border-collapse text-sm">
                         <thead>
                             <tr>
-                                ${headersList.map(header => `<th>${header}</th>`).join('')}
+                                ${dataFieldKeys.map(key => `<th>${labels[key][currentLang]}</th>`).join('')}
                             </tr>
                         </thead>
                         <tbody>
@@ -774,41 +863,27 @@
                                     trClasses.push('regular-mujahid');
                                 }
 
-                                // Map rowData keys to headersList order for table display
-                                const orderedCells = [
-                                    rowData.post_id,
-                                    rowData.combatant_id,
-                                    rowData.date,
-                                    rowData.location,
-                                    rowData.location_details,
-                                    rowData.name_english,
-                                    rowData.name_arabic,
-                                    rowData.nickname,
-                                    rowData.description_online,
-                                    rowData.rank_role,
-                                    rowData.organization,
-                                    rowData.activity,
-                                    rowData.family_casualties_info,
-                                    rowData.casualties_count,
-                                    rowData.additional_combatants,
-                                    rowData.notes
-                                ];
+                                // Map rowData keys to dataFieldKeys order for table display
+                                const orderedCells = dataFieldKeys.map(key => rowData[key]);
 
                                 const cellHTML = orderedCells.map((cellContent, index) => {
                                     let tdClasses = [];
-                                    if (index === 3) tdClasses.push('location');
-                                    if (index === 5) tdClasses.push('name-col', 'english');
-                                    if (index === 6) tdClasses.push('name-col', 'arabic');
-                                    if (index === 8) tdClasses.push('quote');
-                                    if (index === 10) {
+                                    // Apply classes based on the original data key (headersDataKeys[index])
+                                    const currentKey = dataFieldKeys[index];
+
+                                    if (currentKey === 'location') tdClasses.push('location');
+                                    if (currentKey === 'name_english') tdClasses.push('name-col', 'english');
+                                    if (currentKey === 'name_arabic') tdClasses.push('name-col', 'arabic');
+                                    if (currentKey === 'description_online') tdClasses.push('quote');
+                                    if (currentKey === 'organization') {
                                         const org = rowData.organization ? rowData.organization.toLowerCase() : '';
                                         if (org.includes('hamas')) tdClasses.push('org-hamas');
                                         else if (org.includes('dflp')) tdClasses.push('org-dflp');
                                         else if (org.includes('mujahideen')) tdClasses.push('org-mujahideen');
                                         else if (org.includes('fatah')) tdClasses.push('org-fatah');
                                     }
-                                    if (index === 12 && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
-                                        tdClasses.push('family-casualties');
+                                    if (currentKey === 'family_casualties_info' && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
+                                        tdClasses.push('family-casualties'); // This class is styled to inherit/normal by the new CSS
                                     }
                                     return `<td class="${tdClasses.join(' ')}">${highlight(String(cellContent || ''), searchTerm)}</td>`;
                                 }).join('');
@@ -893,30 +968,13 @@
                 return;
             }
 
-            // Use headersList for CSV headers in the correct order
-            const headers = headersList.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n';
+            // Use dataFieldKeys for CSV headers in the correct order, and get translated headers
+            const headers = dataFieldKeys.map(key => `"${labels[key][currentLang].replace(/"/g, '""')}"`).join(',') + '\n';
             let csvContent = headers;
             
             currentData.forEach(rowData => {
-                // Manually list fields in the order they appear in headersList
-                const orderedValues = [
-                    rowData.post_id,
-                    rowData.combatant_id,
-                    rowData.date,
-                    rowData.location,
-                    rowData.location_details,
-                    rowData.name_english,
-                    rowData.name_arabic,
-                    rowData.nickname,
-                    rowData.description_online,
-                    rowData.rank_role,
-                    rowData.organization,
-                    rowData.activity,
-                    rowData.family_casualties_info,
-                    rowData.casualties_count,
-                    rowData.additional_combatants,
-                    rowData.notes
-                ];
+                // Manually list fields in the order they appear in dataFieldKeys
+                const orderedValues = dataFieldKeys.map(key => rowData[key]);
                 
                 const rowDataCsv = orderedValues.map(cellContent => {
                     return '"' + String(cellContent || '').replace(/"/g, '""') + '"'; // Quote and escape double quotes
@@ -954,12 +1012,11 @@
             if (window.innerWidth <= 768) {
                 isCardView = true;
                 document.body.classList.remove('table-view'); // Ensure table-view is off for card view
-                document.getElementById('viewToggleBtn').textContent = 'עבור לתצוגת טבלה';
             } else {
                 isCardView = false;
                 document.body.classList.add('table-view'); // Ensure table-view is on for table view
-                document.getElementById('viewToggleBtn').textContent = 'עבור לתצוגת כרטיסים';
             }
+            updateTextByLang(); // Update all text elements including the view toggle button
             loadData(); // Load data after initial view mode is set
         });
     </script>
