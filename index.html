@@ -79,6 +79,7 @@
             width: 100%; /* Ensure inputs take full width of their group */
         }
 
+        /* The .table-container is now applied to #contentArea when rendering a table */
         .table-container {
             overflow-x: auto; /* Enable horizontal scrolling for tables */
             max-height: 70vh; /* Max height for vertical scrolling */
@@ -86,21 +87,22 @@
             width: 100%; /* Ensure container takes full width */
         }
 
-        table {
+        /* Styles for the dynamically created table */
+        #contentArea table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.75rem; /* Smaller font size for table content */
             min-width: 1200px; /* Minimum width to prevent squishing on small screens */
         }
 
-        th, td {
+        #contentArea th, #contentArea td {
             padding: 0.5rem 0.375rem;
             border: 1px solid #e2e8f0; /* Light border for cells */
             text-align: center;
             vertical-align: top;
         }
 
-        th {
+        #contentArea th {
             background: #4a5568; /* Darker header background */
             color: white;
             font-weight: bold;
@@ -110,11 +112,11 @@
             font-size: 0.625rem; /* Even smaller font for headers */
         }
 
-        tr:nth-child(even) {
+        #contentArea tr:nth-child(even) {
             background-color: #f7fafc; /* Zebra striping */
         }
 
-        tr:hover {
+        #contentArea tr:hover {
             background-color: #edf2f7; /* Hover effect */
         }
 
@@ -235,65 +237,65 @@
                 width: 100%;
                 min-width: unset; /* Remove min-width on small screens */
             }
-            .table-container {
-                max-height: 60vh; /* Adjust height for mobile */
-            }
+            /* table-container styles apply here for table view */
         }
         
         /* New styles for Card View */
-        body.card-view .table-container {
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
             overflow-x: hidden; /* Disable horizontal scrolling in card view */
         }
-
-        body.card-view table,
-        body.card-view thead,
-        body.card-view tbody,
-        body.card-view th,
-        body.card-view td,
-        body.card-view tr {
-            display: block; /* Make table elements behave like blocks */
-        }
-        body.card-view thead tr {
-            position: absolute; /* Hide table headers in card view */
-            top: -9999px;
-            left: -9999px;
-        }
-        body.card-view tr {
-            margin-bottom: 1rem; /* Space between cards */
+        .card {
             background: white;
-            padding: 1rem;
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: flex; /* Use flexbox for card layout */
-            flex-direction: column; /* Stack items vertically within a card */
-            align-items: flex-start; /* Align text to the start */
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             text-align: right; /* Ensure text is right-aligned */
         }
-        body.card-view td {
-            border: none; /* Remove cell borders in card view */
-            position: relative;
-            padding-right: 7rem; /* Space for the data-label */
-            text-align: right; /* Align text to the right */
-            width: 100%; /* Full width for each data row in a card */
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-        body.card-view td::before {
-            content: attr(data-label); /* Use data-label as a visible label */
+        .card h2 {
+            font-size: 1.1rem;
             font-weight: bold;
-            color: #4a5568;
-            position: absolute;
-            right: 0.5rem; /* Position label to the right */
-            top: 0.5rem;
-            width: 6rem; /* Fixed width for labels */
-            text-align: right; /* Align label text to the right */
+            color: #4a1d1d; /* Dark red for main heading */
+            margin-bottom: 0.25rem;
         }
-        /* Specific adjustments for card view elements */
-        body.card-view .location,
-        body.card-view .name-col,
-        body.card-view .quote {
-            max-width: unset; /* Remove max-width constraints in card view */
-            word-wrap: normal; /* Allow normal word wrap */
+        .card .sub {
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .card .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #333;
+            border-top: 1px solid #eee;
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .card .card-details {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed #eee;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .card .card-details p {
+            margin-bottom: 0.25rem;
+        }
+        .card .card-details strong {
+            color: #4a5568; /* Darker gray for labels */
+        }
+        mark {
+            background-color: #fffbbf; /* Light yellow for highlighting */
+            padding: 0 0.1em;
+            border-radius: 0.1em;
         }
     </style>
 </head>
@@ -340,32 +342,9 @@
             <button class="btn btn-secondary" onclick="toggleViewMode()" id="viewToggleBtn">עבור לתצוגת כרטיסים</button>
         </div>
         
-        <div class="table-container">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>מס' פוסט</th>
-                        <th>מס' לוחם</th>
-                        <th>תאריך</th>
-                        <th>מיקום</th>
-                        <th>פירוט מיקום</th>
-                        <th>שם באנגלית</th>
-                        <th>שם בערבית</th>
-                        <th>כינוי</th>
-                        <th>תיאור ברשת</th>
-                        <th>דרגה/תפקיד</th>
-                        <th>ארגון</th>
-                        <th>פעילות</th>
-                        <th>בני משפחה</th>
-                        <th>מס' קורבנות</th>
-                        <th>לוחמים נוספים</th>
-                        <th>הערות</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Table rows will be populated dynamically by JavaScript -->
-                </tbody>
-            </table>
+        <!-- The contentArea will dynamically hold either the table or the card grid -->
+        <div id="contentArea" class="table-container">
+            <!-- Content will be populated by JavaScript -->
         </div>
 
         <!-- Loading Overlay -->
@@ -398,9 +377,39 @@
 
     <script>
         let originalTableData = []; // Stores the raw data from CSV
+        let currentData = []; // Stores the currently filtered data for rendering and export
         let allLocations = new Set();
         let allOrganizations = new Set();
         let allRanks = new Set();
+        let isCardView = false; // Flag to track current view mode
+
+        // Define headersList and headerMap globally
+        const headersList = [
+            "מס' פוסט", "מס' לוחם", "תאריך", "מיקום", "פירוט מיקום", "שם באנגלית",
+            "שם בערבית", "כינוי", "תיאור ברשת", "דרגה/תפקיד", "ארגון", "פעילות",
+            "בני משפחה", "מס' קורבנות", "לוחמים נוספים", "הערות"
+        ];
+        
+        // Mapping from normalized keys to display headers for programmatic access
+        const headerKeyToDisplay = {
+            'post_id': "מס' פוסט",
+            'combatant_id': "מס' לוחם",
+            'date': "תאריך",
+            'location': "מיקום",
+            'location_details': "פירוט מיקום",
+            'name_english': "שם באנגלית",
+            'name_arabic': "שם בערבית",
+            'nickname': "כינוי",
+            'description_online': "תיאור ברשת",
+            'rank_role': "דרגה/תפקיד",
+            'organization': "ארגון",
+            'activity': "פעילות",
+            'family_casualties_info': "בני משפחה",
+            'casualties_count': "מס' קורבנות",
+            'additional_combatants': "לוחמים נוספים",
+            'notes': "הערות"
+        };
+
 
         /**
          * Function to parse a CSV line, robustly handling quoted fields.
@@ -441,7 +450,7 @@
          */
         function normalizeHeader(header) {
             // Trim whitespace, convert to lowercase, and replace spaces with underscores.
-            // Map specific Hebrew headers to English keys for consistency in JS.
+            // Use the headerKeyToDisplay for reverse mapping if needed, or define specific mappings
             const normalized = header.trim().toLowerCase();
             switch (normalized) {
                 case 'מס\' פוסט': return 'post_id';
@@ -496,8 +505,9 @@
 
                 if (lines.length <= 1) { // Check if there are headers and at least one data row
                     console.warn("CSV file is empty or contains only headers. No data to display.");
-                    document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
-                        '<tr><td colspan="16" class="text-gray-500 font-bold text-center">אין נתונים להצגה בטבלה. וודא שקובץ data.csv מכיל שורות נתונים.</td></tr>';
+                    // Display "No data" message using renderData's empty state handling
+                    currentData = []; // Ensure currentData is empty
+                    renderData(currentData);
                     return;
                 }
                 
@@ -533,8 +543,8 @@
             } catch (error) {
                 console.error('Error loading or parsing CSV:', error);
                 // Display a user-friendly message if data fails to load
-                document.getElementById('dataTable').getElementsByTagName('tbody')[0].innerHTML = 
-                    '<tr><td colspan="16" class="text-red-500 font-bold text-center">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</td></tr>';
+                const container = document.getElementById('contentArea');
+                container.innerHTML = '<p class="text-red-500 font-bold text-center py-4">שגיאה בטעינת הנתונים: ' + error.message + '. וודא שקובץ data.csv קיים ובפורמט תקין.</p>';
                 console.log('--- loadData function finished with error ---');
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden'); // Hide loading indicator
@@ -576,9 +586,6 @@
             const rankFilter = document.getElementById('rankFilter').value.toLowerCase();
             const searchBox = document.getElementById('searchBox').value.toLowerCase();
             
-            const tbody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-            tbody.innerHTML = ''; // Clear current table rows
-
             let visibleRowsData = [];
             originalTableData.forEach(rowData => {
                 const location = rowData.location ? rowData.location.toLowerCase() : '';
@@ -599,106 +606,27 @@
                                     description.includes(searchBox);
                 
                 if (locationMatch && orgMatch && rankMatch && searchMatch) {
-                    const rowElement = createTableRow(rowData);
-                    tbody.appendChild(rowElement);
                     visibleRowsData.push(rowData);
                 }
             });
 
-            if (visibleRowsData.length === 0) {
-                // Display "No results" message
-                tbody.innerHTML = '<tr><td colspan="16" class="text-gray-500 font-bold text-center">אין נתונים תואמים למסננים שנבחרו.</td></tr>';
-            }
+            currentData = visibleRowsData; // Store filtered data
+            renderData(currentData); // Render the data (either table or cards)
 
-            console.log(`Displayed ${visibleRowsData.length} rows after filtering.`);
-            updateStats(visibleRowsData);
+            console.log(`Displayed ${currentData.length} rows after filtering.`);
+            updateStats(currentData);
             console.log('--- filterTable function finished ---');
-        }
-
-        // Define headersList globally or pass it to createTableRow if it's dynamic
-        const headersList = [
-            "מס' פוסט", "מס' לוחם", "תאריך", "מיקום", "פירוט מיקום", "שם באנגלית",
-            "שם בערבית", "כינוי", "תיאור ברשת", "דרגה/תפקיד", "ארגון", "פעילות",
-            "בני משפחה", "מס' קורבנות", "לוחמים נוספים", "הערות"
-        ];
-
-        /**
-         * Creates a table row (<tr>) element from a data object.
-         * Applies appropriate CSS classes for styling and color coding.
-         * @param {object} rowData - An object containing the data for a single row.
-         * @returns {HTMLTableRowElement} The created table row element.
-         */
-        function createTableRow(rowData) {
-            const tr = document.createElement('tr');
-            let rankClass = '';
-            const lowerRank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
-            if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
-                rankClass = 'high-ranking';
-            } else if (lowerRank.includes('commander')) {
-                rankClass = 'field-commander';
-            } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
-                rankClass = 'regular-mujahid';
-            }
-            if (rankClass) tr.classList.add(rankClass);
-
-            const cells = [
-                rowData.post_id,
-                rowData.combatant_id,
-                rowData.date,
-                rowData.location,
-                rowData.location_details,
-                rowData.name_english,
-                rowData.name_arabic,
-                rowData.nickname,
-                rowData.description_online,
-                rowData.rank_role,
-                rowData.organization,
-                rowData.activity,
-                rowData.family_casualties_info,
-                rowData.casualties_count,
-                rowData.additional_combatants,
-                rowData.notes
-            ];
-
-            const searchTerm = document.getElementById('searchBox')?.value.toLowerCase() || '';
-
-            cells.forEach((cellContent, index) => {
-                const td = document.createElement('td');
-                // Set the data-label attribute for card view
-                td.setAttribute('data-label', headersList[index]); 
-                // Apply highlighting
-                td.innerHTML = highlight(String(cellContent || ''), searchTerm);
-
-                // Apply specific classes based on content or column index
-                if (index === 3) td.classList.add('location'); // Location column
-                if (index === 5) td.classList.add('name-col', 'english'); // English name
-                if (index === 6) td.classList.add('name-col', 'arabic'); // Arabic name
-                if (index === 8) td.classList.add('quote'); // Description online
-                if (index === 10) { // Organization column
-                    const org = rowData.organization ? rowData.organization.toLowerCase() : '';
-                    if (org.includes('hamas')) td.classList.add('org-hamas');
-                    else if (org.includes('dflp')) td.classList.add('org-dflp');
-                    else if (org.includes('mujahideen')) td.classList.add('org-mujahideen');
-                    else if (org.includes('fatah')) td.classList.add('org-fatah');
-                }
-                if (index === 12 && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
-                    td.classList.add('family-casualties');
-                }
-                tr.appendChild(td);
-            });
-            return tr;
         }
 
         /**
          * Toggles the view mode between table and card view.
-         * Adds or removes the 'card-view' class from the body and updates the button text.
+         * Updates the global `isCardView` flag and button text, then re-renders data.
          */
         function toggleViewMode() {
-            const isCardView = document.body.classList.toggle('card-view');
+            isCardView = !isCardView;
             const btn = document.getElementById('viewToggleBtn');
             btn.textContent = isCardView ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים';
-            // Re-render table to apply new styles correctly after view mode change
-            filterTable(); 
+            renderData(currentData); // Re-render data based on new view mode
         }
 
         /**
@@ -711,6 +639,148 @@
             if (!term) return text;
             const re = new RegExp(`(${term})`, 'gi');
             return text.replace(re, '<mark>$1</mark>');
+        }
+
+        /**
+         * Renders the data either as a table or a grid of cards based on `isCardView`.
+         * @param {Array<object>} data - The array of data objects to render.
+         */
+        function renderData(data) {
+            const container = document.getElementById('contentArea');
+            container.innerHTML = ''; // Clear existing content
+
+            // Handle empty data
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 font-bold text-center py-4">אין נתונים תואמים למסננים שנבחרו.</p>';
+                return;
+            }
+
+            const searchTerm = document.getElementById('searchBox')?.value.toLowerCase() || '';
+
+            if (isCardView) {
+                const grid = document.createElement('div');
+                grid.className = 'card-grid';
+
+                data.forEach(row => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    // Apply rank-based styling to the card itself
+                    let rankClass = '';
+                    const lowerRank = row.rank_role ? row.rank_role.toLowerCase() : '';
+                    if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
+                        rankClass = 'high-ranking';
+                    } else if (lowerRank.includes('commander')) {
+                        rankClass = 'field-commander';
+                    } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
+                        rankClass = 'regular-mujahid';
+                    }
+                    if (rankClass) card.classList.add(rankClass);
+
+                    let orgClass = '';
+                    const org = row.organization ? row.organization.toLowerCase() : '';
+                    if (org.includes('hamas')) orgClass = 'org-hamas';
+                    else if (org.includes('dflp')) orgClass = 'org-dflp';
+                    else if (org.includes('mujahideen')) orgClass = 'org-mujahideen';
+                    else if (org.includes('fatah')) orgClass = 'org-fatah';
+                    
+                    // Build card content with highlighting and detailed info
+                    card.innerHTML = `
+                        <h2 class="${orgClass}">${highlight(row.name_english || '', searchTerm)} | ${highlight(row.name_arabic || '', searchTerm)}</h2>
+                        <div class="sub">${highlight(row.description_online || '', searchTerm)}</div>
+                        <div class="meta">
+                            <span>📍 ${highlight(row.location || '', searchTerm)}</span>
+                            <span>📅 ${highlight(row.date || '', searchTerm)}</span>
+                        </div>
+                        <div class="card-details">
+                            <p><strong>מס' פוסט:</strong> ${highlight(row.post_id || '', searchTerm)}</p>
+                            <p><strong>מס' לוחם:</strong> ${highlight(row.combatant_id || '', searchTerm)}</p>
+                            <p><strong>פירוט מיקום:</strong> ${highlight(row.location_details || '', searchTerm)}</p>
+                            <p><strong>כינוי:</strong> ${highlight(row.nickname || '', searchTerm)}</p>
+                            <p><strong>דרגה/תפקיד:</strong> ${highlight(row.rank_role || '', searchTerm)}</p>
+                            <p><strong>ארגון:</strong> ${highlight(row.organization || '', searchTerm)}</p>
+                            <p><strong>פעילות:</strong> ${highlight(row.activity || '', searchTerm)}</p>
+                            <p class="${(row.family_casualties_info && row.family_casualties_info !== '-') ? 'family-casualties' : ''}">
+                                <strong>בני משפחה:</strong> ${highlight(row.family_casualties_info || '', searchTerm)}
+                            </p>
+                            <p><strong>מס' קורבנות:</strong> ${highlight(String(row.casualties_count || '0'), searchTerm)}</p>
+                            <p><strong>לוחמים נוספים:</strong> ${highlight(row.additional_combatants || '', searchTerm)}</p>
+                            <p><strong>הערות:</strong> ${highlight(row.notes || '', searchTerm)}</p>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+            } else {
+                // Render table view
+                // Ensure the table-container class is added back for table view
+                container.classList.add('table-container');
+
+                const tableHTML = `
+                    <table class="w-full border-collapse text-sm">
+                        <thead>
+                            <tr>
+                                ${headersList.map(header => `<th>${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(rowData => {
+                                let trClasses = [];
+                                const lowerRank = rowData.rank_role ? rowData.rank_role.toLowerCase() : '';
+                                if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
+                                    trClasses.push('high-ranking');
+                                } else if (lowerRank.includes('commander')) {
+                                    trClasses.push('field-commander');
+                                } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
+                                    trClasses.push('regular-mujahid');
+                                }
+
+                                // Map rowData keys to headersList order for table display
+                                const orderedCells = [
+                                    rowData.post_id,
+                                    rowData.combatant_id,
+                                    rowData.date,
+                                    rowData.location,
+                                    rowData.location_details,
+                                    rowData.name_english,
+                                    rowData.name_arabic,
+                                    rowData.nickname,
+                                    rowData.description_online,
+                                    rowData.rank_role,
+                                    rowData.organization,
+                                    rowData.activity,
+                                    rowData.family_casualties_info,
+                                    rowData.casualties_count,
+                                    rowData.additional_combatants,
+                                    rowData.notes
+                                ];
+
+                                const cellHTML = orderedCells.map((cellContent, index) => {
+                                    let tdClasses = [];
+                                    if (index === 3) tdClasses.push('location');
+                                    if (index === 5) tdClasses.push('name-col', 'english');
+                                    if (index === 6) tdClasses.push('name-col', 'arabic');
+                                    if (index === 8) tdClasses.push('quote');
+                                    if (index === 10) {
+                                        const org = rowData.organization ? rowData.organization.toLowerCase() : '';
+                                        if (org.includes('hamas')) tdClasses.push('org-hamas');
+                                        else if (org.includes('dflp')) tdClasses.push('org-dflp');
+                                        else if (org.includes('mujahideen')) tdClasses.push('org-mujahideen');
+                                        else if (org.includes('fatah')) tdClasses.push('org-fatah');
+                                    }
+                                    if (index === 12 && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
+                                        tdClasses.push('family-casualties');
+                                    }
+                                    return `<td class="${tdClasses.join(' ')}">${highlight(String(cellContent || ''), searchTerm)}</td>`;
+                                }).join('');
+
+                                return `<tr class="${trClasses.join(' ')}">${cellHTML}</tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>`;
+                container.innerHTML = tableHTML;
+            }
         }
 
 
@@ -781,21 +851,40 @@
          * Exports the currently visible table data to a CSV file.
          */
         function exportToCSV() {
-            const table = document.getElementById('dataTable');
-            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-            const rows = table.querySelectorAll('tbody tr');
+            if (currentData.length === 0) {
+                console.warn("No data to export.");
+                return;
+            }
+
+            // Use headersList for CSV headers in the correct order
+            const headers = headersList.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n';
+            let csvContent = headers;
             
-            let csvContent = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n'; // Add headers
-            
-            rows.forEach(row => {
-                // In card view, td elements have data-label. In table view, they don't necessarily.
-                // We need to extract the actual cell values.
-                const cells = Array.from(row.querySelectorAll('td'));
-                const rowData = cells.map(cell => {
-                    // Get the actual text content, not including the pseudo-element content
-                    return '"' + cell.textContent.replace(/"/g, '""') + '"'; 
+            currentData.forEach(rowData => {
+                // Manually list fields in the order they appear in headersList
+                const orderedValues = [
+                    rowData.post_id,
+                    rowData.combatant_id,
+                    rowData.date,
+                    rowData.location,
+                    rowData.location_details,
+                    rowData.name_english,
+                    rowData.name_arabic,
+                    rowData.nickname,
+                    rowData.description_online,
+                    rowData.rank_role,
+                    rowData.organization,
+                    rowData.activity,
+                    rowData.family_casualties_info,
+                    rowData.casualties_count,
+                    rowData.additional_combatants,
+                    rowData.notes
+                ];
+                
+                const rowDataCsv = orderedValues.map(cellContent => {
+                    return '"' + String(cellContent || '').replace(/"/g, '""') + '"'; // Quote and escape double quotes
                 }).join(',');
-                csvContent += rowData + '\n';
+                csvContent += rowDataCsv + '\n';
             });
             
             // Create a Blob and download the CSV file
