@@ -33,50 +33,75 @@
             max-width: 1600px; /* Max width for larger screens */
         }
 
-        .header {
-            background: linear-gradient(135deg, #2c5282, #3182ce); /* Blue gradient */
-            color: white;
-            padding: 1.25rem;
+        /* Redesigned header */
+        .site-header {
             text-align: center;
+            padding: 1.5rem 1rem;
+            background: white;
             border-top-left-radius: 0.5rem;
             border-top-right-radius: 0.5rem;
         }
+        .site-header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a202c; /* Dark text for header title */
+        }
+        .site-header p {
+            font-size: 1rem;
+            color: #718096; /* Gray text for header subtitle */
+            margin-top: 0.25rem;
+        }
 
-        .controls {
-            padding: 1rem;
-            background: #f7fafc; /* Lighter background for controls */
-            border-bottom: 1px solid #e2e8f0; /* Subtle bottom border */
+        /* Redesigned filters bar */
+        .filters-bar {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-            gap: 0.625rem; /* Space between filter groups */
-            align-items: center;
-            justify-content: center; /* Center controls */
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
         }
-
-        .filter-group {
+        .filters-bar .filter-group {
             display: flex;
-            flex-direction: column; /* Stack label and input on mobile */
-            align-items: flex-start; /* Align label to start */
-            gap: 0.3125rem; /* Space between label and input */
-            width: 100%; /* Full width for filter group on small screens */
+            flex-direction: column;
+            gap: 0.25rem;
+            width: auto; /* Allow filter groups to size naturally */
+            align-items: flex-start; /* Align labels to the start */
         }
-
-        @media (min-width: 768px) {
-            .filter-group {
-                flex-direction: row; /* Row direction on larger screens */
-                align-items: center;
-                width: auto; /* Auto width for filter group on larger screens */
-            }
+        .filters-bar label {
+            font-size: 0.75rem;
+            color: #4a5568;
         }
-
-        select, input[type="text"] {
-            padding: 0.3125rem 0.625rem;
+        .filters-bar select,
+        .filters-bar input[type="text"] {
+            padding: 0.4rem;
+            font-size: 0.875rem;
             border: 1px solid #cbd5e0;
-            border-radius: 0.25rem; /* Slightly rounded inputs */
-            font-size: 0.875rem; /* Smaller font size for inputs */
-            min-width: 8rem; /* Minimum width for inputs */
-            flex-grow: 1; /* Allow inputs to grow */
-            width: 100%; /* Ensure inputs take full width of their group */
+            border-radius: 0.375rem;
+            background: white;
+            min-width: 140px; /* Minimum width for filter inputs */
+            flex-grow: 1; /* Allow inputs to grow within their group */
+        }
+
+        /* Responsive adjustments for controls */
+        @media (max-width: 768px) {
+            .filters-bar {
+                flex-direction: column; /* Stack controls vertically on small screens */
+                align-items: stretch; /* Stretch controls to full width */
+                padding: 1rem; /* More padding on small screens */
+            }
+            .filters-bar .filter-group {
+                width: 100%; /* Full width for filter group on small screens */
+                align-items: stretch; /* Stretch labels and inputs */
+            }
+            .filters-bar select,
+            .filters-bar input[type="text"],
+            .btn {
+                width: 100%; /* Full width for buttons and inputs */
+                min-width: unset; /* Remove min-width on small screens */
+            }
         }
 
         /* The .table-container is now applied to #contentArea when rendering a table */
@@ -171,7 +196,6 @@
             cursor: pointer;
             font-size: 0.75rem;
             transition: background-color 0.2s ease-in-out; /* Smooth transition */
-            width: 100%; /* Full width on small screens */
             margin-top: 0.5rem; /* Space from other controls */
         }
 
@@ -221,26 +245,8 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Responsive adjustments for overall layout and controls */
-        @media (max-width: 768px) {
-            .controls {
-                flex-direction: column; /* Stack controls vertically on small screens */
-                align-items: stretch; /* Stretch controls to full width */
-            }
-            .filter-group {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.125rem;
-            }
-            select, input[type="text"] {
-                width: 100%;
-                min-width: unset; /* Remove min-width on small screens */
-            }
-            /* table-container styles apply here for table view */
-        }
         
-        /* New styles for Card View */
+        /* Card View styles (default for mobile, or when .table-view is absent) */
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -297,18 +303,44 @@
             padding: 0 0.1em;
             border-radius: 0.1em;
         }
+
+        /* Default card view styles for screens up to 768px wide */
+        @media (max-width: 768px) {
+            body:not(.table-view) .table-container {
+                overflow-x: hidden; /* Disable horizontal scrolling in card view on mobile */
+            }
+            body:not(.table-view) #contentArea table { /* Target table only when not in table-view */
+                display: none; /* Hide the table in card view on mobile */
+            }
+            body:not(.table-view) #contentArea .card-grid {
+                display: grid; /* Ensure grid is active in card view on mobile */
+            }
+        }
+
+        /* Ensure table view is active on larger screens by default */
+        @media (min-width: 769px) {
+            body.table-view .table-container {
+                overflow-x: auto; /* Enable horizontal scrolling for tables */
+            }
+            body.table-view #contentArea table {
+                display: table; /* Ensure table is visible in table-view on desktop */
+            }
+            body.table-view #contentArea .card-grid {
+                display: none; /* Hide card grid in table view on desktop */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container relative"> <!-- Added 'relative' for loading overlay positioning -->
-        <div class="header">
-            <h1 class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
-            <p class="text-sm mt-1">נתונים מתעדכנים באופן רציף</p>
+        <div class="site-header">
+            <h1>מאגר זיהוי לוחמים</h1>
+            <p>נתונים מתעדכנים באופן רציף</p>
         </div>
 
-        <div class="controls">
+        <div class="filters-bar">
             <div class="filter-group">
-                <label for="locationFilter" class="text-gray-700 text-sm">מיקום:</label>
+                <label for="locationFilter">מיקום:</label>
                 <select id="locationFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                     <option value="">הכל</option>
                     <!-- Options will be populated dynamically -->
@@ -316,7 +348,7 @@
             </div>
             
             <div class="filter-group">
-                <label for="orgFilter" class="text-gray-700 text-sm">ארגון:</label>
+                <label for="orgFilter">ארגון:</label>
                 <select id="orgFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                     <option value="">הכל</option>
                     <!-- Options will be populated dynamically -->
@@ -324,7 +356,7 @@
             </div>
             
             <div class="filter-group">
-                <label for="rankFilter" class="text-gray-700 text-sm">דרגה:</label>
+                <label for="rankFilter">דרגה:</label>
                 <select id="rankFilter" onchange="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                     <option value="">הכל</option>
                     <!-- Options will be populated dynamically -->
@@ -332,7 +364,7 @@
             </div>
             
             <div class="filter-group">
-                <label for="searchBox" class="text-gray-700 text-sm">חיפוש:</label>
+                <label for="searchBox">חיפוש:</label>
                 <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." onkeyup="filterTable()" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
             
@@ -625,7 +657,13 @@
         function toggleViewMode() {
             isCardView = !isCardView;
             const btn = document.getElementById('viewToggleBtn');
-            btn.textContent = isCardView ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים';
+            if (isCardView) {
+                document.body.classList.remove('table-view'); // Switch to card view (no table-view class)
+                btn.textContent = 'עבור לתצוגת טבלה';
+            } else {
+                document.body.classList.add('table-view'); // Switch to table view
+                btn.textContent = 'עבור לתצוגת כרטיסים';
+            }
             renderData(currentData); // Re-render data based on new view mode
         }
 
@@ -658,6 +696,7 @@
             const searchTerm = document.getElementById('searchBox')?.value.toLowerCase() || '';
 
             if (isCardView) {
+                container.classList.remove('table-container'); // Remove table scrolling for card view
                 const grid = document.createElement('div');
                 grid.className = 'card-grid';
 
@@ -714,8 +753,7 @@
                 container.appendChild(grid);
             } else {
                 // Render table view
-                // Ensure the table-container class is added back for table view
-                container.classList.add('table-container');
+                container.classList.add('table-container'); // Add table scrolling for table view
 
                 const tableHTML = `
                     <table class="w-full border-collapse text-sm">
@@ -807,8 +845,7 @@
                     // Example: "264-265, 266" - treat each as a separate combatant entry
                     totalCombatants += combatantNumbers.split(',').reduce((acc, current) => {
                         if (current.includes('-')) {
-                            const range = current.split('-');
-                            return acc + (parseInt(range[1]) - parseInt(range[0]) + 1);
+                            return acc + (parseInt(current.split('-')[1]) - parseInt(current.split('-')[0]) + 1);
                         }
                         return acc + 1;
                     }, 0);
@@ -912,7 +949,19 @@
         }
         
         // Load data and initialize table on page load
-        window.onload = loadData;
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set initial view mode based on screen width
+            if (window.innerWidth <= 768) {
+                isCardView = true;
+                document.body.classList.remove('table-view'); // Ensure table-view is off for card view
+                document.getElementById('viewToggleBtn').textContent = 'עבור לתצוגת טבלה';
+            } else {
+                isCardView = false;
+                document.body.classList.add('table-view'); // Ensure table-view is on for table view
+                document.getElementById('viewToggleBtn').textContent = 'עבור לתצוגת כרטיסים';
+            }
+            loadData(); // Load data after initial view mode is set
+        });
     </script>
 </body>
 </html>
