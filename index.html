@@ -154,7 +154,7 @@
         .arabic { font-family: 'Arial Unicode MS', Arial, sans-serif; direction: rtl; }
         .english { direction: ltr; text-align: left; }
         .quote { font-style: italic; color: #4a5568; max-width: 200px; word-wrap: break-word; font-size: 0.7rem; }
-        .family-casualties { color: #e53e3e; font-weight: bold; } /* Red for family casualties */
+        /* Removed .family-casualties red/bold style to be overridden by language specific style */
 
         /* Organization colors */
         .org-hamas { color: #059669; font-weight: bold; }
@@ -330,9 +330,10 @@
             }
         }
 
-        /* Update: Support for language toggle button and dynamic button translation */
+        /* New styles from user prompt for language toggle and family casualties */
         .card-view td.family-casualties,
-        td.family-casualties {
+        td.family-casualties,
+        .card .family {
             color: inherit; /* Reset color for family casualties */
             font-weight: normal; /* Reset font-weight for family casualties */
         }
@@ -346,7 +347,7 @@
             font-size: 0.75rem;
             cursor: pointer;
             box-shadow: 0 0 3px rgba(0,0,0,0.2);
-            z-index: 99; /* Ensure it's above other content */
+            z-index: 1000; /* Ensure it's above other content */
         }
     </style>
 </head>
@@ -355,10 +356,10 @@
     <div class="language-toggle" onclick="toggleLanguage()" id="langBtn">English</div>
 
     <div class="container relative"> <!-- Added 'relative' for loading overlay positioning -->
-        <div class="site-header">
-            <h1>מאגר זיהוי לוחמים</h1>
-            <p>נתונים מתעדכנים באופן רציף</p>
-        </div>
+        <header class="site-header" id="siteHeader">
+            <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
+            <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
+        </header>
 
         <div class="filters-bar">
             <div class="filter-group">
@@ -453,6 +454,8 @@
 
         // Translation labels for various UI elements
         const labels = {
+            site_title: { he: "מאגר זיהוי לוחמים", en: "Combatant Identification Database" },
+            site_sub: { he: "נתונים מתעדכנים באופן רציף", en: "Data updated continuously" },
             post_id: { he: "מס' פוסט", en: "Post ID" },
             combatant_id: { he: "מס' לוחם", en: "Combatant ID" },
             date: { he: "תאריך", en: "Date" },
@@ -699,6 +702,9 @@
          */
         function updateTextByLang() {
             document.getElementById('langBtn').textContent = currentLang === 'he' ? 'English' : 'עברית';
+            document.getElementById('siteTitle').textContent = labels.site_title[currentLang];
+            document.getElementById('siteSub').textContent = labels.site_sub[currentLang];
+
             document.getElementById('searchBox')?.setAttribute('placeholder', labels.search_placeholder[currentLang]);
             
             const viewToggleBtn = document.getElementById('viewToggleBtn');
@@ -709,21 +715,17 @@
             document.getElementById('resetBtn').textContent = labels.reset_filters[currentLang];
             document.getElementById('exportBtn').textContent = labels.export_csv[currentLang];
 
-            // Update header text in site-header
-            document.querySelector('.site-header h1').textContent = currentLang === 'he' ? 'מאגר זיהוי לוחמים' : 'Combatant Identification Database';
-            document.querySelector('.site-header p').textContent = currentLang === 'he' ? 'נתונים מתעדכנים באופן רציף' : 'Data updated continuously';
-
             // Update stats labels
-            document.querySelector('.stat-card:nth-child(1) div:last-child').textContent = labels.total_combatants[currentLang];
-            document.querySelector('.stat-card:nth-child(2) div:last-child').textContent = labels.total_casualties[currentLang];
-            document.querySelector('.stat-card:nth-child(3) div:last-child').textContent = labels.family_members[currentLang];
-            document.querySelector('.stat-card:nth-child(4) div:last-child').textContent = labels.high_ranking[currentLang];
+            document.querySelector('#totalCombatants').nextElementSibling.textContent = labels.total_combatants[currentLang];
+            document.querySelector('#totalCasualties').nextElementSibling.textContent = labels.total_casualties[currentLang];
+            document.querySelector('#familyCasualties').nextElementSibling.textContent = labels.family_members[currentLang];
+            document.querySelector('#highRanking').nextElementSibling.textContent = labels.high_ranking[currentLang];
 
             // Update filter labels
-            document.querySelector('.filters-bar .filter-group:nth-child(1) label').textContent = currentLang === 'he' ? 'מיקום:' : 'Location:';
-            document.querySelector('.filters-bar .filter-group:nth-child(2) label').textContent = currentLang === 'he' ? 'ארגון:' : 'Organization:';
-            document.querySelector('.filters-bar .filter-group:nth-child(3) label').textContent = currentLang === 'he' ? 'דרגה:' : 'Rank:';
-            document.querySelector('.filters-bar .filter-group:nth-child(4) label').textContent = currentLang === 'he' ? 'חיפוש:' : 'Search:';
+            document.querySelector('.filters-bar .filter-group:nth-child(1) label').textContent = labels.location[currentLang] + ':';
+            document.querySelector('.filters-bar .filter-group:nth-child(2) label').textContent = labels.organization[currentLang] + ':';
+            document.querySelector('.filters-bar .filter-group:nth-child(3) label').textContent = labels.rank_role[currentLang] + ':';
+            document.querySelector('.filters-bar .filter-group:nth-child(4) label').textContent = labels.search_placeholder[currentLang].split(' ')[0] + ':'; // "חיפוש:" / "Search:"
 
             // Update filter options (e.g., "All" option)
             const filterSelects = ['locationFilter', 'orgFilter', 'rankFilter'];
@@ -813,6 +815,7 @@
                     else if (org.includes('fatah')) orgClass = 'org-fatah';
                     
                     // Build card content with highlighting and detailed info using labels for titles
+                    // Main title and subtitle
                     card.innerHTML = `
                         <h2 class="${orgClass}">${highlight(row.name_english || '', searchTerm)} | ${highlight(row.name_arabic || '', searchTerm)}</h2>
                         <div class="sub">${highlight(row.description_online || '', searchTerm)}</div>
@@ -820,22 +823,31 @@
                             <span>📍 ${highlight(row.location || '', searchTerm)}</span>
                             <span>📅 ${highlight(row.date || '', searchTerm)}</span>
                         </div>
-                        <div class="card-details">
-                            <p><strong>${labels.post_id[currentLang]}:</strong> ${highlight(row.post_id || '', searchTerm)}</p>
-                            <p><strong>${labels.combatant_id[currentLang]}:</strong> ${highlight(row.combatant_id || '', searchTerm)}</p>
-                            <p><strong>${labels.location_details[currentLang]}:</strong> ${highlight(row.location_details || '', searchTerm)}</p>
-                            <p><strong>${labels.nickname[currentLang]}:</strong> ${highlight(row.nickname || '', searchTerm)}</p>
-                            <p><strong>${labels.rank_role[currentLang]}:</strong> ${highlight(row.rank_role || '', searchTerm)}</p>
-                            <p><strong>${labels.organization[currentLang]}:</strong> ${highlight(row.organization || '', searchTerm)}</p>
-                            <p><strong>${labels.activity[currentLang]}:</strong> ${highlight(row.activity || '', searchTerm)}</p>
-                            <p class="${(row.family_casualties_info && row.family_casualties_info !== '-') ? 'family-casualties' : ''}">
-                                <strong>${labels.family_casualties_info[currentLang]}:</strong> ${highlight(row.family_casualties_info || '', searchTerm)}
-                            </p>
-                            <p><strong>${labels.casualties_count[currentLang]}:</strong> ${highlight(String(row.casualties_count || '0'), searchTerm)}</p>
-                            <p><strong>${labels.additional_combatants[currentLang]}:</strong> ${highlight(row.additional_combatants || '', searchTerm)}</p>
-                            <p><strong>${labels.notes[currentLang]}:</strong> ${highlight(row.notes || '', searchTerm)}</p>
-                        </div>
+                        <div class="card-details"></div>
                     `;
+                    
+                    const cardDetailsDiv = card.querySelector('.card-details');
+
+                    // Add all other fields dynamically, skipping empty/dash ones
+                    dataFieldKeys.forEach(key => {
+                        // Skip fields already rendered in h2, sub, meta
+                        if (['name_english', 'name_arabic', 'description_online', 'location', 'date'].includes(key)) {
+                            return;
+                        }
+
+                        const value = row[key];
+                        // Only add if value is not empty or just a dash
+                        if (value && value.trim() !== '' && value.trim() !== '-') {
+                            const p = document.createElement('p');
+                            // Apply 'family' class if it's family_casualties_info
+                            if (key === 'family_casualties_info') {
+                                p.classList.add('family'); // Use 'family' class for specific styling
+                            }
+                            p.innerHTML = `<strong>${labels[key][currentLang]}:</strong> ${highlight(String(value), searchTerm)}`;
+                            cardDetailsDiv.appendChild(p);
+                        }
+                    });
+
                     grid.appendChild(card);
                 });
 
@@ -868,7 +880,7 @@
 
                                 const cellHTML = orderedCells.map((cellContent, index) => {
                                     let tdClasses = [];
-                                    // Apply classes based on the original data key (headersDataKeys[index])
+                                    // Apply classes based on the original data key (dataFieldKeys[index])
                                     const currentKey = dataFieldKeys[index];
 
                                     if (currentKey === 'location') tdClasses.push('location');
@@ -882,9 +894,8 @@
                                         else if (org.includes('mujahideen')) tdClasses.push('org-mujahideen');
                                         else if (org.includes('fatah')) tdClasses.push('org-fatah');
                                     }
-                                    if (currentKey === 'family_casualties_info' && rowData.family_casualties_info && rowData.family_casualties_info !== '-') {
-                                        tdClasses.push('family-casualties'); // This class is styled to inherit/normal by the new CSS
-                                    }
+                                    // The 'family-casualties' class is now handled by the general CSS reset
+                                    // so no specific class addition logic needed here for the visual red/bold effect.
                                     return `<td class="${tdClasses.join(' ')}">${highlight(String(cellContent || ''), searchTerm)}</td>`;
                                 }).join('');
 
