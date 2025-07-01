@@ -1,395 +1,393 @@
-/* Universal transition for smoother changes */
+/* קובץ CSS משופר למראה רשמי ומקצועי */
+
+/* ========== הגדרות בסיס ========== */
 * {
-    transition: all 0.2s ease;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-/* Custom styles to ensure full responsiveness and aesthetic appeal */
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f3f4f6; /* Light gray background */
-    direction: rtl; /* Default direction set by JS on load */
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    direction: rtl;
     margin: 0;
     padding: 0;
     display: flex;
-    flex-direction: column; /* Stack children vertically */
-    justify-content: flex-start; /* Align to top */
-    align-items: center; /* Center horizontally */
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     min-height: 100vh;
-    padding-top: 1.25rem; /* Add some padding at the top */
-    padding-bottom: 1.25rem; /* Add some padding at the bottom */
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    color: #2d3748;
+    line-height: 1.6;
 }
 
-/* Dark mode simple styling */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #1f2937;
-        color: #f9fafb;
-    }
-    .container {
-        background: #374151;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    .site-header {
-        background: linear-gradient(135deg, #4c51bf 0%, #6b4382 100%);
-    }
-    .site-header h1 {
-        color: #f9fafb;
-    }
-    .site-header p {
-        color: #d1d5db;
-    }
-    .filters-bar {
-        background: #2d3748;
-        border-top: 1px solid #4a5568;
-        border-bottom: 1px solid #4a5568;
-    }
-    .filters-bar label {
-        color: #d1d5db;
-    }
-    .filters-bar select,
-    .filters-bar input[type="text"] {
-        background: #4a5568;
-        border: 1px solid #6b7280;
-        color: #f9fafb;
-    }
-    #contentArea th {
-        background: #2d3748;
-        color: #f9fafb;
-        border: 1px solid #4a5568;
-    }
-    #contentArea td {
-        border: 1px solid #4a5568;
-    }
-    #contentArea tr:nth-child(even) {
-        background-color: #374151;
-    }
-    #contentArea tr:hover {
-        background-color: #4a5568;
-    }
-    .stat-card {
-        background: #374151;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-    .stat-number {
-        color: #93c5fd;
-    }
-    .btn {
-        background: #4f46e5;
-    }
-    .btn:hover {
-        background: #6366f1;
-    }
-    .btn-secondary {
-        background: #4a5568;
-    }
-    .btn-secondary:hover {
-        background: #6b7280;
-    }
-    .loading-overlay {
-        background-color: rgba(55, 65, 81, 0.8);
-    }
-    .spinner {
-        border-left-color: #93c5fd;
-    }
-    .text-gray-700 {
-        color: #d1d5db;
-    }
-    .card {
-        background: #374151;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-    .card h2 {
-        color: #fca5a5;
-    }
-    .card .sub, .card .meta span, .card .card-details p, .card .card-details strong {
-        color: #d1d5db;
-    }
-    mark {
-        background-color: #6366f1; /* Darker highlight */
-        color: white;
-    }
-    .language-toggle {
-        background: #2d3748;
-        color: #d1d5db;
-        box-shadow: 0 0 3px rgba(255,255,255,0.2);
-    }
-    .error-banner {
-        background-color: #4a1d1d;
-        border: 1px solid #881a1a;
-        color: #fca5a5;
-    }
-    .error-banner small {
-        color: #fca5a5;
-    }
-    .error-banner button {
-        color: #fca5a5;
-    }
-    .toast {
-        background: #065f46;
-    }
-    .toast.error {
-        background: #881a1a;
-    }
-    .results-counter {
-        background: #374151;
-        color: #93c5fd;
-    }
-    .sort-indicator {
-        color: #d1d5db;
-    }
-}
-
+/* ========== קונטיינר ראשי ========== */
 .container {
-    background: white;
-    border-radius: 0.5rem; /* Rounded corners */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
     overflow: hidden;
-    margin-bottom: 1.25rem; /* Margin between containers */
+    margin-bottom: 2rem;
     width: 100%;
-    max-width: 1600px; /* Max width for larger screens */
+    max-width: 1600px;
+    border: 1px solid rgba(226, 232, 240, 0.3);
+    backdrop-filter: blur(10px);
+    position: relative;
 }
 
-/* Redesigned header with gradient */
+/* ========== כותרת האתר - מראה רשמי ========== */
 .site-header {
     text-align: center;
-    padding: 1.5rem 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 50%, #1a202c 100%);
     color: white;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-}
-.site-header h1 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white; /* White text for header title */
-}
-.site-header p {
-    font-size: 1rem;
-    color: #e0e0e0; /* Lighter gray text for header subtitle */
-    margin-top: 0.25rem;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Redesigned filters bar */
+.site-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+}
+
+.site-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.site-header p {
+    font-size: 1.1rem;
+    color: #e2e8f0;
+    margin-top: 0.5rem;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+}
+
+/* ========== סרגל פילטרים מקצועי ========== */
 .filters-bar {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
-    padding: 1rem 0;
-    background: #f7fafc;
-    border-top: 1px solid #e2e8f0;
-    border-bottom: 1px solid #e2e8f0;
+    align-items: end;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-bottom: 2px solid #e2e8f0;
+    position: relative;
 }
-.filters-bar .filter-group {
+
+.filters-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #cbd5e0 50%, transparent 100%);
+}
+
+.filter-group {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    width: auto; /* Allow filter groups to size naturally */
-    align-items: flex-start; /* Align labels to the start */
+    gap: 0.5rem;
+    min-width: 150px;
+    flex: 1;
+    max-width: 200px;
 }
-.filters-bar label {
-    font-size: 0.75rem;
+
+.filter-group label {
+    font-size: 0.875rem;
     color: #4a5568;
+    font-weight: 600;
+    text-align: right;
 }
+
 .filters-bar select,
 .filters-bar input[type="text"] {
-    padding: 0.4rem;
-    font-size: 0.875rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
     background: white;
-    min-width: 140px; /* Minimum width for filter inputs */
-    flex-grow: 1; /* Allow inputs to grow within their group */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* Responsive adjustments for controls */
-@media (max-width: 768px) {
-    .filters-bar {
-        flex-direction: column; /* Stack controls vertically on small screens */
-        align-items: stretch; /* Stretch controls to full width */
-        padding: 1rem; /* More padding on small screens */
-    }
-    .filters-bar .filter-group {
-        width: 100%; /* Full width for filter group on small screens */
-        align-items: stretch; /* Stretch labels and inputs */
-    }
-    .filters-bar select,
-    .filters-bar input[type="text"],
-    .btn {
-        width: 100%; /* Full width for buttons and inputs */
-        min-width: unset; /* Remove min-width on small screens */
-    }
-    /* Mobile tap target improvements */
-    .btn {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        min-height: 44px; /* Minimum comfortable tap target */
-    }
-    .filters-bar select,
-    .filters-bar input {
-        min-height: 44px;
-        font-size: 16px; /* Prevents iPhone zoom on focus */
-    }
+.filters-bar select:focus,
+.filters-bar input[type="text"]:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    transform: translateY(-1px);
 }
 
-/* The .table-container is now applied to #contentArea when rendering a table */
-.table-container {
-    overflow-x: auto; /* Enable horizontal scrolling for tables */
-    max-height: 70vh; /* Max height for vertical scrolling */
-    overflow-y: auto;
-    width: 100%; /* Ensure container takes full width */
+.filters-bar select:hover,
+.filters-bar input[type="text"]:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Effect for loading on table/card container */
-.table-container.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-
-/* Styles for the dynamically created table */
-#contentArea table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.75rem; /* Smaller font size for table content */
-    min-width: 1200px; /* Minimum width to prevent squishing on small screens */
-}
-
-#contentArea th, #contentArea td {
-    padding: 0.5rem 0.375rem;
-    border: 1px solid #e2e8f0; /* Light border for cells */
-    text-align: center;
-    vertical-align: top;
-}
-
-#contentArea th {
-    background: #4a5568; /* Darker header background */
-    color: white;
-    font-weight: bold;
-    position: sticky; /* Sticky header */
-    top: 0;
-    z-index: 10;
-    font-size: 0.625rem; /* Even smaller font for headers */
-}
-
-#contentArea tr:nth-child(even) {
-    background-color: #f7fafc; /* Zebra striping */
-}
-
-/* Animation for table rows */
-#contentArea tr {
-    transition: background-color 0.2s ease;
-}
-
-#contentArea tr:hover {
-    background-color: #edf2f7; /* Hover effect */
-}
-
-/* Color coding by rank */
-.high-ranking { background-color: #fed7d7 !important; } /* Reddish for high ranking */
-.field-commander { background-color: #feebc8 !important; } /* Orange for field commander */
-.regular-mujahid { background-color: #f0fff4 !important; } /* Greenish for regular */
-
-/* Text directions and sizes */
-.arabic { font-family: 'Arial Unicode MS', Arial, sans-serif; direction: rtl; }
-.english { direction: ltr; text-align: left; }
-.quote { font-style: italic; color: #4a5568; max-width: 200px; word-wrap: break-word; font-size: 0.7rem; }
-
-/* Organization colors */
-.org-hamas { color: #059669; font-weight: bold; }
-.org-dflp { color: #dc2626; font-weight: bold; }
-.org-mujahideen { color: #7c2d12; font-weight: bold; }
-.org-fatah { color: #1e40af; font-weight: bold; }
-
-.stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid for stats */
-    gap: 1rem;
-    padding: 1.25rem;
-    background: #f7fafc;
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
-}
-
-.stat-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: all 0.3s ease; /* Transition for hover effect */
-}
-.stat-card:hover {
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
-}
-
-.stat-number {
-    font-size: 1.5rem; /* Larger font for numbers */
-    font-weight: bold;
-    color: #2b6cb0; /* Blue color for numbers */
-    margin-bottom: 0.3125rem;
-}
-
+/* ========== כפתורים מקצועיים ========== */
 .btn {
-    background: #48bb78; /* Green button */
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.75rem;
-    transition: all 0.3s ease; /* Smooth transition */
-    transform: scale(1); /* Initial scale for animation */
-    margin-top: 0.5rem; /* Space from other controls */
-    display: flex; /* Allow icon and text to sit side by side */
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem; /* Space between icon and text */
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(66, 153, 225, 0.2);
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
 }
 
 .btn:hover {
-    transform: scale(1.05); /* Slightly enlarge on hover */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Add shadow on hover */
-    background: #38a169; /* Darker green on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(66, 153, 225, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2);
 }
 
 .btn-secondary {
-    background: #607D8B; /* Grayish blue for secondary button */
+    background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+    box-shadow: 0 4px 8px rgba(113, 128, 150, 0.2);
 }
 
 .btn-secondary:hover {
-    background: #455A64; /* Darker gray blue on hover */
+    box-shadow: 0 8px 16px rgba(113, 128, 150, 0.3);
 }
 
-/* Column specific widths/breaks */
-.location { max-width: 80px; word-wrap: break-word; }
-.name-col { max-width: 120px; word-wrap: break-word; }
+/* ========== קונטיינר הטבלה ========== */
+.table-container {
+    overflow-x: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+    width: 100%;
+    border-radius: 8px;
+    margin: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
 
-/* Loading indicator styles */
+/* ========== עיצוב הטבלה ========== */
+#contentArea table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8rem;
+    min-width: 1200px;
+    background: white;
+}
+
+#contentArea th {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: white;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.75rem;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    letter-spacing: 0.025em;
+}
+
+#contentArea th:first-child {
+    border-top-right-radius: 8px;
+}
+
+#contentArea th:last-child {
+    border-top-left-radius: 8px;
+}
+
+#contentArea td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: top;
+    transition: background-color 0.2s ease;
+}
+
+#contentArea tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+#contentArea tr:hover {
+    background-color: #edf2f7;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#contentArea tr:last-child td:first-child {
+    border-bottom-right-radius: 8px;
+}
+
+#contentArea tr:last-child td:last-child {
+    border-bottom-left-radius: 8px;
+}
+
+/* ========== צבעי דרגות ========== */
+.high-ranking { 
+    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%) !important;
+    border-right: 4px solid #f56565;
+    font-weight: 600;
+}
+
+.field-commander { 
+    background: linear-gradient(135deg, #feebc8 0%, #fbd38d 100%) !important;
+    border-right: 4px solid #ed8936;
+    font-weight: 500;
+}
+
+.regular-mujahid { 
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%) !important;
+    border-right: 4px solid #48bb78;
+}
+
+/* ========== צבעי ארגונים ========== */
+.org-hamas { 
+    color: #22543d; 
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(34, 84, 61, 0.1);
+}
+
+.org-dflp { 
+    color: #742a2a; 
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(116, 42, 42, 0.1);
+}
+
+.org-mujahideen { 
+    color: #7c2d12; 
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(124, 45, 18, 0.1);
+}
+
+.org-fatah { 
+    color: #1e3a8a; 
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(30, 58, 138, 0.1);
+}
+
+/* ========== כרטיסי סטטיסטיקות ========== */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-top: 2px solid #e2e8f0;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4299e1, #3182ce, #2b6cb0);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2b6cb0 0%, #3182ce 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(43, 108, 176, 0.1);
+}
+
+.stat-card > div:last-child {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ========== אינדיקטור טעינה ========== */
 .loading-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.8);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
-    border-radius: 0.5rem;
+    border-radius: 12px;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
+    backdrop-filter: blur(5px);
 }
 
 .spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #2c5282;
+    border: 4px solid rgba(66, 153, 225, 0.1);
+    border-top: 4px solid #4299e1;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     animation: spin 1s linear infinite;
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
 }
 
 @keyframes spin {
@@ -397,238 +395,283 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Loading text animation */
-.loading-text::after {
-    content: '';
-    animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-    0%, 20% { content: ''; }
-    40% { content: '.'; }
-    60% { content: '..'; }
-    80%, 100% { content: '...'; }
-}
-
-/* Card View styles (default for mobile, or when .table-view is absent) */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem;
-    overflow-x: hidden; /* Disable horizontal scrolling in card view */
-}
-.card {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-align: right; /* Ensure text is right-aligned */
-    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
-}
-/* Hover effect for cards */
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.card h2 {
+.loading-overlay p {
+    color: #4a5568;
     font-size: 1.1rem;
-    font-weight: bold;
-    color: #4a1d1d; /* Dark red for main heading */
-    margin-bottom: 0.25rem;
-}
-.card .sub {
-    font-size: 0.85rem;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
-.card .meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-    color: #333;
-    border-top: 1px solid #eee;
-    padding-top: 0.5rem;
-    margin-top: 0.5rem;
-}
-.card .card-details {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px dashed #eee;
-    font-size: 0.75rem;
-    color: #666;
-}
-.card .card-details p {
-    margin-bottom: 0.25rem;
-}
-.card .card-details strong {
-    color: #4a5568; /* Darker gray for labels */
-}
-mark {
-    background-color: #fffbbf; /* Light yellow for highlighting */
-    padding: 0 0.1em;
-    border-radius: 0.1em;
+    font-weight: 600;
 }
 
-/* Default card view styles for screens up to 768px wide */
-@media (max-width: 768px) {
-    body:not(.table-view) .table-container {
-        overflow-x: hidden; /* Disable horizontal scrolling in card view on mobile */
-    }
-    body:not(.table-view) #contentArea table { /* Target table only when not in table-view */
-        display: none; /* Hide the table in card view on mobile */
-    }
-    body:not(.table-view) #contentArea .card-grid {
-        display: grid; /* Ensure grid is active in card view on mobile */
-    }
-}
-
-/* Ensure table view is active on larger screens by default */
-@media (min-width: 769px) {
-    body.table-view .table-container {
-        overflow-x: auto; /* Enable horizontal scrolling for tables */
-    }
-    body.table-view #contentArea table {
-        display: table; /* Ensure table is visible in table-view on desktop */
-    }
-    body.table-view #contentArea .card-grid {
-        display: none; /* Hide card grid in table view on desktop */
-    }
-}
-
-/* Styles for language toggle and family casualties field */
-.card-view td.family-casualties,
-td.family-casualties,
-.card .family {
-    color: inherit; /* Reset color for family casualties from red */
-    font-weight: normal; /* Reset font-weight for family casualties from bold */
-}
+/* ========== מתג שפה ========== */
 .language-toggle {
     position: fixed;
-    top: 1rem;
-    left: 1rem;
-    background: #edf2f7;
-    padding: 0.4rem 0.7rem;
-    border-radius: 0.3rem;
-    font-size: 0.75rem;
+    top: 2rem;
+    left: 2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 0 3px rgba(0,0,0,0.2);
-    z-index: 1000; /* Ensure it's above other content */
-}
-
-/* Error Banner styles */
-.error-banner {
-    background-color: #fee2e2; /* light red */
-    border: 1px solid #f87171; /* slightly darker red */
-    color: #b91c1c; /* dark red text */
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    position: relative;
-    text-align: right;
-    width: 100%;
-    max-width: 1600px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.error-banner strong {
-    font-weight: bold;
-}
-.error-banner small {
-    display: block;
-    margin-top: 0.25rem;
-    color: #881a1a;
-}
-.error-banner button {
-    background: none;
-    border: none;
-    color: #b91c1c;
-    font-size: 1.2rem;
-    font-weight: bold;
-    position: absolute;
-    left: 1rem; /* Position 'X' to the left for RTL */
-    top: 0.5rem;
-    cursor: pointer;
-    padding: 0 0.5rem;
-}
-
-/* Sorting indicators */
-.sort-indicator {
-    display: inline-block;
-    margin-left: 0.25rem;
-    transition: transform 0.2s;
-}
-.sort-asc .sort-indicator {
-    transform: rotate(180deg);
-}
-.sort-desc .sort-indicator {
-    transform: rotate(0deg);
-}
-
-/* Status colors for potential future use or manual application */
-.status-active { color: #22c55e; font-weight: bold; }
-.status-inactive { color: #ef4444; font-weight: bold; }
-.status-pending { color: #f59e0b; font-weight: bold; }
-
-/* Highlight important data */
-.important-data {
-    background-color: #fef3c7;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
-/* Focus indicators for accessibility */
-button:focus, select:focus, input:focus {
-    outline: 2px solid #4f46e5;
-    outline-offset: 2px;
-}
-
-/* Toast Notifications */
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end; /* Align toasts to the right */
+    transition: all 0.3s ease;
+    border: 2px solid rgba(66, 153, 225, 0.1);
+    color: #4a5568;
 }
 
+.language-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+    border-color: rgba(66, 153, 225, 0.3);
+}
+
+/* ========== הדגשת חיפוש ========== */
+mark {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    padding: 0.1em 0.2em;
+    border-radius: 4px;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
+}
+
+/* ========== עמודות מיוחדות ========== */
+.location { 
+    max-width: 100px; 
+    word-wrap: break-word;
+    font-weight: 500;
+}
+
+.name-col { 
+    max-width: 140px; 
+    word-wrap: break-word;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.quote { 
+    font-style: italic; 
+    color: #718096; 
+    max-width: 200px; 
+    word-wrap: break-word; 
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ========== כפתור חזרה למעלה ========== */
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgba(66, 153, 225, 0.3);
+    font-size: 1.2rem;
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(66, 153, 225, 0.4);
+}
+
+/* ========== הודעות Toast ========== */
 .toast {
-    background: #10b981;
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
     color: white;
     padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+    z-index: 1000;
     transform: translateX(100%);
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-    opacity: 0;
-    max-width: 300px; /* Limit toast width */
+    transition: transform 0.3s ease;
+    font-weight: 600;
 }
 
 .toast.show {
     transform: translateX(0);
-    opacity: 1;
 }
 
 .toast.error {
-    background: #ef4444;
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    box-shadow: 0 8px 20px rgba(245, 101, 101, 0.3);
 }
 
-/* Results Counter */
-.results-counter {
-    background: #e0e7ff;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    color: #3730a3;
-    margin-bottom: 1rem;
-    text-align: center;
-    display: none; /* Hidden by default, shown by JS */
+/* ========== תצוגה רספונסיבית ========== */
+@media (max-width: 768px) {
+    body {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .site-header {
+        padding: 2rem 1rem;
+    }
+
+    .site-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .filter-group {
+        width: 100%;
+        max-width: none;
+        min-width: auto;
+    }
+
+    .filters-bar select,
+    .filters-bar input[type="text"],
+    .btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .language-toggle {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .back-to-top {
+        bottom: 1rem;
+        left: 1rem;
+        width: 50px;
+        height: 50px;
+    }
+
+    .toast {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        transform: translateY(-100%);
+    }
+
+    .toast.show {
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .site-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .site-header p {
+        font-size: 1rem;
+    }
+}
+
+/* ========== מצב הדפסה ========== */
+@media print {
+    .filters-bar, 
+    .btn, 
+    .language-toggle, 
+    .back-to-top,
+    .toast {
+        display: none !important;
+    }
+    
+    .container {
+        box-shadow: none;
+        margin: 0;
+        max-width: none;
+        border: none;
+    }
+    
+    body {
+        background: white !important;
+        font-size: 10pt;
+        padding: 0;
+    }
+    
+    .site-header {
+        background: white !important;
+        color: black !important;
+        border-bottom: 2px solid #000;
+        page-break-inside: avoid;
+    }
+    
+    #contentArea th {
+        background: #f5f5f5 !important;
+        color: black !important;
+        border: 1px solid #000;
+    }
+    
+    #contentArea td {
+        border: 1px solid #000;
+        font-size: 9pt;
+    }
+    
+    .stats {
+        page-break-inside: avoid;
+        background: white !important;
+    }
+}
+
+/* ========== מצב גישה (Accessibility) ========== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========== מצב ניגודיות גבוהה ========== */
+@media (prefers-contrast: high) {
+    .container {
+        border: 3px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid #000;
+    }
+    
+    #contentArea th {
+        border: 2px solid #000;
+    }
+    
+    #contentArea td {
+        border: 1px solid #000;
+    }
 }
