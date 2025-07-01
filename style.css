@@ -1,0 +1,389 @@
+/* Custom styles to ensure full responsiveness and aesthetic appeal */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Light gray background */
+    direction: rtl; /* Default direction set by JS on load */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    justify-content: flex-start; /* Align to top */
+    align-items: center; /* Center horizontally */
+    min-height: 100vh;
+    padding-top: 1.25rem; /* Add some padding at the top */
+    padding-bottom: 1.25rem; /* Add some padding at the bottom */
+}
+
+.container {
+    background: white;
+    border-radius: 0.5rem; /* Rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    overflow: hidden;
+    margin-bottom: 1.25rem; /* Margin between containers */
+    width: 100%;
+    max-width: 1600px; /* Max width for larger screens */
+}
+
+/* Redesigned header */
+.site-header {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: white;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+.site-header h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1a202c; /* Dark text for header title */
+}
+.site-header p {
+    font-size: 1rem;
+    color: #718096; /* Gray text for header subtitle */
+    margin-top: 0.25rem;
+}
+
+/* Redesigned filters bar */
+.filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    background: #f7fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+.filters-bar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: auto; /* Allow filter groups to size naturally */
+    align-items: flex-start; /* Align labels to the start */
+}
+.filters-bar label {
+    font-size: 0.75rem;
+    color: #4a5568;
+}
+.filters-bar select,
+.filters-bar input[type="text"] {
+    padding: 0.4rem;
+    font-size: 0.875rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.375rem;
+    background: white;
+    min-width: 140px; /* Minimum width for filter inputs */
+    flex-grow: 1; /* Allow inputs to grow within their group */
+}
+
+/* Responsive adjustments for controls */
+@media (max-width: 768px) {
+    .filters-bar {
+        flex-direction: column; /* Stack controls vertically on small screens */
+        align-items: stretch; /* Stretch controls to full width */
+        padding: 1rem; /* More padding on small screens */
+    }
+    .filters-bar .filter-group {
+        width: 100%; /* Full width for filter group on small screens */
+        align-items: stretch; /* Stretch labels and inputs */
+    }
+    .filters-bar select,
+    .filters-bar input[type="text"],
+    .btn {
+        width: 100%; /* Full width for buttons and inputs */
+        min-width: unset; /* Remove min-width on small screens */
+    }
+}
+
+/* The .table-container is now applied to #contentArea when rendering a table */
+.table-container {
+    overflow-x: auto; /* Enable horizontal scrolling for tables */
+    max-height: 70vh; /* Max height for vertical scrolling */
+    overflow-y: auto;
+    width: 100%; /* Ensure container takes full width */
+}
+
+/* Styles for the dynamically created table */
+#contentArea table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem; /* Smaller font size for table content */
+    min-width: 1200px; /* Minimum width to prevent squishing on small screens */
+}
+
+#contentArea th, #contentArea td {
+    padding: 0.5rem 0.375rem;
+    border: 1px solid #e2e8f0; /* Light border for cells */
+    text-align: center;
+    vertical-align: top;
+}
+
+#contentArea th {
+    background: #4a5568; /* Darker header background */
+    color: white;
+    font-weight: bold;
+    position: sticky; /* Sticky header */
+    top: 0;
+    z-index: 10;
+    font-size: 0.625rem; /* Even smaller font for headers */
+}
+
+#contentArea tr:nth-child(even) {
+    background-color: #f7fafc; /* Zebra striping */
+}
+
+#contentArea tr:hover {
+    background-color: #edf2f7; /* Hover effect */
+}
+
+/* Color coding by rank */
+.high-ranking { background-color: #fed7d7 !important; } /* Reddish for high ranking */
+.field-commander { background-color: #feebc8 !important; } /* Orange for field commander */
+.regular-mujahid { background-color: #f0fff4 !important; } /* Greenish for regular */
+
+/* Text directions and sizes */
+.arabic { font-family: 'Arial Unicode MS', Arial, sans-serif; direction: rtl; }
+.english { direction: ltr; text-align: left; }
+.quote { font-style: italic; color: #4a5568; max-width: 200px; word-wrap: break-word; font-size: 0.7rem; }
+
+/* Organization colors */
+.org-hamas { color: #059669; font-weight: bold; }
+.org-dflp { color: #dc2626; font-weight: bold; }
+.org-mujahideen { color: #7c2d12; font-weight: bold; }
+.org-fatah { color: #1e40af; font-weight: bold; }
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid for stats */
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #f7fafc;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem; /* Larger font for numbers */
+    font-weight: bold;
+    color: #2b6cb0; /* Blue color for numbers */
+    margin-bottom: 0.3125rem;
+}
+
+.btn {
+    background: #48bb78; /* Green button */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background-color 0.2s ease-in-out; /* Smooth transition */
+    margin-top: 0.5rem; /* Space from other controls */
+}
+
+.btn:hover {
+    background: #38a169; /* Darker green on hover */
+}
+
+.btn-secondary {
+    background: #607D8B; /* Grayish blue for secondary button */
+}
+
+.btn-secondary:hover {
+    background: #455A64; /* Darker gray blue on hover */
+}
+
+/* Column specific widths/breaks */
+.location { max-width: 80px; word-wrap: break-word; }
+.name-col { max-width: 120px; word-wrap: break-word; }
+
+/* Loading indicator styles */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    border-radius: 0.5rem;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #2c5282;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Card View styles (default for mobile, or when .table-view is absent) */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+    overflow-x: hidden; /* Disable horizontal scrolling in card view */
+}
+.card {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: right; /* Ensure text is right-aligned */
+}
+.card h2 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #4a1d1d; /* Dark red for main heading */
+    margin-bottom: 0.25rem;
+}
+.card .sub {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+.card .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #333;
+    border-top: 1px solid #eee;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
+.card .card-details {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #eee;
+    font-size: 0.75rem;
+    color: #666;
+}
+.card .card-details p {
+    margin-bottom: 0.25rem;
+}
+.card .card-details strong {
+    color: #4a5568; /* Darker gray for labels */
+}
+mark {
+    background-color: #fffbbf; /* Light yellow for highlighting */
+    padding: 0 0.1em;
+    border-radius: 0.1em;
+}
+
+/* Default card view styles for screens up to 768px wide */
+@media (max-width: 768px) {
+    body:not(.table-view) .table-container {
+        overflow-x: hidden; /* Disable horizontal scrolling in card view on mobile */
+    }
+    body:not(.table-view) #contentArea table { /* Target table only when not in table-view */
+        display: none; /* Hide the table in card view on mobile */
+    }
+    body:not(.table-view) #contentArea .card-grid {
+        display: grid; /* Ensure grid is active in card view on mobile */
+    }
+}
+
+/* Ensure table view is active on larger screens by default */
+@media (min-width: 769px) {
+    body.table-view .table-container {
+        overflow-x: auto; /* Enable horizontal scrolling for tables */
+    }
+    body.table-view #contentArea table {
+        display: table; /* Ensure table is visible in table-view on desktop */
+    }
+    body.table-view #contentArea .card-grid {
+        display: none; /* Hide card grid in table view on desktop */
+    }
+}
+
+/* Styles for language toggle and family casualties field */
+.card-view td.family-casualties,
+td.family-casualties,
+.card .family {
+    color: inherit; /* Reset color for family casualties from red */
+    font-weight: normal; /* Reset font-weight for family casualties from bold */
+}
+.language-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    background: #edf2f7;
+    padding: 0.4rem 0.7rem;
+    border-radius: 0.3rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Error Banner styles */
+.error-banner {
+    background-color: #fee2e2; /* light red */
+    border: 1px solid #f87171; /* slightly darker red */
+    color: #b91c1c; /* dark red text */
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    text-align: right;
+    width: 100%;
+    max-width: 1600px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.error-banner strong {
+    font-weight: bold;
+}
+.error-banner small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #881a1a;
+}
+.error-banner button {
+    background: none;
+    border: none;
+    color: #b91c1c;
+    font-size: 1.2rem;
+    font-weight: bold;
+    position: absolute;
+    left: 1rem; /* Position 'X' to the left for RTL */
+    top: 0.5rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
+}
+
+/* Sorting indicators */
+.sort-indicator {
+    display: inline-block;
+    margin-left: 0.25rem;
+    transition: transform 0.2s;
+}
+.sort-asc .sort-indicator {
+    transform: rotate(180deg);
+}
+.sort-desc .sort-indicator {
+    transform: rotate(0deg);
+}
