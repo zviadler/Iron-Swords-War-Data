@@ -1,3 +1,8 @@
+/* Universal transition for smoother changes */
+* {
+    transition: all 0.2s ease;
+}
+
 /* Custom styles to ensure full responsiveness and aesthetic appeal */
 body {
     font-family: 'Inter', sans-serif;
@@ -14,6 +19,126 @@ body {
     padding-bottom: 1.25rem; /* Add some padding at the bottom */
 }
 
+/* Dark mode simple styling */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
+    .container {
+        background: #374151;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .site-header {
+        background: linear-gradient(135deg, #4c51bf 0%, #6b4382 100%);
+    }
+    .site-header h1 {
+        color: #f9fafb;
+    }
+    .site-header p {
+        color: #d1d5db;
+    }
+    .filters-bar {
+        background: #2d3748;
+        border-top: 1px solid #4a5568;
+        border-bottom: 1px solid #4a5568;
+    }
+    .filters-bar label {
+        color: #d1d5db;
+    }
+    .filters-bar select,
+    .filters-bar input[type="text"] {
+        background: #4a5568;
+        border: 1px solid #6b7280;
+        color: #f9fafb;
+    }
+    #contentArea th {
+        background: #2d3748;
+        color: #f9fafb;
+        border: 1px solid #4a5568;
+    }
+    #contentArea td {
+        border: 1px solid #4a5568;
+    }
+    #contentArea tr:nth-child(even) {
+        background-color: #374151;
+    }
+    #contentArea tr:hover {
+        background-color: #4a5568;
+    }
+    .stat-card {
+        background: #374151;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .stat-number {
+        color: #93c5fd;
+    }
+    .btn {
+        background: #4f46e5;
+    }
+    .btn:hover {
+        background: #6366f1;
+    }
+    .btn-secondary {
+        background: #4a5568;
+    }
+    .btn-secondary:hover {
+        background: #6b7280;
+    }
+    .loading-overlay {
+        background-color: rgba(55, 65, 81, 0.8);
+    }
+    .spinner {
+        border-left-color: #93c5fd;
+    }
+    .text-gray-700 {
+        color: #d1d5db;
+    }
+    .card {
+        background: #374151;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .card h2 {
+        color: #fca5a5;
+    }
+    .card .sub, .card .meta span, .card .card-details p, .card .card-details strong {
+        color: #d1d5db;
+    }
+    mark {
+        background-color: #6366f1; /* Darker highlight */
+        color: white;
+    }
+    .language-toggle {
+        background: #2d3748;
+        color: #d1d5db;
+        box-shadow: 0 0 3px rgba(255,255,255,0.2);
+    }
+    .error-banner {
+        background-color: #4a1d1d;
+        border: 1px solid #881a1a;
+        color: #fca5a5;
+    }
+    .error-banner small {
+        color: #fca5a5;
+    }
+    .error-banner button {
+        color: #fca5a5;
+    }
+    .toast {
+        background: #065f46;
+    }
+    .toast.error {
+        background: #881a1a;
+    }
+    .results-counter {
+        background: #374151;
+        color: #93c5fd;
+    }
+    .sort-indicator {
+        color: #d1d5db;
+    }
+}
+
 .container {
     background: white;
     border-radius: 0.5rem; /* Rounded corners */
@@ -24,22 +149,23 @@ body {
     max-width: 1600px; /* Max width for larger screens */
 }
 
-/* Redesigned header */
+/* Redesigned header with gradient */
 .site-header {
     text-align: center;
     padding: 1.5rem 1rem;
-    background: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
 }
 .site-header h1 {
     font-size: 2rem;
     font-weight: bold;
-    color: #1a202c; /* Dark text for header title */
+    color: white; /* White text for header title */
 }
 .site-header p {
     font-size: 1rem;
-    color: #718096; /* Gray text for header subtitle */
+    color: #e0e0e0; /* Lighter gray text for header subtitle */
     margin-top: 0.25rem;
 }
 
@@ -93,6 +219,17 @@ body {
         width: 100%; /* Full width for buttons and inputs */
         min-width: unset; /* Remove min-width on small screens */
     }
+    /* Mobile tap target improvements */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        min-height: 44px; /* Minimum comfortable tap target */
+    }
+    .filters-bar select,
+    .filters-bar input {
+        min-height: 44px;
+        font-size: 16px; /* Prevents iPhone zoom on focus */
+    }
 }
 
 /* The .table-container is now applied to #contentArea when rendering a table */
@@ -102,6 +239,13 @@ body {
     overflow-y: auto;
     width: 100%; /* Ensure container takes full width */
 }
+
+/* Effect for loading on table/card container */
+.table-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 
 /* Styles for the dynamically created table */
 #contentArea table {
@@ -130,6 +274,11 @@ body {
 
 #contentArea tr:nth-child(even) {
     background-color: #f7fafc; /* Zebra striping */
+}
+
+/* Animation for table rows */
+#contentArea tr {
+    transition: background-color 0.2s ease;
 }
 
 #contentArea tr:hover {
@@ -168,6 +317,11 @@ body {
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     text-align: center;
+    transition: all 0.3s ease; /* Transition for hover effect */
+}
+.stat-card:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
 }
 
 .stat-number {
@@ -185,11 +339,18 @@ body {
     border-radius: 0.25rem;
     cursor: pointer;
     font-size: 0.75rem;
-    transition: background-color 0.2s ease-in-out; /* Smooth transition */
+    transition: all 0.3s ease; /* Smooth transition */
+    transform: scale(1); /* Initial scale for animation */
     margin-top: 0.5rem; /* Space from other controls */
+    display: flex; /* Allow icon and text to sit side by side */
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Space between icon and text */
 }
 
 .btn:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Add shadow on hover */
     background: #38a169; /* Darker green on hover */
 }
 
@@ -236,6 +397,19 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* Loading text animation */
+.loading-text::after {
+    content: '';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+}
+
 /* Card View styles (default for mobile, or when .table-view is absent) */
 .card-grid {
     display: grid;
@@ -253,7 +427,14 @@ body {
     flex-direction: column;
     justify-content: space-between;
     text-align: right; /* Ensure text is right-aligned */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
 }
+/* Hover effect for cards */
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
 .card h2 {
     font-size: 1.1rem;
     font-weight: bold;
@@ -386,4 +567,68 @@ td.family-casualties,
 }
 .sort-desc .sort-indicator {
     transform: rotate(0deg);
+}
+
+/* Status colors for potential future use or manual application */
+.status-active { color: #22c55e; font-weight: bold; }
+.status-inactive { color: #ef4444; font-weight: bold; }
+.status-pending { color: #f59e0b; font-weight: bold; }
+
+/* Highlight important data */
+.important-data {
+    background-color: #fef3c7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Focus indicators for accessibility */
+button:focus, select:focus, input:focus {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end; /* Align toasts to the right */
+}
+
+.toast {
+    background: #10b981;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 0;
+    max-width: 300px; /* Limit toast width */
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.error {
+    background: #ef4444;
+}
+
+/* Results Counter */
+.results-counter {
+    background: #e0e7ff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #3730a3;
+    margin-bottom: 1rem;
+    text-align: center;
+    display: none; /* Hidden by default, shown by JS */
 }
