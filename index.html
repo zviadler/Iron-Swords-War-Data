@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מאגר זיהוי לוחמים</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -39,20 +43,28 @@
             
             <div class="filter-group">
                 <label for="searchBox">חיפוש:</label>
-                <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <input type="text" id="searchBox" placeholder="🔍 חפש שם, מיקום או תיאור..." class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
             
-            <button class="btn" id="exportBtn" aria-label="ייצא נתונים לקובץ CSV">ייצא ל-CSV</button>
-            <button class="btn btn-secondary" id="resetBtn" aria-label="אפס את כל הפילטרים והחיפוש">איפוס פילטרים</button>
-            <button class="btn btn-secondary" id="viewToggleBtn" aria-label="החלף בין תצוגת טבלה לתצוגת כרטיסים">עבור לתצוגת כרטיסים</button>
+            <button class="btn" id="exportBtn" aria-label="ייצא נתונים לקובץ CSV">
+                <i class="fas fa-download"></i> ייצא ל-CSV
+            </button>
+            <button class="btn btn-secondary" id="resetBtn" aria-label="אפס את כל הפילטרים והחיפוש">
+                <i class="fas fa-refresh"></i> איפוס פילטרים
+            </button>
+            <button class="btn btn-secondary" id="viewToggleBtn" aria-label="החלף בין תצוגת טבלה לתצוגת כרטיסים">
+                <i class="fas fa-th-list"></i> עבור לתצוגת כרטיסים
+            </button>
         </div>
+
+        <div id="resultsCounter" class="results-counter hidden"></div>
         
         <div id="contentArea" class="table-container">
             </div>
 
         <div id="loadingOverlay" class="loading-overlay hidden">
             <div class="spinner"></div>
-            <p class="text-gray-700 text-lg">טוען נתונים...</p>
+            <p class="text-gray-700 text-lg loading-text">טוען נתונים...</p>
         </div>
     </div>
     
@@ -76,6 +88,8 @@
             </div>
         </div>
     </div>
+
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="script.js"></script>
 </body>
