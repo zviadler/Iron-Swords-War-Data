@@ -70,7 +70,12 @@ const labels = {
     error_http: { he: "שגיאת HTTP: ", en: "HTTP Error: " },
     error_empty_csv: { he: "קובץ CSV ריק", en: "Empty CSV file" },
     error_data_load_context: { he: "טעינת קובץ נתונים", en: "Data file loading" },
-    error_no_source: { he: "לא ניתן לטעון נתונים מאף מקור", en: "Could not load data from any source" }
+    error_no_source: { he: "לא ניתן לטעון נתונים מאף מקור", en: "Could not load data from any source" },
+    export_success: { he: "הנתונים יוצאו בהצלחה ל-CSV!", en: "Data exported to CSV successfully!" },
+    export_no_data: { he: "אין נתונים לייצוא.", en: "No data to export." },
+    filter_reset_success: { he: "הפילטרים אופסו בהצלחה.", en: "Filters reset successfully." },
+    results_found: { he: "נמצאו {count} תוצאות", en: "{count} results found" },
+    result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" }
 };
 
 /**
@@ -168,24 +173,32 @@ function normalizeHeader(header) {
 }
 
 /**
- * Shows the loading overlay with a given message.
+ * Shows the loading overlay with a given message and adds loading class to content area.
  * @param {string} message - The message to display in the loading overlay.
  */
 function showLoadingState(message) {
     const overlay = document.getElementById('loadingOverlay');
+    const contentArea = document.getElementById('contentArea');
     if (overlay) {
-        overlay.querySelector('p').textContent = message;
+        overlay.querySelector('.loading-text').textContent = message; // Use .loading-text class
         overlay.classList.remove('hidden');
+    }
+    if (contentArea) {
+        contentArea.classList.add('loading'); // Add loading class to content area
     }
 }
 
 /**
- * Hides the loading overlay.
+ * Hides the loading overlay and removes loading class from content area.
  */
 function hideLoadingState() {
     const overlay = document.getElementById('loadingOverlay');
+    const contentArea = document.getElementById('contentArea');
     if (overlay) {
         overlay.classList.add('hidden');
+    }
+    if (contentArea) {
+        contentArea.classList.remove('loading'); // Remove loading class from content area
     }
 }
 
@@ -204,6 +217,36 @@ function showErrorMessage(error, context) {
     `;
     // Insert at the top of the body, before the main container
     document.body.insertBefore(errorDiv, document.querySelector('.container'));
+}
+
+/**
+ * Shows a toast notification.
+ * @param {string} message - The message to display.
+ * @param {string} type - 'success' or 'error'.
+ * @param {number} duration - How long the toast should be visible in ms.
+ */
+function showToast(message, type = 'success', duration = 3000) {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        console.error("Toast container not found!");
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    toastContainer.appendChild(toast);
+
+    // Force reflow for animation
+    void toast.offsetWidth;
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, duration);
 }
 
 /**
@@ -292,6 +335,7 @@ async function loadData() {
     } catch (error) {
         console.error('Error loading or parsing data:', error);
         showErrorMessage(error, labels.error_data_load_context[currentLang]);
+        showToast(labels.error_loading_data[currentLang] + error.message, 'error', 5000); // Show toast notification
         // Display no data message if loading fails
         currentData = []; // Ensure currentData is empty
         renderData(currentData);
@@ -429,7 +473,8 @@ function addSortingToTable() {
         
         // Update indicator based on current sort state
         if (currentSortColumn === index) {
-            header.classList.remove('sort-asc', 'sort-desc'); // Clear previous
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc')); // Clear all others
+            header.classList.remove('sort-asc', 'sort-desc'); // Clear previous for current
             if (currentSortDirection === 'asc') {
                 header.classList.add('sort-asc');
                 header.querySelector('.sort-indicator').innerHTML = '↑';
@@ -438,8 +483,10 @@ function addSortingToTable() {
                 header.querySelector('.sort-indicator').innerHTML = '↓';
             }
         } else {
+            // Reset others to default
+            const otherHeaderSpan = header.querySelector('.sort-indicator');
+            if (otherHeaderSpan) otherHeaderSpan.innerHTML = '↕';
             header.classList.remove('sort-asc', 'sort-desc');
-            header.querySelector('.sort-indicator').innerHTML = '↕';
         }
     });
 }
@@ -494,14 +541,16 @@ function updateTextByLang() {
     
     const viewToggleBtn = document.getElementById('viewToggleBtn');
     if (viewToggleBtn) {
-        viewToggleBtn.textContent = isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang];
+        // Update button text and icon based on current view mode
+        const iconClass = isCardView ? 'fas fa-table' : 'fas fa-th-list';
+        viewToggleBtn.innerHTML = `<i class="${iconClass}"></i> ${isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang]}`;
     }
     
     const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) resetBtn.textContent = labels.reset_filters[currentLang];
+    if (resetBtn) resetBtn.innerHTML = `<i class="fas fa-refresh"></i> ${labels.reset_filters[currentLang]}`;
 
     const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) exportBtn.textContent = labels.export_csv[currentLang];
+    if (exportBtn) exportBtn.innerHTML = `<i class="fas fa-download"></i> ${labels.export_csv[currentLang]}`;
 
     // Update stats labels
     if (document.querySelector('#totalCombatants')) document.querySelector('#totalCombatants').nextElementSibling.textContent = labels.total_combatants[currentLang];
@@ -536,6 +585,21 @@ function updateTextByLang() {
             .replace('{current}', currentPage + 1)
             .replace('{total}', totalPages === 0 ? 1 : totalPages); // Handle 0 total pages
     }
+
+    // Update results counter text
+    const resultsCounter = document.getElementById('resultsCounter');
+    if (resultsCounter) {
+        if (currentData.length === 1) {
+            resultsCounter.textContent = labels.result_found[currentLang];
+        } else {
+            resultsCounter.textContent = labels.results_found[currentLang].replace('{count}', currentData.length);
+        }
+        if (currentData.length > 0) {
+            resultsCounter.classList.remove('hidden');
+        } else {
+            resultsCounter.classList.add('hidden');
+        }
+    }
 }
 
 /**
@@ -545,12 +609,13 @@ function updateTextByLang() {
 function toggleViewMode() {
     isCardView = !isCardView;
     const btn = document.getElementById('viewToggleBtn');
+    const iconClass = isCardView ? 'fas fa-table' : 'fas fa-th-list'; // Change icon based on new state
+    btn.innerHTML = `<i class="${iconClass}"></i> ${isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang]}`;
+
     if (isCardView) {
         document.body.classList.remove('table-view'); // Switch to card view (no table-view class)
-        btn.textContent = labels.toggle_view_table[currentLang];
     } else {
         document.body.classList.add('table-view'); // Switch to table view
-        btn.textContent = labels.toggle_view_card[currentLang];
     }
     currentPage = 0; // Reset to first page on view mode change
     renderData(currentData); // Re-render data based on new view mode
@@ -569,8 +634,12 @@ function renderData(data) {
     // Handle empty data
     if (data.length === 0) {
         container.innerHTML = `<p class="text-gray-500 font-bold text-center py-4">${labels.no_matching_data[currentLang]}</p>`;
+        document.getElementById('resultsCounter').classList.add('hidden'); // Hide counter if no results
         return;
     }
+
+    // Update results counter
+    updateTextByLang(); // This will show the results counter
 
     const searchTerm = document.getElementById('searchBox')?.value.toLowerCase() || '';
 
@@ -796,6 +865,7 @@ function updateStats(data) {
  */
 function exportToCSV() {
     if (currentData.length === 0) {
+        showToast(labels.export_no_data[currentLang], 'error');
         console.warn("No data to export.");
         return;
     }
@@ -824,6 +894,9 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url); // Clean up the object URL
+
+    showToast(labels.export_success[currentLang], 'success');
 }
 
 /**
@@ -837,6 +910,7 @@ function resetFilters() {
     currentSortColumn = null; // Reset sorting
     currentSortDirection = 'asc';
     filterTable();
+    showToast(labels.filter_reset_success[currentLang], 'success');
     console.log('Filters have been reset.');
 }
 
