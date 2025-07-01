@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מאגר זיהוי לוחמים</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="language-toggle" id="langBtn" role="button" tabindex="0" aria-label="החלף שפה">English</div>
+
+    <div class="container relative"> <header class="site-header" id="siteHeader">
+            <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
+            <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
+        </header>
+
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label for="locationFilter">מיקום:</label>
+                <select id="locationFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="orgFilter">ארגון:</label>
+                <select id="orgFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="rankFilter">דרגה:</label>
+                <select id="rankFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="">הכל</option>
+                    </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchBox">חיפוש:</label>
+                <input type="text" id="searchBox" placeholder="חפש שם, מיקום או תיאור..." class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+            </div>
+            
+            <button class="btn" id="exportBtn" aria-label="ייצא נתונים לקובץ CSV">ייצא ל-CSV</button>
+            <button class="btn btn-secondary" id="resetBtn" aria-label="אפס את כל הפילטרים והחיפוש">איפוס פילטרים</button>
+            <button class="btn btn-secondary" id="viewToggleBtn" aria-label="החלף בין תצוגת טבלה לתצוגת כרטיסים">עבור לתצוגת כרטיסים</button>
+        </div>
+        
+        <div id="contentArea" class="table-container">
+            </div>
+
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p class="text-gray-700 text-lg">טוען נתונים...</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCombatants">0</div>
+                <div>סה"כ לוחמים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCasualties">0</div>
+                <div>סה"כ קורבנות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="familyCasualties">0</div>
+                <div>בני משפחה</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highRanking">0</div>
+                <div>בכירים</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
