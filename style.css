@@ -283,6 +283,7 @@ body {
     margin: 1rem;
     box-shadow: inset 0 4px 8px var(--shadow-light);
     background: var(--bg-primary);
+    padding: 1rem;
 }
 
 .table-container::-webkit-scrollbar {
@@ -309,10 +310,11 @@ body {
 #contentArea table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0;
+    /* התיקון המרכזי: יצירת רווח אנכי בין השורות */
+    border-spacing: 0 1rem;
     font-size: 0.85rem;
     min-width: 1200px;
-    background: var(--bg-primary);
+    background: transparent;
 }
 
 #contentArea th {
@@ -320,7 +322,7 @@ body {
     color: white;
     font-weight: 700;
     position: sticky;
-    top: 0;
+    top: -1rem; /* Adjust sticky position due to container padding */
     z-index: 10;
     font-size: 0.8rem;
     padding: 1.25rem 0.875rem;
@@ -331,14 +333,7 @@ body {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     transition: all 0.3s ease;
-}
-
-#contentArea th:first-child {
-    border-top-right-radius: 12px;
-}
-
-#contentArea th:last-child {
-    border-top-left-radius: 12px;
+    border-radius: 12px;
 }
 
 #contentArea th:hover {
@@ -346,34 +341,53 @@ body {
     transform: translateY(-1px);
 }
 
+/* הגדרת כל שורה ככרטיסיה */
+#contentArea tr {
+    background-color: var(--bg-primary);
+    box-shadow: 0 4px 12px var(--shadow-light);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 #contentArea td {
     padding: 1rem 0.875rem;
-    border-bottom: 1px solid var(--border-color);
+    border: none;
     text-align: center;
     vertical-align: top;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--bg-primary);
+    background: transparent; /* התאים שקופים כדי להראות את רקע השורה */
     color: var(--text-primary);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#contentArea tr:nth-child(even) td {
-    background-color: var(--bg-secondary);
-}
-
-#contentArea tr:hover td {
-    background-color: var(--accent-primary);
-    color: white;
-    transform: scale(1.01);
-    box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
-#contentArea tr:last-child td:first-child {
+/* עיגול פינות לתאים הקיצוניים כדי לעגל את כל השורה */
+#contentArea td:first-child {
+    border-top-right-radius: 12px;
     border-bottom-right-radius: 12px;
 }
 
-#contentArea tr:last-child td:last-child {
+#contentArea td:last-child {
+    border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
 }
+
+#contentArea tr:nth-child(even) {
+    background-color: var(--bg-secondary);
+}
+
+#contentArea tr:hover {
+    background-color: var(--accent-primary);
+    color: white;
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px var(--shadow-medium);
+    z-index: 5;
+    position: relative;
+}
+
+/* שינוי צבע הטקסט בתאים בעת ריחוף מעל השורה */
+#contentArea tr:hover td {
+    color: white;
+}
+
 
 /* ========== צבעי דרגות ========== */
 .high-ranking { 
@@ -789,7 +803,6 @@ mark {
         margin: 1rem;
         max-width: calc(100% - 2rem);
     }
-    
     .stats {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
