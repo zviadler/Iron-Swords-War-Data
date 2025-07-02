@@ -1,4 +1,4 @@
-/* קובץ CSS משופר במיוחד למראה רשמי ומקצועי */
+/* קובץ CSS משופר למראה רשמי ומקצועי */
 
 /* ========== משתני CSS למצב כהה ובהיר ========== */
 :root {
@@ -22,35 +22,11 @@
     --success-color: #48bb78;
     --warning-color: #ed8936;
     --error-color: #f56565;
-    --card-bg: #ffffff;
-    --card-border: rgba(226, 232, 240, 0.6);
-    --hover-bg: rgba(66, 153, 225, 0.05);
 }
 
 /* ========== מצב כהה ========== */
-[data-theme="dark"] {
-    --bg-primary: #1a202c;
-    --bg-secondary: #2d3748;
-    --bg-gradient-start: #1a202c;
-    --bg-gradient-end: #2d3748;
-    --text-primary: #f7fafc;
-    --text-secondary: #e2e8f0;
-    --text-muted: #a0aec0;
-    --border-color: #4a5568;
-    --border-subtle: rgba(74, 85, 104, 0.3);
-    --shadow-light: rgba(0, 0, 0, 0.3);
-    --shadow-medium: rgba(0, 0, 0, 0.4);
-    --shadow-heavy: rgba(0, 0, 0, 0.5);
-    --header-bg-start: #1a202c;
-    --header-bg-end: #2d3748;
-    --card-bg: #2d3748;
-    --card-border: rgba(74, 85, 104, 0.6);
-    --hover-bg: rgba(66, 153, 225, 0.1);
-}
-
-/* תמיכה באוטו-דיטקט מצב כהה */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) {
+    :root {
         --bg-primary: #1a202c;
         --bg-secondary: #2d3748;
         --bg-gradient-start: #1a202c;
@@ -65,9 +41,6 @@
         --shadow-heavy: rgba(0, 0, 0, 0.5);
         --header-bg-start: #1a202c;
         --header-bg-end: #2d3748;
-        --card-bg: #2d3748;
-        --card-border: rgba(74, 85, 104, 0.6);
-        --hover-bg: rgba(66, 153, 225, 0.1);
     }
 }
 
@@ -88,10 +61,6 @@
     outline: none;
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
 body {
     font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
@@ -108,70 +77,6 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     transition: background 0.3s ease, color 0.3s ease;
-    overflow-x: hidden;
-}
-
-/* ========== כפתור Dark Mode ========== */
-.theme-toggle {
-    position: fixed;
-    top: 2rem;
-    left: 2rem;
-    background: var(--card-bg);
-    border: 2px solid var(--border-color);
-    padding: 0.75rem;
-    border-radius: 50%;
-    font-size: 1.25rem;
-    cursor: pointer;
-    z-index: 1000;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 20px var(--shadow-medium);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(20px);
-    color: var(--text-primary);
-}
-
-.theme-toggle:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 12px 30px var(--shadow-heavy);
-    border-color: var(--accent-primary);
-    background: var(--hover-bg);
-}
-
-.theme-toggle:active {
-    transform: translateY(-1px) scale(1.05);
-}
-
-/* אייקון השמש והירח */
-.theme-toggle .sun-icon,
-.theme-toggle .moon-icon {
-    transition: all 0.3s ease;
-    position: absolute;
-}
-
-[data-theme="dark"] .theme-toggle .sun-icon,
-:root:not([data-theme]) .theme-toggle .sun-icon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-}
-
-[data-theme="dark"] .theme-toggle .moon-icon,
-:root:not([data-theme]) .theme-toggle .moon-icon {
-    opacity: 0;
-    transform: rotate(90deg) scale(0.5);
-}
-
-[data-theme="light"] .theme-toggle .sun-icon {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.5);
-}
-
-[data-theme="light"] .theme-toggle .moon-icon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
 }
 
 /* ========== קונטיינר ראשי ========== */
@@ -285,17 +190,6 @@ body {
     font-weight: 600;
     text-align: right;
     transition: color 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: flex-end;
-}
-
-/* תיקון סמלים בעברית */
-.filter-group label .icon {
-    display: inline-flex;
-    font-size: 1rem;
-    order: -1; /* הצבת הסמל בתחילת הלייבל בעברית */
 }
 
 .filters-bar select,
@@ -304,7 +198,7 @@ body {
     font-size: 0.9rem;
     border: 2px solid var(--border-color);
     border-radius: 10px;
-    background: var(--card-bg);
+    background: var(--bg-primary);
     color: var(--text-primary);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 6px var(--shadow-light);
@@ -379,7 +273,7 @@ body {
     box-shadow: 0 12px 24px rgba(113, 128, 150, 0.35);
 }
 
-/* ========== קונטיינר הטבלה משופר ========== */
+/* ========== קונטיינר הטבלה ========== */
 .table-container {
     overflow-x: auto;
     max-height: 70vh;
@@ -412,11 +306,12 @@ body {
     background: var(--accent-secondary);
 }
 
-/* ========== עיצוב הטבלה משופר ========== */
+/* ========== עיצוב הטבלה ========== */
 #contentArea table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 1.5rem; /* הגדלת הרווח בין השורות */
+    /* התיקון המרכזי: יצירת רווח אנכי בין השורות */
+    border-spacing: 0 1rem;
     font-size: 0.85rem;
     min-width: 1200px;
     background: transparent;
@@ -427,10 +322,10 @@ body {
     color: white;
     font-weight: 700;
     position: sticky;
-    top: -1rem;
+    top: -1rem; /* Adjust sticky position due to container padding */
     z-index: 10;
     font-size: 0.8rem;
-    padding: 1.5rem 1rem; /* הגדלת הריפוד */
+    padding: 1.25rem 0.875rem;
     text-align: center;
     vertical-align: middle;
     border: none;
@@ -439,45 +334,40 @@ body {
     text-transform: uppercase;
     transition: all 0.3s ease;
     border-radius: 12px;
-    box-shadow: 0 4px 12px var(--shadow-medium);
 }
 
 #contentArea th:hover {
     background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px var(--shadow-heavy);
+    transform: translateY(-1px);
 }
 
-/* שיפור הכרטיסיות (שורות) */
+/* הגדרת כל שורה ככרטיסיה */
 #contentArea tr {
-    background-color: var(--card-bg);
-    box-shadow: 0 6px 20px var(--shadow-light);
-    border-radius: 16px; /* פינות מעוגלות יותר */
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(10px);
+    background-color: var(--bg-primary);
+    box-shadow: 0 4px 12px var(--shadow-light);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #contentArea td {
-    padding: 1.5rem 1rem; /* הגדלת הריפוד הפנימי */
+    padding: 1rem 0.875rem;
     border: none;
     text-align: center;
     vertical-align: top;
-    background: transparent;
+    background: transparent; /* התאים שקופים כדי להראות את רקע השורה */
     color: var(--text-primary);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 500;
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* עיגול פינות לתאים הקיצוניים */
+/* עיגול פינות לתאים הקיצוניים כדי לעגל את כל השורה */
 #contentArea td:first-child {
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
 }
 
 #contentArea td:last-child {
-    border-top-left-radius: 16px;
-    border-bottom-left-radius: 16px;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
 }
 
 #contentArea tr:nth-child(even) {
@@ -485,166 +375,59 @@ body {
 }
 
 #contentArea tr:hover {
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    background-color: var(--accent-primary);
     color: white;
-    transform: translateY(-4px) scale(1.02); /* הגדלת האפקט */
-    box-shadow: 0 15px 40px var(--shadow-heavy);
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px var(--shadow-medium);
     z-index: 5;
     position: relative;
-    border-color: transparent;
 }
 
+/* שינוי צבע הטקסט בתאים בעת ריחוף מעל השורה */
 #contentArea tr:hover td {
     color: white;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* ========== תצוגת כרטיסים משופרת ========== */
-.cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2rem; /* הגדלת הרווח בין הכרטיסים */
-    padding: 2rem;
-    background: transparent;
-}
 
-.person-card {
-    background: var(--card-bg);
-    border-radius: 20px; /* פינות מעוגלות יותר */
-    padding: 2rem;
-    box-shadow: 0 10px 30px var(--shadow-medium);
-    border: 2px solid var(--card-border);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(15px);
-}
-
-.person-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-    transition: height 0.3s ease;
-}
-
-.person-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 60px var(--shadow-heavy);
-    border-color: var(--accent-primary);
-}
-
-.person-card:hover::before {
-    height: 8px;
-}
-
-.person-card .card-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.person-card .card-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    text-align: center;
-}
-
-.person-card .card-org {
-    font-size: 1rem;
-    font-weight: 600;
-    text-align: center;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    background: var(--hover-bg);
-    display: inline-block;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.person-card .card-info {
-    display: grid;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.person-card .info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--hover-bg);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.person-card .info-item:hover {
-    background: var(--border-color);
-    transform: translateX(-4px);
-}
-
-.person-card .info-item .icon {
-    font-size: 1.1rem;
-    color: var(--accent-primary);
-    flex-shrink: 0;
-}
-
-.person-card .info-item .label {
-    font-weight: 600;
-    color: var(--text-secondary);
-    min-width: 60px;
-}
-
-.person-card .info-item .value {
-    color: var(--text-primary);
-    font-weight: 500;
-    word-break: break-word;
-}
-
-/* ========== צבעי דרגות משופרים ========== */
+/* ========== צבעי דרגות ========== */
 .high-ranking { 
     background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%) !important;
-    border-left: 4px solid var(--error-color);
+    border-right: 4px solid var(--error-color);
     font-weight: 600;
     position: relative;
 }
 
-.high-ranking::after {
+.high-ranking::before {
     content: '⭐';
     position: absolute;
-    right: 0.5rem;
+    left: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .field-commander { 
     background: linear-gradient(135deg, #feebc8 0%, #fbd38d 100%) !important;
-    border-left: 4px solid var(--warning-color);
+    border-right: 4px solid var(--warning-color);
     font-weight: 500;
     position: relative;
 }
 
-.field-commander::after {
+.field-commander::before {
     content: '🎖️';
     position: absolute;
-    right: 0.5rem;
+    left: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .regular-mujahid { 
     background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%) !important;
-    border-left: 4px solid var(--success-color);
+    border-right: 4px solid var(--success-color);
 }
 
-/* ========== צבעי ארגונים משופרים ========== */
+/* ========== צבעי ארגונים ========== */
 .org-hamas { 
     color: #22543d; 
     font-weight: 700;
@@ -669,12 +452,12 @@ body {
     text-shadow: 0 1px 2px rgba(30, 58, 138, 0.1);
 }
 
-/* ========== כרטיסי סטטיסטיקות משופרים ========== */
+/* ========== כרטיסי סטטיסטיקות ========== */
 .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 2.5rem; /* הגדלת הרווח */
-    padding: 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    padding: 2.5rem;
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--border-color) 100%);
     border-top: 2px solid var(--border-color);
     position: relative;
@@ -691,17 +474,17 @@ body {
 }
 
 .stat-card {
-    background: var(--card-bg);
-    padding: 3rem 2rem; /* הגדלת הריפוד */
-    border-radius: 20px; /* פינות מעוגלות יותר */
-    box-shadow: 0 15px 40px var(--shadow-medium);
+    background: var(--bg-primary);
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px var(--shadow-medium);
     text-align: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid var(--card-border);
+    border: 1px solid var(--border-subtle);
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(10px);
 }
 
 .stat-card::before {
@@ -710,7 +493,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 6px; /* גובה גדול יותר */
+    height: 4px;
     background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), #2b6cb0);
     transition: height 0.3s ease;
 }
@@ -730,28 +513,32 @@ body {
 }
 
 .stat-card:hover {
-    transform: translateY(-10px) scale(1.03);
-    box-shadow: 0 25px 60px var(--shadow-heavy);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 50px var(--shadow-heavy);
     border-color: var(--accent-primary);
 }
 
 .stat-card:hover::before {
-    height: 10px;
+    height: 6px;
 }
 
 .stat-card:hover::after {
-    width: 350px;
-    height: 350px;
+    width: 300px;
+    height: 300px;
+}
+
+.stat-card:active {
+    transform: translateY(-4px) scale(1.01);
 }
 
 .stat-number {
-    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 800;
     background: linear-gradient(135deg, #2b6cb0 0%, var(--accent-primary) 50%, var(--accent-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     text-shadow: 0 4px 8px rgba(43, 108, 176, 0.1);
     position: relative;
     z-index: 1;
@@ -760,12 +547,12 @@ body {
 }
 
 .stat-card:hover .stat-number {
-    transform: scale(1.15);
-    filter: drop-shadow(0 6px 12px rgba(66, 153, 225, 0.4));
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(66, 153, 225, 0.3));
 }
 
 .stat-card > div:last-child {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -777,10 +564,10 @@ body {
 
 .stat-card:hover > div:last-child {
     color: var(--accent-primary);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
 }
 
-    /* ========== אינדיקטור טעינה ========== */
+/* ========== אינדיקטור טעינה ========== */
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -1014,30 +801,4 @@ mark {
 @media (max-width: 1200px) {
     .container {
         margin: 1rem;
-        max-width: calc(100% - 2rem);
-    }
-    .stats {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    body {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-
-    .site-header {
-        padding: 2rem 1rem;
-    }
-
-    .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 1.5rem;
-        gap: 1rem;
-    }
-
-    .filter-group {
-        wi
+        
