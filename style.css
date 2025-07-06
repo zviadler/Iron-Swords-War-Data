@@ -337,7 +337,6 @@ body {
 /* כל שורה = כרטיס */
 #contentArea tr{
     background:var(--bg-primary);
-    border-radius:12px;
     box-shadow:0 4px 12px var(--shadow-light);
     transition:background var(--transition-fast) ease,
                 transform var(--transition-fast) ease,
@@ -351,15 +350,6 @@ body {
 }
 
 /* עיגול פינות לשוליים */
-#contentArea td:first-child{
-    border-top-right-radius:12px;
-    border-bottom-right-radius:12px;
-}
-#contentArea td:last-child{
-    border-top-left-radius:12px;
-    border-bottom-left-radius:12px;
-}
-
 #contentArea tr:nth-child(even){
     background:var(--bg-secondary);
 }
