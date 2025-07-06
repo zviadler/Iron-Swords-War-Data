@@ -372,20 +372,6 @@ body {
 #contentArea tr:hover td{ color:#fff; }
 
 /* ==========================================================
-   מצב כרטיסיות – רווח בין כרטיסים (mobile / card-view)
-   ========================================================== */
-@media (max-width:720px){
-
-    #contentArea table{ border-spacing:0; }
-    #contentArea tr{
-        display:block;
-        margin-block-end:1rem;    /* רווח בין כרטיסיות */
-
-    }
-    #contentArea tr:last-child{ margin-block-end:0; }
-}
-
-/* ==========================================================
    צבעי דרגות
    ========================================================== */
 .high-ranking{
