@@ -79,8 +79,8 @@ const labels = {
 };
 
 // --- START: Embedded Data ---
-// This is where your CSV data will be embedded as a JavaScript array of objects.
-// This eliminates the need for fetching a separate CSV file and avoids CORS issues.
+// This data is used when the application is run locally (e.g., by opening index.html directly from your file system).
+// It prevents CORS errors when no local server is available.
 const embeddedCombatantData = [
     {
         "post_id": "1",
@@ -107,8 +107,8 @@ const embeddedCombatantData = [
         "location": "Al Zawaida (Central Camps)",
         "location_details": "tent",
         "name_english": "Imad Al-Baba \"Abu Ashraf\"",
-        "name_arabic": "عماد البابا \"أبو أشرف\"",
-        "nickname": "أبو أشرف",
+        "name_arabic": "عماد البابا \"אבו אשרף\"",
+        "nickname": "אבו אשרף",
         "description_online": "-",
         "rank_role": "Leader of Military Intelligence Service",
         "organization": "Al-Mujahideen Battalions",
@@ -125,7 +125,7 @@ const embeddedCombatantData = [
         "location": "Gaza City, al-Shati",
         "location_details": "-",
         "name_english": "Youssef Saleem Bakr",
-        "name_arabic": "يوسف سليم بكر",
+        "name_arabic": "יوسف סלים בכר",
         "nickname": "-",
         "description_online": "\"leader (al-Qa'id) and a heroic martyr (al-Batal)\"",
         "rank_role": "Leader",
@@ -143,7 +143,7 @@ const embeddedCombatantData = [
         "location": "Gaza City, al-Shati",
         "location_details": "-",
         "name_english": "Son of Youssef Saleem Bakr",
-        "name_arabic": "ابنه يوسف سليم بكر",
+        "name_arabic": "בנו של יוסף סלים בכר",
         "nickname": "-",
         "description_online": "\"leader (al-Qa'id) and a heroic martyr (al-Batal)\"",
         "rank_role": "Leader",
@@ -190,8 +190,7 @@ function highlight(text, term) {
 
 /**
  * Function to parse a CSV line, robustly handling quoted fields.
- * NOTE: This function is no longer strictly needed if using embedded JSON data,
- * but kept for completeness if you decide to revert to CSV string parsing.
+ * This function is used when loading data from an external CSV file.
  * @param {string} line - The single line of CSV text to parse.
  * @returns {Array<string>} An array of strings, where each string is a field from the CSV line.
  */
@@ -227,8 +226,7 @@ function parseCsvLine(line) {
  * Converts a raw CSV header string to a consistent, normalized key name.
  * This helps in reliably mapping CSV columns to JavaScript object properties.
  * For example, "מס' פוסט" might become "post_id".
- * NOTE: This function is no longer strictly needed if using embedded JSON data,
- * as the JSON keys should already be normalized.
+ * This function is used when loading data from an external CSV file.
  * @param {string} header - The raw header string from the CSV.
  * @returns {string} The normalized key name.
  */
@@ -336,8 +334,7 @@ function showToast(message, type = 'success', duration = 3000) {
 
 /**
  * Loads CSV data from a specified URL.
- * NOTE: This function is no longer used directly for loading data.csv
- * but can be kept for future extensibility if you need to load external CSVs.
+ * This function is now specifically called when the application is detected to be running from a server.
  * @param {string} url - The URL of the CSV file.
  * @returns {Promise<Array<object>>} A promise that resolves with the parsed data.
  */
@@ -371,20 +368,35 @@ async function loadCSVData(url) {
 }
 
 /**
- * Loads data from the embedded `embeddedCombatantData` array.
- * This replaces the need to fetch an external CSV file.
- * Parses the data and populates the originalTableData array.
- * Also populates filter options based on the data.
+ * Loads data dynamically based on the environment (local file system vs. web server).
+ * If running locally (file:// protocol), it uses embedded data to avoid CORS issues.
+ * If running from a web server (http:// or https:// protocol), it attempts to fetch data.csv.
  */
 async function loadData() {
     console.log('--- Starting loadData function ---');
     showLoadingState(labels.loading_data[currentLang]);
 
     try {
-        // Use the embedded data directly
-        originalTableData = embeddedCombatantData;
+        // Determine if the application is running locally or from a server
+        const isLocal = window.location.protocol === 'file:';
+        console.log(`Current protocol: ${window.location.protocol}. Is local file access: ${isLocal}`);
+
+        if (isLocal) {
+            // Load data from embedded JavaScript array for local execution
+            originalTableData = embeddedCombatantData;
+            console.log('נתונים נטענו ממקור מקומי (embeddedCombatantData) כדי למנוע שגיאות CORS.');
+            console.log('Data loaded from local source (embeddedCombatantData) to prevent CORS errors.');
+        } else {
+            // Attempt to load data from data.csv when running from a server
+            const csvUrl = 'data.csv'; // Assuming data.csv is in the same directory as index.html
+            console.log(`מנסה לטעון נתונים מקובץ CSV חיצוני: ${csvUrl}`);
+            console.log(`Attempting to load data from external CSV: ${csvUrl}`);
+            originalTableData = await loadCSVData(csvUrl);
+            console.log('נתונים נטענו מקובץ data.csv (מקור מרוחק).');
+            console.log('Data loaded from data.csv (remote source).');
+        }
         
-        console.log('originalTableData after loading embedded data:', originalTableData);
+        console.log('originalTableData after loading:', originalTableData);
 
         // Clear existing filter sets before populating
         allLocations.clear();
@@ -402,10 +414,11 @@ async function loadData() {
         console.log('--- loadData function finished successfully ---');
     } catch (error) {
         console.error('Error loading or parsing data:', error);
-        showErrorMessage(error, labels.error_data_load_context[currentLang]);
-        showToast(labels.error_loading_data[currentLang] + error.message, 'error', 5000); // Show toast notification
-        // Display no data message if loading fails
-        currentData = []; // Ensure currentData is empty
+        // Add specific error message for CSV fetch failure on remote
+        const contextError = labels.error_data_load_context[currentLang] + (window.location.protocol !== 'file:' ? labels.csv_file_error[currentLang] : '');
+        showErrorMessage(error, contextError);
+        showToast(labels.error_loading_data[currentLang] + error.message, 'error', 5000);
+        currentData = [];
         renderData(currentData);
         console.log('--- loadData function finished with error ---');
     } finally {
