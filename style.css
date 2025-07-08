@@ -330,7 +330,6 @@ body {
                transform var(--transition-fast) ease;
 }
 #contentArea th:hover{
-    background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));
     transform:translateY(-1px);
 }
 
@@ -353,49 +352,7 @@ body {
 #contentArea tr:nth-child(even){
     background:var(--bg-secondary);
 }
-#contentArea tr:hover{
-    background:var(--accent-primary);
-    color:#fff;
-    transform:scale(1.02);
-    box-shadow:0 8px 20px var(--shadow-medium);
-}
-#contentArea tr:hover td{ color:#fff; }
 
-/* ==========================================================
-   צבעי דרגות
-   ========================================================== */
-.high-ranking{
-    background:linear-gradient(135deg,#fed7d7,#feb2b2)!important;
-    border-inline-start:4px solid var(--error-color);
-    font-weight:600;position:relative;
-}
-.high-ranking::before{
-    content:'⭐';position:absolute;inset-inline-start:.5rem;top:50%;
-    transform:translateY(-50%);font-size:.8rem;
-}
-
-.field-commander{
-    background:linear-gradient(135deg,#feebc8,#fbd38d)!important;
-    border-inline-start:4px solid var(--warning-color);
-    font-weight:500;position:relative;
-}
-.field-commander::before{
-    content:'🎖️';position:absolute;inset-inline-start:.5rem;top:50%;
-    transform:translateY(-50%);font-size:.8rem;
-}
-
-.regular-mujahid{
-    background:linear-gradient(135deg,#f0fff4,#c6f6d5)!important;
-    border-inline-start:4px solid var(--success-color);
-}
-
-/* ==========================================================
-   צבעי ארגונים
-   ========================================================== */
-.org-hamas      {color:#22543d;font-weight:700;text-shadow:0 1px 2px rgba(34,84,61,.1);}
-.org-dflp       {color:#742a2a;font-weight:700;text-shadow:0 1px 2px rgba(116,42,42,.1);}
-.org-mujahideen {color:#7c2d12;font-weight:700;text-shadow:0 1px 2px rgba(124,45,18,.1);}
-.org-fatah      {color:#1e3a8a;font-weight:700;text-shadow:0 1px 2px rgba(30,58,138,.1);}
 
 /* ==========================================================
    כרטיסי סטטיסטיקות
