@@ -862,7 +862,7 @@ function renderData(data) {
         });
 
         // Add pagination controls below the table
-        const totalPages = Math.ceil(data.length / VISIBLE_ROWS);
+        const totalPages = Math.ceil(currentData.length / VISIBLE_ROWS);
         const paginationDiv = document.createElement('div');
         paginationDiv.className = 'flex justify-center items-center gap-4 mt-4';
         paginationDiv.innerHTML = `
