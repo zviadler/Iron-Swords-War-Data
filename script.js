@@ -821,7 +821,7 @@ function renderData(data) {
         const tbody = container.querySelector('tbody');
         const startIndex = currentPage * VISIBLE_ROWS;
         const endIndex = startIndex + VISIBLE_ROWS;
-        const visibleData = data.slice(startIndex, endIndex);
+        const visibleData = currentData.slice(startIndex, endIndex);
 
         visibleData.forEach(rowData => {
             let trClasses = [];
