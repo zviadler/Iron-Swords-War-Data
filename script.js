@@ -682,22 +682,53 @@ function toggleViewMode() {
     saveUserPreferences(); // Save preferences after view mode change
 }
 
-/**
- * Renders the data either as a table or a grid of cards based on `isCardView`.
- * Implements basic pagination for table view.
- * @param {Array<object>} data - The array of data objects to render.
- */
 function renderData(data) {
-console.log('Rendering data rows:', data);
-    const container = document.getElementById('contentArea');
-    container.innerHTML = ''; // Clear existing content
+    console.log('Rendering data rows:', data);
+    console.log('Type of data:', typeof data);
+    console.log('Is array?', Array.isArray(data));
+    console.log('Length:', data.length);
 
-    // Handle empty data
-    if (data.length === 0) {
-        container.innerHTML = `<p class="text-gray-500 font-bold text-center py-4">${labels.no_matching_data[currentLang]}</p>`;
-        document.getElementById('resultsCounter').classList.add('hidden'); // Hide counter if no results
+    const tableBody = document.querySelector('#data-table tbody');
+    if (!tableBody) {
+        console.error('Table body element not found');
         return;
     }
+
+    tableBody.innerHTML = ''; // ניקוי קודם
+
+    // בדיקה תקינה אם data הוא לא מערך או מערך ריק
+    if (!Array.isArray(data) || data.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="10">${labels.no_data[currentLang]}</td></tr>`;
+        return;
+    }
+
+    // הצגת השורות בטבלה
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+
+        // עמודת name
+        const tdName = document.createElement('td');
+        tdName.textContent = row.name || '';
+        tr.appendChild(tdName);
+
+        // עמודת location
+        const tdLocation = document.createElement('td');
+        tdLocation.textContent = row.location || '';
+        tr.appendChild(tdLocation);
+
+        // עמודת organization
+        const tdOrganization = document.createElement('td');
+        tdOrganization.textContent = row.organization || '';
+        tr.appendChild(tdOrganization);
+
+        // עמודת rank_role
+        const tdRank = document.createElement('td');
+        tdRank.textContent = row.rank_role || '';
+        tr.appendChild(tdRank);
+
+        tableBody.appendChild(tr);
+    });
+}
 
     // Update results counter
     updateTextByLang(); // This will show the results counter
