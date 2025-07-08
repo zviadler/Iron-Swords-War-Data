@@ -877,7 +877,6 @@ function renderData(data) {
 
         addSortingToTable(); // Apply sorting listeners after table is rendered
     }
-}
 
 /**
  * Changes the current page for table pagination.
