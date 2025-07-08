@@ -78,6 +78,87 @@ const labels = {
     result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" }
 };
 
+// --- START: Embedded Data ---
+// This is where your CSV data will be embedded as a JavaScript array of objects.
+// This eliminates the need for fetching a separate CSV file and avoids CORS issues.
+const embeddedCombatantData = [
+    {
+        "post_id": "1",
+        "combatant_id": "1",
+        "date": "25-APR-2025",
+        "location": "Unknown",
+        "location_details": "-",
+        "name_english": "Muhammad Baraka Ayish Al-Amur",
+        "name_arabic": "محمد بركة عايش العامور",
+        "nickname": "-",
+        "description_online": "-",
+        "rank_role": "Member of Military Council",
+        "organization": "Al-Mujahideen Battalions",
+        "activity": "-",
+        "family_casualties_info": "wife, 2 sons, 5 daughters",
+        "casualties_count": "9",
+        "additional_combatants": "-",
+        "notes": "-"
+    },
+    {
+        "post_id": "2",
+        "combatant_id": "2",
+        "date": "24-APR-2025",
+        "location": "Al Zawaida (Central Camps)",
+        "location_details": "tent",
+        "name_english": "Imad Al-Baba \"Abu Ashraf\"",
+        "name_arabic": "عماد البابا \"أبو أشرف\"",
+        "nickname": "أبو أشرف",
+        "description_online": "-",
+        "rank_role": "Leader of Military Intelligence Service",
+        "organization": "Al-Mujahideen Battalions",
+        "activity": "-",
+        "family_casualties_info": "1 other man, 1 child",
+        "casualties_count": "3",
+        "additional_combatants": "-",
+        "notes": "-"
+    },
+    {
+        "post_id": "3",
+        "combatant_id": "3",
+        "date": "22-APR-2025",
+        "location": "Gaza City, al-Shati",
+        "location_details": "-",
+        "name_english": "Youssef Saleem Bakr",
+        "name_arabic": "يوسف سليم بكر",
+        "nickname": "-",
+        "description_online": "\"leader (al-Qa'id) and a heroic martyr (al-Batal)\"",
+        "rank_role": "Leader",
+        "organization": "-",
+        "activity": "-",
+        "family_casualties_info": "wife, daughter",
+        "casualties_count": "1",
+        "additional_combatants": "4",
+        "notes": "5,Funeral with gunshots"
+    },
+    {
+        "post_id": "3",
+        "combatant_id": "4",
+        "date": "22-APR-2025",
+        "location": "Gaza City, al-Shati",
+        "location_details": "-",
+        "name_english": "Son of Youssef Saleem Bakr",
+        "name_arabic": "ابنه يوسف سليم بكر",
+        "nickname": "-",
+        "description_online": "\"leader (al-Qa'id) and a heroic martyr (al-Batal)\"",
+        "rank_role": "Leader",
+        "organization": "-",
+        "activity": "-",
+        "family_casualties_info": "-",
+        "casualties_count": "1",
+        "additional_combatants": "3",
+        "notes": "5,Funeral with gunshots"
+    }
+    // Add more data objects here as needed from your CSV
+];
+// --- END: Embedded Data ---
+
+
 /**
  * Cleans a string to prevent XSS attacks by converting HTML entities.
  * @param {string} input - The string to sanitize.
@@ -109,6 +190,8 @@ function highlight(text, term) {
 
 /**
  * Function to parse a CSV line, robustly handling quoted fields.
+ * NOTE: This function is no longer strictly needed if using embedded JSON data,
+ * but kept for completeness if you decide to revert to CSV string parsing.
  * @param {string} line - The single line of CSV text to parse.
  * @returns {Array<string>} An array of strings, where each string is a field from the CSV line.
  */
@@ -144,6 +227,8 @@ function parseCsvLine(line) {
  * Converts a raw CSV header string to a consistent, normalized key name.
  * This helps in reliably mapping CSV columns to JavaScript object properties.
  * For example, "מס' פוסט" might become "post_id".
+ * NOTE: This function is no longer strictly needed if using embedded JSON data,
+ * as the JSON keys should already be normalized.
  * @param {string} header - The raw header string from the CSV.
  * @returns {string} The normalized key name.
  */
@@ -251,6 +336,8 @@ function showToast(message, type = 'success', duration = 3000) {
 
 /**
  * Loads CSV data from a specified URL.
+ * NOTE: This function is no longer used directly for loading data.csv
+ * but can be kept for future extensibility if you need to load external CSVs.
  * @param {string} url - The URL of the CSV file.
  * @returns {Promise<Array<object>>} A promise that resolves with the parsed data.
  */
@@ -284,27 +371,9 @@ async function loadCSVData(url) {
 }
 
 /**
- * Placeholder function for loading JSON data.
- * @param {string} url - The URL of the JSON data.
- */
-async function loadJSONData(url) {
-    console.warn(`Attempting to load JSON data from ${url}. This function is a placeholder.`);
-    throw new Error('JSON data loading not implemented.');
-}
-
-/**
- * Placeholder function for loading data from an API.
- * @param {string} url - The URL of the API endpoint.
- */
-async function loadAPIData(url) {
-    console.warn(`Attempting to load API data from ${url}. This function is a placeholder.`);
-    throw new Error('API data loading not implemented.');
-}
-
-
-/**
- * Loads data from the data.csv file (can be extended to multiple sources).
- * Parses the CSV content and populates the originalTableData array.
+ * Loads data from the embedded `embeddedCombatantData` array.
+ * This replaces the need to fetch an external CSV file.
+ * Parses the data and populates the originalTableData array.
  * Also populates filter options based on the data.
  */
 async function loadData() {
@@ -312,11 +381,10 @@ async function loadData() {
     showLoadingState(labels.loading_data[currentLang]);
 
     try {
-        // For this implementation, we stick to data.csv as the primary source.
-        // The concept of multiple sources is shown, but not fully implemented here.
-        originalTableData = await loadCSVData('data.csv');
+        // Use the embedded data directly
+        originalTableData = embeddedCombatantData;
         
-        console.log('originalTableData after parsing:', originalTableData);
+        console.log('originalTableData after loading embedded data:', originalTableData);
 
         // Clear existing filter sets before populating
         allLocations.clear();
