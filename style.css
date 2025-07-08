@@ -1,4 +1,3 @@
-
 /* ==========================================================
    קובץ CSS משופר למראה רשמי ומקצועי – גרסה מעודכנת (2025-07-02)
    שינויים עיקריים:
@@ -15,8 +14,8 @@
     --bg-gradient-start: #f5f7fa;
     --bg-gradient-end: #c3cfe2;
 
-    --text-primary: #2d3748;
-    --text-secondary: #4a5568;
+    --text-primary: #2d3748; /* צבע טקסט ראשי - כהה במצב בהיר */
+    --text-secondary: #4a5568; /* צבע טקסט משני - כהה במצב בהיר */
     --text-muted: #718096;
 
     /* גבולות, צללים */
@@ -29,14 +28,31 @@
     /* צבעי מבטא ומצב */
     --accent-primary: #4299e1;
     --accent-secondary: #3182ce;
-    --header-bg-start: #2d3748;
-    --header-bg-end: #4a5568;
+
+    /* צבעים לכותרת האתר - הותאמו לקריאות ויופי */
+    --site-header-bg-start: #3b82f6; /* כחול עמוק יותר */
+    --site-header-bg-end: #2563eb;   /* כחול כהה יותר */
+    --site-header-text-color: #ffffff; /* טקסט לבן על רקע כחול */
+    --site-header-text-shadow-color: rgba(0,0,0,0.5); /* צל טקסט בולט */
+    --site-header-p-color: #bfdbfe; /* צבע פסקאות בהיר יותר */
+
+
+    /* צבעים לכותרת הטבלה - מבוססים על ה-HTML לדוגמה */
+    --header-bg: #f1f5f9;
+    --header-text: #475569;
+    --header-border: #e2e8f0;
+    --header-hover: #e2e8f0;
+    /* צבעי מיון (נשמרו למקרה שה-JS ישתמש בהם, אך ה-CSS לא ייצר חצים) */
+    --sort-active: #3b82f6;
+    --sort-inactive: #94a3b8;
+
+
     --success-color: #48bb78;
     --warning-color: #ed8936;
     --error-color:   #f56565;
 
     /* טוקנים נוספים */
-    --transition-fast: .3s;          /* זמן ברירת-מחדל למעברים */
+    --transition-fast: .3s;            /* זמן ברירת-מחדל למעברים */
 }
 
 /* ========== מצב כהה ========== */
@@ -47,8 +63,8 @@
         --bg-gradient-start: #1a202c;
         --bg-gradient-end: #2d3748;
 
-        --text-primary: #f7fafc;
-        --text-secondary: #e2e8f0;
+        --text-primary: #f7fafc; /* צבע טקסט ראשי - בהיר במצב כהה */
+        --text-secondary: #e2e8f0; /* צבע טקסט משני - בהיר במצב כהה */
         --text-muted: #a0aec0;
 
         --border-color: #4a5568;
@@ -58,8 +74,19 @@
         --shadow-medium: rgba(0,0,0,.4);
         --shadow-heavy: rgba(0,0,0,.5);
 
-        --header-bg-start: #1a202c;
-        --header-bg-end: #2d3748;
+        /* צבעים לכותרת האתר - הותאמו למצב כהה */
+        --site-header-bg-start: #1a202c; /* רקע כותרת אתר - כהה במצב כהה */
+        --site-header-bg-end: #2d3748;   /* רקע כותרת אתר - כהה יותר במצב כהה */
+        --site-header-text-color: #f7fafc; /* טקסט בהיר על רקע כהה */
+        --site-header-text-shadow-color: rgba(0,0,0,0.7); /* צל טקסט בולט יותר */
+        --site-header-p-color: #cbd5e1; /* צבע פסקאות בהיר יותר */
+
+
+        /* צבעים חדשים לכותרת הטבלה - מבוססים על ה-HTML לדוגמה */
+        --header-bg: #2d3748;
+        --header-text: #e2e8f0;
+        --header-border: #4a5568;
+        --header-hover: #374151;
     }
 }
 
@@ -70,14 +97,20 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-
 }
+
+/* איפוס תוכן של פסאודו-אלמנטים כברירת מחדל כדי למנוע כפילויות */
+/* הסרה מוחלטת של חיצים מ-CSS */
+*::before,
+*::after {
+    content: none !important; /* שימוש ב-!important כדי לוודא דריסה */
+}
+
 
 :focus-visible {
     outline: 3px solid var(--accent-primary);
     outline-offset: 2px;
     border-radius: 4px;
-
 }
 :focus:not(:focus-visible) {
     outline: none;
@@ -131,47 +164,69 @@ body {
 }
 
 /* ==========================================================
-   כותרת אתר
+   כותרת אתר (עיצוב מחדש לקריאות ויופי)
    ========================================================== */
 .site-header {
     position: relative;
     text-align: center;
     padding: 3rem 2rem;
-    background: linear-gradient(135deg,var(--header-bg-start) 0%,var(--header-bg-end) 50%,var(--header-bg-start) 100%);
-    color:#fff;
+    /* רקע גרדיאנט חדש ועשיר יותר */
+    background: linear-gradient(135deg,var(--site-header-bg-start) 0%,var(--site-header-bg-end) 100%);
+    color: var(--site-header-text-color); /* צבע טקסט מותאם */
     overflow: hidden;
+    /* צל עמוק יותר לכותרת כולה */
+    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.3);
+    transition: all var(--transition-fast) ease;
 }
+.site-header:hover {
+    box-shadow: inset 0 -7px 20px rgba(0,0,0,0.3), 0 15px 40px rgba(0,0,0,0.4);
+}
+
 .site-header::before {
     content:'';
     position:absolute;
     inset:0;
-    background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0L0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-    opacity:.3;
+    /* טקסטורת רשת עדינה יותר */
+    background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0L0 0 0 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity:.4; /* אטימות מעט גבוהה יותר */
+    z-index: 1; /* ודא שהטקסט מעליו */
 }
 .site-header::after {
     content:'';
     position:absolute;
     inset-inline:0;
     bottom:0;
-    height:2px;
+    height:3px; /* פס תחתון בולט יותר */
     background:linear-gradient(90deg,transparent 0%,var(--accent-primary) 50%,transparent 100%);
+    z-index: 2; /* מעל הטקסטורה */
 }
 
 .site-header h1 {
-    font-size: clamp(1.8rem,4vw,2.5rem);
-    font-weight: 700;
-    letter-spacing: -.025em;
-    text-shadow: 0 4px 8px rgba(0,0,0,.3);
+    font-size: clamp(1.8rem,4vw,2.8rem); /* גופן מעט גדול יותר */
+    font-weight: 800; /* מודגש יותר */
+    letter-spacing: -.03em; /* רווח אותיות הדוק יותר */
+    /* צל טקסט בולט יותר עם אפקט עדין */
+    text-shadow: 0 5px 15px var(--site-header-text-shadow-color);
+    position: relative; /* כדי לוודא שמעל הפסאודו-אלמנטים */
+    z-index: 2;
+    transition: text-shadow var(--transition-fast) ease;
 }
+.site-header h1:hover {
+    text-shadow: 0 7px 20px var(--site-header-text-shadow-color);
+}
+
 .site-header p {
-    font-size: clamp(1rem,2vw,1.1rem);
-    font-weight: 300;
-    color: #e2e8f0;
-    opacity: .9;
+    font-size: clamp(1rem,2vw,1.2rem); /* גופן מעט גדול יותר */
+    font-weight: 400; /* משקל גופן רגיל */
+    color: var(--site-header-p-color); /* צבע פסקאות מותאם */
+    opacity: .95; /* אטימות גבוהה יותר */
+    position: relative; /* כדי לוודא שמעל הפסאודו-אלמנטים */
+    z-index: 2;
+    margin-top: 0.5rem; /* רווח קטן מהכותרת הראשית */
 }
 
 /* ==========================================================
-   סרגל פילטרים
+   סרגל פילטרים (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 .filters-bar {
     display: flex;
@@ -225,7 +280,7 @@ body {
 }
 
 /* ==========================================================
-   כפתורים
+   כפתורים (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 .btn {
     display: inline-block;
@@ -273,7 +328,7 @@ body {
 }
 
 /* ==========================================================
-   קונטיינר טבלה
+   קונטיינר טבלה (מעודכן)
    ========================================================== */
 .table-container{
     position:relative;
@@ -303,22 +358,22 @@ body {
 }
 
 /* ==========================================================
-   טבלה – הסרת רווח בין שורות
+   טבלה – הסרת רווח בין שורות (מעודכן)
    ========================================================== */
-#contentArea table{
+table{
     width:100%;
-    border-collapse:separate;      /* נדרש ל-sticky */
-    border-spacing:0;             /*  ← בוטל הרווח האנכי */
+    border-collapse:separate;       /* נדרש ל-sticky */
+    border-spacing:0;               /* ← בוטל הרווח האנכי */
     font-size:.85rem;
-    min-width:1200px;
+    min-width:1200px; /* Adjust as needed for your content */
     background:transparent;
 }
-#contentArea th{
-    position:sticky;
-    top:0;                         /* היה ‎-1rem לפני התיקון */
+th{
+    position: sticky;
+    top:0;
     z-index:10;
-    background:linear-gradient(135deg,var(--header-bg-start) 0%,var(--header-bg-end) 100%);
-    color:#fff;
+    background: var(--header-bg); /* שימוש בצבע רקע חדש לכותרת */
+    color: var(--header-text);    /* שימוש בצבע טקסט חדש לכותרת */
     padding:1.25rem .875rem;
     font-size:.8rem;
     font-weight:700;
@@ -326,36 +381,56 @@ body {
     text-transform:uppercase;
     letter-spacing:.05em;
     border-radius:12px;
+    border-bottom: 2px solid var(--header-border); /* הוספת גבול תחתון לכותרת */
     transition:background var(--transition-fast) ease,
-               transform var(--transition-fast) ease;
+               transform var(--transition-fast) ease,
+               box-shadow var(--transition-fast) ease; /* הוספת box-shadow למעבר */
+    cursor: pointer;
+    user-select: none;
 }
-#contentArea th:hover{
+th:hover{
+    background: var(--header-hover); /* שימוש בצבע ריחוף חדש לכותרת */
     transform:translateY(-1px);
+    box-shadow: var(--shadow-subtle); /* הוספת צל קל בריחוף */
 }
 
+th.sort-asc::after {
+    content: '';
+    border-bottom: 4px solid var(--sort-active);
+    transform: rotate(180deg);
+}
+
+th.sort-desc::after {
+    content: '';
+    border-bottom: 4px solid var(--sort-active);
+} */
+
 /* כל שורה = כרטיס */
-#contentArea tr{
+tr{
     background:var(--bg-primary);
     box-shadow:0 4px 12px var(--shadow-light);
     transition:background var(--transition-fast) ease,
                 transform var(--transition-fast) ease,
                 box-shadow var(--transition-fast) ease;
 }
-#contentArea td{
+td{
     padding:1rem .875rem;
     text-align:center;
     vertical-align:top;
     color:var(--text-primary);
+    border-bottom: 1px solid var(--border-color); /* Added border between rows */
 }
 
 /* עיגול פינות לשוליים */
-#contentArea tr:nth-child(even){
+tr:nth-child(even){
     background:var(--bg-secondary);
 }
-
+tr:hover td {
+    background: var(--bg-secondary); /* Hover effect for rows */
+}
 
 /* ==========================================================
-   כרטיסי סטטיסטיקות
+   כרטיסי סטטיסטיקות (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 .stats{
     display:grid;
@@ -407,7 +482,7 @@ body {
     border-radius:50%;
     transform:translate(-50%,-50%);
     transition:width .5s cubic-bezier(.4,0,.2,1),
-               height .5s cubic-bezier(.4,0,.2,1);
+                height .5s cubic-bezier(.4,0,.2,1);
     z-index:0;
 }
 
@@ -454,7 +529,7 @@ body {
 }
 
 /* ==========================================================
-   אינדיקטור טעינה
+   אינדיקטור טעינה (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 .loading-overlay{
     position:absolute;
@@ -501,7 +576,7 @@ body {
 }
 
 /* ==========================================================
-   כפתור חזרה למעלה
+   כפתור חזרה למעלה (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 .back-to-top{
     position:fixed;
@@ -534,7 +609,7 @@ body {
 }
 
 /* ==========================================================
-   הדגשת חיפוש
+   הדגשת חיפוש (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 mark{
     background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);
@@ -546,7 +621,7 @@ mark{
 }
 
 /* ==========================================================
-   אנימציות (Keyframes)
+   אנימציות (Keyframes) (נשמר מה-CSS המקורי שלך)
    ========================================================== */
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes pulse{from{opacity:.3;transform:translate(-50%,-50%) scale(.8);}to{opacity:1;transform:translate(-50%,-50%) scale(1.2);}}
@@ -555,8 +630,22 @@ mark{
 @keyframes bounceIn{0%{transform:scale(0) rotate(180deg);}50%{transform:scale(1.2) rotate(90deg);}100%{transform:scale(1) rotate(0deg);}}
 
 /* ==========================================================
-   תצוגה רספונסיבית
+   תצוגה רספונסיבית (מעודכן)
    ========================================================== */
 @media (max-width:1200px){
     .container{margin:1rem;}
-                    }
+}
+
+@media (max-width: 768px) {
+    .table-container {
+        font-size: 0.75rem;
+    }
+    
+    th, td {
+        padding: 8px 6px;
+    }
+    
+    th {
+        font-size: 0.7rem;
+    }
+}
