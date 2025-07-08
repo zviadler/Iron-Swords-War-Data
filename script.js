@@ -688,6 +688,7 @@ function toggleViewMode() {
  * @param {Array<object>} data - The array of data objects to render.
  */
 function renderData(data) {
+console.log('Rendering data rows:', data);
     const container = document.getElementById('contentArea');
     container.innerHTML = ''; // Clear existing content
 
