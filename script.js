@@ -803,6 +803,7 @@ function renderData(data) {
         container.appendChild(grid);
     } else {
         // Render table view
+        const container = document.querySelector('#data-container');
         container.classList.add('table-container'); // Add table scrolling for table view
 
         const tableHTML = `
