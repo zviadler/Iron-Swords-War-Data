@@ -1,3 +1,65 @@
+// --- SAMPLE DATA: ניתן להסיר ברגע שיש קובץ data.csv אמיתי ---
+const sampleData = [
+  {
+    post_id: "1",
+    combatant_id: "1",
+    date: "25-APR-2025",
+    location: "Unknown",
+    location_details: "-",
+    name_english: "Muhammad Baraka Ayish Al-Amur",
+    name_arabic: "محمد بركة عايش العامور",
+    nickname: "-",
+    description_online: "-",
+    rank_role: "Member of Military Council",
+    organization: "Al-Mujahideen Battalions",
+    activity: "-",
+    family_casualties_info: "wife, 2 sons, 5 daughters",
+    casualties_count: "9",
+    additional_combatants: "-",
+    notes: "-"
+  },
+  {
+    post_id: "2",
+    combatant_id: "2",
+    date: "24-APR-2025",
+    location: "Al Zawaida (Central Camps)",
+    location_details: "tent",
+    name_english: 'Imad Al-Baba "Abu Ashraf"',
+    name_arabic: 'عماد البابا "أبو أشرف"',
+    nickname: "أبو أشرف",
+    description_online: "-",
+    rank_role: "Leader of Military Intelligence Service",
+    organization: "Al-Mujahideen Battalions",
+    activity: "-",
+    family_casualties_info: "1 other man, 1 child",
+    casualties_count: "3",
+    additional_combatants: "-",
+    notes: "-"
+  },
+  {
+    post_id: "3",
+    combatant_id: "3",
+    date: "22-APR-2025",
+    location: "Gaza City, al-Shati",
+    location_details: "-",
+    name_english: "Youssef Saleem Bakr",
+    name_arabic: "يوسف سليم بكر",
+    nickname: "-",
+    description_online: '"leader (al-Qa\'id) and a heroic martyr (al-Batal)"',
+    rank_role: "Leader",
+    organization: "-",
+    activity: "-",
+    family_casualties_info: "wife, daughter",
+    casualties_count: "1",
+    additional_combatants: "4,5",
+    notes: "Funeral with gunshots"
+  }
+];
+// ------------------------------------------------------------
+
+
+
+
 let originalTableData = []; // Stores the raw data from CSV
 let currentData = []; // Stores the currently filtered and sorted data for rendering and export
 let allLocations = new Set();
@@ -312,13 +374,10 @@ async function loadData() {
     showLoadingState(labels.loading_data[currentLang]);
 
     try {
-        // For this implementation, we stick to data.csv as the primary source.
-        // The concept of multiple sources is shown, but not fully implemented here.
-        originalTableData = await loadCSVData('data.csv');
-        
+        // **בזמן בדיקות:** השתמש בנתוני sampleData במקום טעינת קובץ
+        originalTableData = sampleData; // כאן אתה משתמש ב-`sampleData` ישירות
         console.log('originalTableData after parsing:', originalTableData);
 
-        // Clear existing filter sets before populating
         allLocations.clear();
         allOrganizations.clear();
         allRanks.clear();
@@ -329,6 +388,7 @@ async function loadData() {
             if (rowData.rank_role) allRanks.add(rowData.rank_role);
         });
 
+        // ודא ש-populateFilters ו-filterTable לא משתבשות
         populateFilters();
         filterTable(); // Initial display of data
         console.log('--- loadData function finished successfully ---');
@@ -337,7 +397,7 @@ async function loadData() {
         showErrorMessage(error, labels.error_data_load_context[currentLang]);
         showToast(labels.error_loading_data[currentLang] + error.message, 'error', 5000); // Show toast notification
         // Display no data message if loading fails
-        currentData = []; // Ensure currentData is empty
+        currentData = sampleData; // ודא ש-currentData מכיל את sampleData
         renderData(currentData);
         console.log('--- loadData function finished with error ---');
     } finally {
