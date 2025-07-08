@@ -1,65 +1,3 @@
-// --- SAMPLE DATA: ניתן להסיר ברגע שיש קובץ data.csv אמיתי ---
-const sampleData = [
-  {
-    post_id: "1",
-    combatant_id: "1",
-    date: "25-APR-2025",
-    location: "Unknown",
-    location_details: "-",
-    name_english: "Muhammad Baraka Ayish Al-Amur",
-    name_arabic: "محمد بركة عايش العامور",
-    nickname: "-",
-    description_online: "-",
-    rank_role: "Member of Military Council",
-    organization: "Al-Mujahideen Battalions",
-    activity: "-",
-    family_casualties_info: "wife, 2 sons, 5 daughters",
-    casualties_count: "9",
-    additional_combatants: "-",
-    notes: "-"
-  },
-  {
-    post_id: "2",
-    combatant_id: "2",
-    date: "24-APR-2025",
-    location: "Al Zawaida (Central Camps)",
-    location_details: "tent",
-    name_english: 'Imad Al-Baba "Abu Ashraf"',
-    name_arabic: 'عماد البابا "أبو أشرف"',
-    nickname: "أبو أشرف",
-    description_online: "-",
-    rank_role: "Leader of Military Intelligence Service",
-    organization: "Al-Mujahideen Battalions",
-    activity: "-",
-    family_casualties_info: "1 other man, 1 child",
-    casualties_count: "3",
-    additional_combatants: "-",
-    notes: "-"
-  },
-  {
-    post_id: "3",
-    combatant_id: "3",
-    date: "22-APR-2025",
-    location: "Gaza City, al-Shati",
-    location_details: "-",
-    name_english: "Youssef Saleem Bakr",
-    name_arabic: "يوسف سليم بكر",
-    nickname: "-",
-    description_online: '"leader (al-Qa\'id) and a heroic martyr (al-Batal)"',
-    rank_role: "Leader",
-    organization: "-",
-    activity: "-",
-    family_casualties_info: "wife, daughter",
-    casualties_count: "1",
-    additional_combatants: "4,5",
-    notes: "Funeral with gunshots"
-  }
-];
-// ------------------------------------------------------------
-
-
-
-
 let originalTableData = []; // Stores the raw data from CSV
 let currentData = []; // Stores the currently filtered and sorted data for rendering and export
 let allLocations = new Set();
@@ -374,10 +312,13 @@ async function loadData() {
     showLoadingState(labels.loading_data[currentLang]);
 
     try {
-        // **בזמן בדיקות:** השתמש בנתוני sampleData במקום טעינת קובץ
-        originalTableData = sampleData; // כאן אתה משתמש ב-`sampleData` ישירות
+        // For this implementation, we stick to data.csv as the primary source.
+        // The concept of multiple sources is shown, but not fully implemented here.
+        originalTableData = await loadCSVData('data.csv');
+        
         console.log('originalTableData after parsing:', originalTableData);
 
+        // Clear existing filter sets before populating
         allLocations.clear();
         allOrganizations.clear();
         allRanks.clear();
@@ -388,7 +329,6 @@ async function loadData() {
             if (rowData.rank_role) allRanks.add(rowData.rank_role);
         });
 
-        // ודא ש-populateFilters ו-filterTable לא משתבשות
         populateFilters();
         filterTable(); // Initial display of data
         console.log('--- loadData function finished successfully ---');
@@ -397,7 +337,7 @@ async function loadData() {
         showErrorMessage(error, labels.error_data_load_context[currentLang]);
         showToast(labels.error_loading_data[currentLang] + error.message, 'error', 5000); // Show toast notification
         // Display no data message if loading fails
-        currentData = sampleData; // ודא ש-currentData מכיל את sampleData
+        currentData = []; // Ensure currentData is empty
         renderData(currentData);
         console.log('--- loadData function finished with error ---');
     } finally {
@@ -682,53 +622,21 @@ function toggleViewMode() {
     saveUserPreferences(); // Save preferences after view mode change
 }
 
+/**
+ * Renders the data either as a table or a grid of cards based on `isCardView`.
+ * Implements basic pagination for table view.
+ * @param {Array<object>} data - The array of data objects to render.
+ */
 function renderData(data) {
-    console.log('Rendering data rows:', data);
-    console.log('Type of data:', typeof data);
-    console.log('Is array?', Array.isArray(data));
-    console.log('Length:', data.length);
+    const container = document.getElementById('contentArea');
+    container.innerHTML = ''; // Clear existing content
 
-    const tableBody = document.querySelector('#data-table tbody');
-    if (!tableBody) {
-        console.error('Table body element not found');
+    // Handle empty data
+    if (data.length === 0) {
+        container.innerHTML = `<p class="text-gray-500 font-bold text-center py-4">${labels.no_matching_data[currentLang]}</p>`;
+        document.getElementById('resultsCounter').classList.add('hidden'); // Hide counter if no results
         return;
     }
-
-    tableBody.innerHTML = ''; // ניקוי קודם
-
-    // בדיקה תקינה אם data הוא לא מערך או מערך ריק
-    if (!Array.isArray(data) || data.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="10">${labels.no_data[currentLang]}</td></tr>`;
-        return;
-    }
-
-    // הצגת השורות בטבלה
-    data.forEach(row => {
-        const tr = document.createElement('tr');
-
-        // עמודת name
-        const tdName = document.createElement('td');
-        tdName.textContent = row.name || '';
-        tr.appendChild(tdName);
-
-        // עמודת location
-        const tdLocation = document.createElement('td');
-        tdLocation.textContent = row.location || '';
-        tr.appendChild(tdLocation);
-
-        // עמודת organization
-        const tdOrganization = document.createElement('td');
-        tdOrganization.textContent = row.organization || '';
-        tr.appendChild(tdOrganization);
-
-        // עמודת rank_role
-        const tdRank = document.createElement('td');
-        tdRank.textContent = row.rank_role || '';
-        tr.appendChild(tdRank);
-
-        tableBody.appendChild(tr);
-    });
-}
 
     // Update results counter
     updateTextByLang(); // This will show the results counter
@@ -803,7 +711,6 @@ function renderData(data) {
         container.appendChild(grid);
     } else {
         // Render table view
-        const container = document.querySelector('#data-container');
         container.classList.add('table-container'); // Add table scrolling for table view
 
         const tableHTML = `
@@ -821,7 +728,7 @@ function renderData(data) {
         const tbody = container.querySelector('tbody');
         const startIndex = currentPage * VISIBLE_ROWS;
         const endIndex = startIndex + VISIBLE_ROWS;
-        const visibleData = currentData.slice(startIndex, endIndex);
+        const visibleData = data.slice(startIndex, endIndex);
 
         visibleData.forEach(rowData => {
             let trClasses = [];
@@ -862,7 +769,7 @@ function renderData(data) {
         });
 
         // Add pagination controls below the table
-        const totalPages = Math.ceil(currentData.length / VISIBLE_ROWS);
+        const totalPages = Math.ceil(data.length / VISIBLE_ROWS);
         const paginationDiv = document.createElement('div');
         paginationDiv.className = 'flex justify-center items-center gap-4 mt-4';
         paginationDiv.innerHTML = `
@@ -878,6 +785,7 @@ function renderData(data) {
 
         addSortingToTable(); // Apply sorting listeners after table is rendered
     }
+}
 
 /**
  * Changes the current page for table pagination.
