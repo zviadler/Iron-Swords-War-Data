@@ -326,6 +326,13 @@ body {
 .btn-secondary:hover{
     box-shadow:0 12px 24px rgba(113,128,150,.35);
 }
+#resultsCounter {
+  text-align: center; /* מרכז את הטקסט אופקית */
+  font-size: 16px; /* גודל טקסט */
+  color: #333; /* צבע טקסט */
+  font-weight: bold; /* עיצוב של הטקסט */
+  margin: 10px 0; /* רווח למעלה ולמטה */
+}
 
 /* ==========================================================
    קונטיינר טבלה (מעודכן)
@@ -526,8 +533,7 @@ tr:hover td {
     color:var(--accent-primary);
     transform:translateY(-2px);
 }
-/*מכאן והלאה עיצוב מצב כרטיסיות
- קונטיינר שמכיל את כל הכרטיסיות */
+/* קונטיינר שמכיל את כל הכרטיסיות */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
