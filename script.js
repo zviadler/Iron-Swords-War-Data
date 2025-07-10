@@ -75,7 +75,11 @@ const labels = {
     export_no_data: { he: "אין נתונים לייצוא.", en: "No data to export." },
     filter_reset_success: { he: "הפילטרים אופסו בהצלחה.", en: "Filters reset successfully." },
     results_found: { he: "נמצאו {count} תוצאות", en: "{count} results found" },
-    result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" }
+    result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" },
+    data_collection: { he: "איסוף נתונים:", en: "Data Collection:" },
+    legal_notice: { he: "הערה משפטית:", en: "Legal Notice:" },
+    data_accuracy_disclaimer: { he: "הנתונים מוצגים כפי שנאספו ועלולים להכיל טעויות. האתר אינו אחראי לדיוק המידע.", en: "Data is presented as collected and may contain errors. This website is not responsible for data accuracy." },
+    all_rights_reserved: { he: "כל הזכויות שמורות", en: "All rights reserved" },
 };
 
 // --- START: Embedded Data ---
@@ -614,75 +618,132 @@ function sortTable(columnIndex, direction = null, shouldRender = true) {
  * Updates all dynamic text elements in the UI based on the current language.
  */
 function updateTextByLang() {
-    document.getElementById('langBtn').textContent = currentLang === 'he' ? 'English' : 'עברית';
-    document.getElementById('siteTitle').textContent = labels.site_title[currentLang];
-    document.getElementById('siteSub').textContent = labels.site_sub[currentLang];
+    // כפתור שפה
+    setTextContent('langBtn', currentLang === 'he' ? 'English' : 'עברית');
 
-    document.getElementById('searchBox')?.setAttribute('placeholder', labels.search_placeholder[currentLang]);
-    
+    // כותרות אתר
+    setTextContent('siteTitle', labels.site_title[currentLang]);
+    setTextContent('siteSub', labels.site_sub[currentLang]);
+
+    // placeholder לחיפוש
+    setAttribute('searchBox', 'placeholder', labels.search_placeholder[currentLang]);
+
+    // כפתור תצוגה (כרטיסים/טבלה)
     const viewToggleBtn = document.getElementById('viewToggleBtn');
     if (viewToggleBtn) {
-        // Update button text and icon based on current view mode
         const iconClass = isCardView ? 'fas fa-table' : 'fas fa-th-list';
-        viewToggleBtn.innerHTML = `<i class="${iconClass}"></i> ${isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang]}`;
+        const label = isCardView ? labels.toggle_view_table[currentLang] : labels.toggle_view_card[currentLang];
+        viewToggleBtn.innerHTML = `<i class="${iconClass}"></i> ${label}`;
     }
-    
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) resetBtn.innerHTML = `<i class="fas fa-refresh"></i> ${labels.reset_filters[currentLang]}`;
 
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) exportBtn.innerHTML = `<i class="fas fa-download"></i> ${labels.export_csv[currentLang]}`;
+    // כפתורים נוספים
+    setButtonHTML('resetBtn', 'fas fa-refresh', labels.reset_filters[currentLang]);
+    setButtonHTML('exportBtn', 'fas fa-download', labels.export_csv[currentLang]);
 
-    // Update stats labels
-    if (document.querySelector('#totalCombatants')) document.querySelector('#totalCombatants').nextElementSibling.textContent = labels.total_combatants[currentLang];
-    if (document.querySelector('#totalCasualties')) document.querySelector('#totalCasualties').nextElementSibling.textContent = labels.total_casualties[currentLang];
-    if (document.querySelector('#familyCasualties')) document.querySelector('#familyCasualties').nextElementSibling.textContent = labels.family_members[currentLang];
-    if (document.querySelector('#highRanking')) document.querySelector('#highRanking').nextElementSibling.textContent = labels.high_ranking[currentLang];
+    // טקסטים ב-footer לפי שפה
+    toggleLanguageElements('dataCollectionHebrew', 'dataCollectionEnglish');
 
-    // Update filter labels
-    if (document.querySelector('.filters-bar .filter-group:nth-child(1) label')) document.querySelector('.filters-bar .filter-group:nth-child(1) label').textContent = labels.location[currentLang] + ':';
-    if (document.querySelector('.filters-bar .filter-group:nth-child(2) label')) document.querySelector('.filters-bar .filter-group:nth-child(2) label').textContent = labels.organization[currentLang] + ':';
-    if (document.querySelector('.filters-bar .filter-group:nth-child(3) label')) document.querySelector('.filters-bar .filter-group:nth-child(3) label').textContent = labels.rank_role[currentLang] + ':';
-    if (document.querySelector('.filters-bar .filter-group:nth-child(4) label')) document.querySelector('.filters-bar .filter-group:nth-child(4) label').textContent = labels.search_placeholder[currentLang].split(' ')[0] + ':'; // "חיפוש:" / "Search:"
+    // סטטיסטיקות
+    const statsLabels = {
+        totalCombatants: labels.total_combatants[currentLang],
+        totalCasualties: labels.total_casualties[currentLang],
+        familyCasualties: labels.family_members[currentLang],
+        highRanking: labels.high_ranking[currentLang],
+    };
+    updateStatsLabels(statsLabels);
 
-    // Update filter options (e.g., "All" option)
-    const filterSelects = ['locationFilter', 'orgFilter', 'rankFilter'];
-    filterSelects.forEach(selectId => {
+    // תגיות פילטרים
+    const filterLabels = [
+        { selector: '.filters-bar .filter-group:nth-child(1) label', labelKey: 'location' },
+        { selector: '.filters-bar .filter-group:nth-child(2) label', labelKey: 'organization' },
+        { selector: '.filters-bar .filter-group:nth-child(3) label', labelKey: 'rank_role' },
+        { selector: '.filters-bar .filter-group:nth-child(4) label', 
+          text: labels.search_placeholder[currentLang].split(' ')[0] + ':' },
+    ];
+    updateFilterLabels(filterLabels);
+
+    // אפשרות "הכל" בתיבות הסינון
+    const allText = currentLang === 'he' ? 'הכל' : 'All';
+    ['locationFilter', 'orgFilter', 'rankFilter'].forEach(selectId => {
         const selectElement = document.getElementById(selectId);
-        if (selectElement && selectElement.options.length > 0) {
-            selectElement.options[0].textContent = currentLang === 'he' ? 'הכל' : 'All';
+        if (selectElement?.options.length > 0) {
+            selectElement.options[0].textContent = allText;
         }
     });
-    
-    // Update pagination buttons if they exist
-    const prevBtn = document.getElementById('prevPageBtn');
-    const nextBtn = document.getElementById('nextPageBtn');
-    const pageInfoSpan = document.getElementById('pageInfo');
-    if (prevBtn) prevBtn.textContent = labels.previous_page[currentLang];
-    if (nextBtn) nextBtn.textContent = labels.next_page[currentLang];
-    if (pageInfoSpan) {
-         const totalPages = Math.ceil(currentData.length / VISIBLE_ROWS);
-         pageInfoSpan.textContent = labels.page_info[currentLang]
-            .replace('{current}', currentPage + 1)
-            .replace('{total}', totalPages === 0 ? 1 : totalPages); // Handle 0 total pages
-    }
 
-    // Update results counter text
-    const resultsCounter = document.getElementById('resultsCounter');
-    if (resultsCounter) {
-        if (currentData.length === 1) {
-            resultsCounter.textContent = labels.result_found[currentLang];
-        } else {
-            resultsCounter.textContent = labels.results_found[currentLang].replace('{count}', currentData.length);
-        }
-        if (currentData.length > 0) {
-            resultsCounter.classList.remove('hidden');
-        } else {
-            resultsCounter.classList.add('hidden');
+    // כפתורי עמודים
+    setTextContent('prevPageBtn', labels.previous_page[currentLang]);
+    setTextContent('nextPageBtn', labels.next_page[currentLang]);
+    updatePageInfo();
+
+    // ספירת תוצאות
+    updateResultsCounter();
+}
+
+// פונקציות עזר
+function setTextContent(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function setButtonHTML(id, iconClass, label) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<i class="${iconClass}"></i> ${label}`;
+}
+
+function setAttribute(id, attribute, value) {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute(attribute, value);
+}
+
+function toggleLanguageElements(hebrewId, englishId) {
+    const hebrewEl = document.getElementById(hebrewId);
+    const englishEl = document.getElementById(englishId);
+    if (hebrewEl && englishEl) {
+        const isHebrew = currentLang === 'he';
+        hebrewEl.classList.toggle('hidden', !isHebrew);
+        englishEl.classList.toggle('hidden', isHebrew);
+    }
+}
+
+function updateStatsLabels(statsLabels) {
+    for (const [id, label] of Object.entries(statsLabels)) {
+        const el = document.querySelector(`#${id}`);
+        if (el?.nextElementSibling) {
+            el.nextElementSibling.textContent = label;
         }
     }
 }
 
+function updateFilterLabels(filterLabels) {
+    filterLabels.forEach(({ selector, labelKey, text }) => {
+        const el = document.querySelector(selector);
+        if (el) {
+            el.textContent = text || `${labels[labelKey][currentLang]}:`;
+        }
+    });
+}
+
+function updatePageInfo() {
+    const pageInfoSpan = document.getElementById('pageInfo');
+    if (pageInfoSpan) {
+        const totalPages = Math.ceil(currentData.length / VISIBLE_ROWS);
+        pageInfoSpan.textContent = labels.page_info[currentLang]
+            .replace('{current}', currentPage + 1)
+            .replace('{total}', totalPages === 0 ? 1 : totalPages);
+    }
+}
+
+function updateResultsCounter() {
+    const resultsCounter = document.getElementById('resultsCounter');
+    if (resultsCounter) {
+        resultsCounter.textContent = currentData.length === 1
+            ? labels.result_found[currentLang]
+            : labels.results_found[currentLang].replace('{count}', currentData.length);
+
+        resultsCounter.classList.toggle('hidden', currentData.length === 0);
+    }
+}
 /**
  * Toggles the view mode between table and card view.
  * Updates the global `isCardView` flag and button text, then re-renders data.
