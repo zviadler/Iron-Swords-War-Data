@@ -527,6 +527,85 @@ tr:hover td {
     color:var(--accent-primary);
     transform:translateY(-2px);
 }
+/*מכאן והלאה עיצוב מצב כרטיסיות
+ קונטיינר שמכיל את כל הכרטיסיות */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* עיצוב הכרטיס */
+.card {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* צל עדין */
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    color: #222;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    cursor: default;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+}
+
+.card.high-ranking {
+    border-left: 4px solid #555;
+}
+
+/* תוכן הכרטיס */
+.card h2 {
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin: 0 0 0.3rem 0;
+    color: #111;
+}
+
+.card h2.org-mujahideen {
+    font-weight: 600;
+    color: #444;
+}
+
+.card .sub {
+    font-size: 0.9rem;
+    color: #666;
+    min-height: 1.2rem;
+}
+
+.card .meta {
+    font-size: 0.85rem;
+    color: #555;
+    display: flex;
+    justify-content: flex-start;
+    gap: 1.2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.6rem;
+}
+
+.card .card-details p {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.card .card-details p strong {
+    font-weight: 600;
+    color: #222;
+}
+
+.card .card-details p.family {
+    font-style: italic;
+    color: #555;
+}
+
 
 /* ==========================================================
    אינדיקטור טעינה (נשמר מה-CSS המקורי שלך)
