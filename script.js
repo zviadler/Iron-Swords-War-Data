@@ -734,7 +734,7 @@ function renderData(data) {
             card.className = 'card';
 
             // Apply rank-based styling to the card itself
-            let rankClass = '';
+           /* let rankClass = '';
             const lowerRank = row.rank_role ? row.rank_role.toLowerCase() : '';
             if (lowerRank.includes('leader') || lowerRank.includes('prominent')) {
                 rankClass = 'high-ranking';
@@ -743,7 +743,7 @@ function renderData(data) {
             } else if (lowerRank.includes('mujahid') || lowerRank.includes('fighter')) {
                 rankClass = 'regular-mujahid';
             }
-            if (rankClass) card.classList.add(rankClass);
+            if (rankClass) card.classList.add(rankClass);*/
 
             let orgClass = '';
             const org = row.organization ? row.organization.toLowerCase() : '';
@@ -754,22 +754,34 @@ function renderData(data) {
             
             // Build card content with highlighting and detailed info using labels for titles
             // Main title and subtitle
+            // פונקציה שמחזירה HTML רק אם יש תוכן משמעותי
+            function renderIfValid(content, className = '', tagName = 'div') {
+                const value = content?.trim();
+                if (!value || value === '-') return '';
+                return `<${tagName} class="${className}">${highlight(value, searchTerm)}</${tagName}>`;
+            }
+
+            // בתוך הלולאה שדרכה בונים כל כרטיס:
+            const metaLocation = row.location && row.location.trim() !== '-' ? `<span>📍 ${highlight(row.location, searchTerm)}</span>` : '';
+            const metaDate = row.date && row.date.trim() !== '-' ? `<span>📅 ${highlight(row.date, searchTerm)}</span>` : '';
+
             card.innerHTML = `
-                <h2 class="${orgClass}">${highlight(row.name_english || '', searchTerm)} | ${highlight(row.name_arabic || '', searchTerm)}</h2>
-                <div class="sub">${highlight(row.description_online || '', searchTerm)}</div>
+                <h2>${highlight(row.name_english || '', searchTerm)} | ${highlight(row.name_arabic || '', searchTerm)}</h2>
+                ${renderIfValid(row.description_online, 'sub')}
                 <div class="meta">
-                    <span>📍 ${highlight(row.location || '', searchTerm)}</span>
-                    <span>📅 ${highlight(row.date || '', searchTerm)}</span>
+                    ${metaLocation}
+                    ${metaDate}
                 </div>
                 <div class="card-details"></div>
             `;
-            
+
             const cardDetailsDiv = card.querySelector('.card-details');
+
 
             // Add all other fields dynamically, skipping empty/dash ones
             dataFieldKeys.forEach(key => {
                 // Skip fields already rendered in h2, sub, meta
-                if (['name_english', 'name_arabic', 'description_online', 'location', 'date'].includes(key)) {
+                if (['name_english', 'name_arabic', 'description_online', 'location', 'date', 'post_id'].includes(key)) {
                     return;
                 }
 
