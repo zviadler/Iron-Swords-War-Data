@@ -5,72 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מאגר זיהוי לוחמים</title>
     <link rel="icon" href="https://pbs.twimg.com/profile_images/1734469370716274688/K7wQUSar_400x400.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- במידת האפשר, העבר ל-PostCSS/CLI בייצור -->
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- שפת הדף -->
     <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="language-toggle" id="langBtn" role="button" tabindex="0" aria-label="החלף שפה">English</div>
+    <!-- Toggle שפה -->
+    <div id="langBtn"
+         class="language-toggle p-2 cursor-pointer"
+         role="button" tabindex="0"
+         aria-label="החלף שפה">
+        English
+    </div>
 
-    <div class="container relative"> <header class="site-header" id="siteHeader">
-            <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
-            <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
+    <div class="container relative mx-auto my-4">
+        <header class="site-header px-6 py-8 text-center" id="siteHeader">
+            <h1 id="siteTitle" class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
+            <p id="siteSub" class="mt-2 text-lg">נתונים מתעדכנים באופן רציף</p>
         </header>
 
-        <div class="filters-bar">
-            <div class="filter-group">
+        <!-- סרגל פילטרים -->
+        <div class="filters-bar px-6 py-4 flex flex-wrap gap-4 items-end bg-gray-100 rounded-lg">
+            <div class="filter-group flex flex-col">
                 <label for="locationFilter">מיקום:</label>
-                <select id="locationFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <select id="locationFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
                     <option value="">הכל</option>
-                    </select>
+                </select>
             </div>
-            
-            <div class="filter-group">
+            <div class="filter-group flex flex-col">
                 <label for="orgFilter">ארגון:</label>
-                <select id="orgFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <select id="orgFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
                     <option value="">הכל</option>
-                    </select>
+                </select>
             </div>
-            
-            <div class="filter-group">
+            <div class="filter-group flex flex-col">
                 <label for="rankFilter">דרגה:</label>
-                <select id="rankFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <select id="rankFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
                     <option value="">הכל</option>
-                    </select>
+                </select>
             </div>
-            
-            <div class="filter-group">
+            <div class="filter-group flex flex-col flex-grow">
                 <label for="searchBox">חיפוש:</label>
-                <input type="text" id="searchBox" placeholder="🔍 חפש שם, מיקום או תיאור..." class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <input type="text"
+                       id="searchBox"
+                       placeholder="🔍 חפש שם, מיקום או תיאור..."
+                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full border-gray-300 rounded-md">
             </div>
-            
-            <button class="btn" id="exportBtn" aria-label="ייצא נתונים לקובץ CSV">
+
+            <button id="exportBtn" class="btn">
                 <i class="fas fa-download"></i> ייצא ל-CSV
             </button>
-            <button class="btn btn-secondary" id="resetBtn" aria-label="אפס את כל הפילטרים והחיפוש">
+            <button id="resetBtn" class="btn btn-secondary">
                 <i class="fas fa-refresh"></i> איפוס פילטרים
             </button>
-            <button class="btn btn-secondary" id="viewToggleBtn" aria-label="החלף בין תצוגת טבלה לתצוגת כרטיסים">
+            <button id="viewToggleBtn" class="btn btn-secondary">
                 <i class="fas fa-th-list"></i> עבור לתצוגת כרטיסים
             </button>
         </div>
-    <div id="data-container" class="mt-4"></div>
-        <div id="resultsCounter" class="results-counter hidden"></div>
-        
-        <div id="contentArea" class="table-container">
-            </div>
 
+        <!-- מיכל התוכן (טבלה/כרטיסים) -->
+        <div id="contentArea" class="table-container mt-4"></div>
+
+        <!-- פגינציה -->
+        <div class="flex justify-center items-center gap-4 mt-4">
+            <button id="prevPageBtn" class="btn btn-secondary" disabled>הקודם</button>
+            <span id="pageInfo" class="text-gray-700">עמוד 1 מתוך 1</span>
+            <button id="nextPageBtn" class="btn btn-secondary" disabled>הבא</button>
+        </div>
+
+        <!-- Counter תוצאות -->
+        <div id="resultsCounter" class="results-counter mt-2 text-center text-gray-700 font-bold hidden"></div>
+
+        <!-- Overlay טעינה -->
         <div id="loadingOverlay" class="loading-overlay hidden">
             <div class="spinner"></div>
-            <p class="text-gray-700 text-lg loading-text">טוען נתונים...</p>
+            <p class="loading-text">טוען נתונים...</p>
         </div>
     </div>
-    
-    <div class="container">
-        <div class="stats">
+
+    <!-- סטטיסטיקות -->
+    <div class="container mx-auto my-8">
+        <div class="stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="stat-card">
                 <div class="stat-number" id="totalCombatants">0</div>
                 <div>סה"כ לוחמים</div>
@@ -90,21 +112,26 @@
         </div>
     </div>
 
-
+    <!-- Toast container -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <div class="footer-info container mt-8 mb-4 text-center text-gray-600 text-sm">
+    <!-- Footer מידע משפטי -->
+    <div class="footer-info container mx-auto mb-8 text-center text-gray-600 text-sm">
         <div id="dataCollectionHebrew">
-            <p><strong>איסוף נתונים:</strong> הנתונים באתר זה נאספו על ידי <a href="https://x.com/MiddleEastBuka/status/1916380369030369745" target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
+            <p><strong>איסוף נתונים:</strong> הנתונים באתר זה נאספו על ידי <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
+                target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
             <p><strong>הערה משפטית:</strong> הנתונים מוצגים כפי שנאספו ועלולים להכיל טעויות. האתר אינו אחראי לדיוק המידע.</p>
             <p>© כל הזכויות שמורות</p>
         </div>
         <div id="dataCollectionEnglish" class="hidden">
-            <p><strong>Data Collection:</strong> The data on this website was collected by <a href="https://x.com/MiddleEastBuka/status/1916380369030369745" target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
+            <p><strong>Data Collection:</strong> The data on this website was collected by <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
+                target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
             <p><strong>Legal Notice:</strong> Data is presented as collected and may contain errors. This website is not responsible for data accuracy.</p>
             <p>© All rights reserved</p>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- הסקריפט העיקרי -->
+    <script defer src="script.js"></script>
 </body>
 </html>
