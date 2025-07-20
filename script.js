@@ -351,9 +351,9 @@ function normalizeHeader(header) {
     function populateFilters() {
         const sets = { location: new Set(), org: new Set(), rank: new Set() };
         state.originalData.forEach(r => {
-            if (r.location) sets.location.add(r.location.trim());
-            if (r.organization) sets.org.add(r.organization.trim());
-            if (r.rank_role) sets.rank.add(r.rank_role.trim());
+            if (r.location) sets.location.add(r.location);
+            if (r.organization) sets.org.add(r.organization);
+            if (r.rank_role) sets.rank.add(r.rank_role);
         });
         [
             ['locationFilter','location'],
@@ -373,19 +373,19 @@ function normalizeHeader(header) {
     }
 
     function filterData() {
-    const { location, org, rank, search } = state.filters;
-    state.filteredData = state.originalData.filter(r => {
-        const loc = (r.location||'').toLowerCase().trim();
-        const o   = (r.organization||'').toLowerCase().trim();
-        const rk  = (r.rank_role||'').toLowerCase().trim();
-        const txt = ((r.name_english||'')+(r.name_arabic||'')+(r.description_online||'')+loc+o).toLowerCase();
-        return (!location || loc === location)
-            && (!org || o === org)
-            && (!rank || rk === rank)
-            && (!search || txt.includes(search));
-    });
-    state.currentPage = 0;
-}
+        const { location, org, rank, search } = state.filters;
+        state.filteredData = state.originalData.filter(r => {
+            const loc = (r.location||'').toLowerCase();
+            const o   = (r.organization||'').toLowerCase();
+            const rk  = (r.rank_role||'').toLowerCase();
+            const txt = ((r.name_english||'')+(r.name_arabic||'')+(r.description_online||'')+loc+o).toLowerCase();
+            return (!location|| loc.includes(location))
+                && (!org|| o.includes(org))
+                && (!rank|| rk.includes(rank))
+                && (!search|| txt.includes(search));
+        });
+        state.currentPage = 0;
+    }
 
     const debouncedFilter = debounce(() => {
         state.filters.search = dom.searchBox.value.toLowerCase();
