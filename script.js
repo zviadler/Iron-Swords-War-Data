@@ -213,28 +213,61 @@
         return result;
     }
 
-    function normalizeHeader(header) {
-        const normalized = header.trim().toLowerCase();
-        switch (normalized) {
-            case "מס' פוסט": return 'post_id';
-            case "מס' לוחם": return 'combatant_id';
-            case 'תאריך': return 'date';
-            case 'מיקום': return 'location';
-            case 'פירוט מיקום': return 'location_details';
-            case 'שם באנגלית': return 'name_english';
-            case 'שם בערבית': return 'name_arabic';
-            case 'כינוי': return 'nickname';
-            case 'תיאור ברשת': return 'description_online';
-            case 'דרגה/תפקיד': return 'rank_role';
-            case 'ארגון': return 'organization';
-            case 'פעילות': return 'activity';
-            case 'בני משפחה': return 'family_casualties_info';
-            case "מס' קורבנות": return 'casualties_count';
-            case 'לוחמים נוספים': return 'additional_combatants';
-            case 'הערות': return 'notes';
-            default: return normalized.replace(/ /g, '_').replace(/[^a-z0-9_]/g, '');
-        }
+function normalizeHeader(header) {
+    const normalized = header.trim().toLowerCase();
+    switch (normalized) {
+        case "מס' פוסט":
+        case "post no.":
+            return 'post_id';
+        case "מס' לוחם":
+        case "fighter no.":
+            return 'combatant_id';
+        case 'תאריך':
+        case 'date':
+            return 'date';
+        case 'מיקום':
+        case 'location':
+            return 'location';
+        case 'פירוט מיקום':
+        case 'location details':
+            return 'location_details';
+        case 'שם באנגלית':
+        case 'name in english':
+            return 'name_english';
+        case 'שם בערבית':
+        case 'name in arabic':
+            return 'name_arabic';
+        case 'כינוי':
+        case 'nickname':
+            return 'nickname';
+        case 'תיאור ברשת':
+        case 'social media description':
+            return 'description_online';
+        case 'דרגה/תפקיד':
+        case 'rank/role':
+            return 'rank_role';
+        case 'ארגון':
+        case 'organization':
+            return 'organization';
+        case 'פעילות':
+        case 'activity':
+            return 'activity';
+        case 'בני משפחה':
+        case 'family members':
+            return 'family_casualties_info';
+        case "מס' קורבנות":
+        case 'no. of victims':
+            return 'casualties_count';
+        case 'לוחמים נוספים':
+        case 'additional fighters':
+            return 'additional_combatants';
+        case 'הערות':
+        case 'notes':
+            return 'notes';
+        default:
+            return normalized.replace(/ /g, '_').replace(/[^a-z0-9_]/g, '');
     }
+}
 
     let collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
 
