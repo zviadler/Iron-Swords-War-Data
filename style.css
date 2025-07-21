@@ -257,34 +257,51 @@ body {
     background: var(--accent-secondary);
 }
 
-/* עדכון סרגל הפילטרים למובייל */
+/* עדכון המיקום של כפתור הפילטרים */
+.mobile-filters-toggle {
+    display: none;
+    width: 100%;
+    padding: 1rem;
+    margin: 1rem;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color var(--transition-fast) ease;
+}
+
+/* עדכון התנהגות תפריט הפילטרים במובייל */
 @media (max-width: 768px) {
     .mobile-filters-toggle {
-        display: block; /* מציג את כפתור התפריט במובייל */
+        display: block;
+        margin: 1rem auto;
+        max-width: calc(100% - 2rem);
     }
 
     .filters-bar {
-        display: none; /* מסתיר את הפילטרים כברירת מחדל */
+        display: none;
         flex-direction: column;
         padding: 1rem;
+        width: 100%;
     }
 
     .filters-bar.active {
-        display: flex; /* מציג את הפילטרים כשהתפריט פעיל */
-    }
-
-    .filters-bar > * {
-        width: 100%;
-        margin: 0.5rem 0;
+        display: flex;
     }
 
     .filter-group {
         max-width: 100%;
+        width: 100%;
+        margin: 0.5rem 0;
     }
 
     /* התאמת כפתורי הייצוא ומעבר תצוגה */
     .filters-bar > #exportBtn,
     .filters-bar > #viewToggleBtn {
+        width: 100%;
         margin: 0.5rem 0;
     }
 }
