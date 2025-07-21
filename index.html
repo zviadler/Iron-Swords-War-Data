@@ -112,7 +112,7 @@
                 </select>
             </div>
             
-            <div class="filter-group flex-grow">
+            <div class="filter-group search-group">
                 <label for="searchBox">חיפוש:</label>
                 <input type="search"
                        id="searchBox"
@@ -124,30 +124,32 @@
             </div>
 
             <!-- Action Buttons -->
-            <button id="exportBtn" 
-                    class="btn"
-                    type="button"
-                    aria-label="ייצא נתונים לקובץ CSV">
-                <i class="fas fa-download" aria-hidden="true"></i>
-                <span>ייצא ל-CSV</span>
-            </button>
-            
-            <button id="resetBtn" 
-                    class="btn btn-secondary"
-                    type="button"
-                    aria-label="איפוס כל הפילטרים">
-                <i class="fas fa-refresh" aria-hidden="true"></i>
-                <span>איפוס פילטרים</span>
-            </button>
-            
-            <button id="viewToggleBtn" 
-                    class="btn btn-secondary"
-                    type="button"
-                    aria-label="החלף בין תצוגת טבלה לכרטיסים"
-                    aria-pressed="false">
-                <i class="fas fa-th-list" aria-hidden="true"></i>
-                <span>עבור לתצוגת כרטיסים</span>
-            </button>
+            <div class="filter-actions">
+                <button id="exportBtn" 
+                        class="btn"
+                        type="button"
+                        aria-label="ייצא נתונים לקובץ CSV">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <span>ייצא ל-CSV</span>
+                </button>
+                
+                <button id="resetBtn" 
+                        class="btn btn-secondary"
+                        type="button"
+                        aria-label="איפוס כל הפילטרים">
+                    <i class="fas fa-refresh" aria-hidden="true"></i>
+                    <span>איפוס פילטרים</span>
+                </button>
+                
+                <button id="viewToggleBtn" 
+                        class="btn btn-secondary"
+                        type="button"
+                        aria-label="החלף בין תצוגת טבלה לכרטיסים"
+                        aria-pressed="false">
+                    <i class="fas fa-th-list" aria-hidden="true"></i>
+                    <span>עבור לתצוגת כרטיסים</span>
+                </button>
+            </div>
         </section>
 
         <!-- Content Area -->
