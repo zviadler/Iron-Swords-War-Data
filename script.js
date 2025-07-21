@@ -1,4 +1,74 @@
-(function() {
+// === אתחול ===
+    function initialize() {
+        console.log('Initializing app...');
+        
+        // עדכון שפה
+        document.documentElement.lang = state.lang;
+        document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
+        collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+        
+        // אתחול פילטרים מובייל
+        initializeMobileFilters();
+        
+        updateTextByLang();
+        loadData();
+        
+        // מאזינים
+        if (dom.langBtn) {
+            dom.langBtn.addEventListener('click', () => {
+                state.lang = state.lang === 'he' ? 'en' : 'he';
+                document.documentElement.lang = state.lang;
+                document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
+                collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+                updateTextByLang();
+                updateMobileFiltersButton(); // עדכון כפתור מובייל
+                applySortAndRender();
+            });
+        }
+        
+        if (dom.locationFilter) {
+            dom.locationFilter.addEventListener('change', () => {
+                state.filters.location = dom.locationFilter.value.toLowerCase();
+                filterData();
+                applySortAndRender();
+            });
+        }
+        
+        if (dom.orgFilter) {
+            dom.orgFilter.addEventListener('change', () => {
+                state.filters.org = dom.orgFilter.value.toLowerCase();
+                filterData();
+                applySortAndRender();
+            });
+        }
+        
+        if (dom.rankFilter) {
+            dom.rankFilter.addEventListener('change', () => {
+                state.filters.rank = dom.rankFilter.value.toLowerCase();
+                filterData();
+                applySortAndRender();
+            });
+        }
+        
+        if (dom.searchBox) {
+            dom.searchBox.addEventListener('input', debouncedFilter);
+        }
+        
+        if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
+        if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
+        
+        if (dom.viewToggleBtn) {
+            dom.viewToggleBtn.addEventListener('click', () => {
+                state.isCardView = !state.isCardView;
+                applySortAndRender();
+            });
+        }
+        
+        if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetFilters);
+        if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
+        
+        console.log('App initialized');
+    }(function() {
     'use strict';
 
     // === מצב מרכזי ===
@@ -33,7 +103,9 @@
         totalCombatants: document.getElementById('totalCombatants'),
         totalCasualties: document.getElementById('totalCasualties'),
         familyCasualties: document.getElementById('familyCasualties'),
-        highRanking: document.getElementById('highRanking')
+        highRanking: document.getElementById('highRanking'),
+        mobileFiltersToggle: document.getElementById('mobileFiltersToggle'),
+        filtersBar: document.getElementById('filtersBar')
     };
 
     // === מפת שדות ===
@@ -396,15 +468,36 @@
     }
 
     function renderTableView(data, term) {
+        const tableWrapper = document.createElement('div');
+        tableWrapper.className = 'table-container';
+        
         const table = document.createElement('table');
         table.className = 'table-responsive';
         
+        // כותרות עמודות
         const thead = document.createElement('thead');
-        thead.innerHTML = `<tr>${
-            dataFieldKeys.map((k, i) => `<th data-col="${i}" style="cursor: pointer;">${labels[k][state.lang]} <span>↕</span></th>`).join('')
-        }</tr>`;
+        const headerRow = document.createElement('tr');
+        
+        dataFieldKeys.forEach((key, index) => {
+            const th = document.createElement('th');
+            th.dataset.col = index;
+            th.style.cursor = 'pointer';
+            th.innerHTML = `${labels[key][state.lang]} <span class="sort-icon">↕</span>`;
+            
+            // עדכון אינדיקטור מיון
+            if (state.sort.column === index) {
+                const icon = th.querySelector('.sort-icon');
+                icon.textContent = state.sort.direction === 'asc' ? '↑' : '↓';
+                icon.style.color = '#3b82f6';
+            }
+            
+            headerRow.appendChild(th);
+        });
+        
+        thead.appendChild(headerRow);
         table.appendChild(thead);
         
+        // גוף טבלה
         const tbody = document.createElement('tbody');
         const start = state.currentPage * state.VISIBLE_ROWS;
         const chunk = data.slice(start, start + state.VISIBLE_ROWS);
@@ -420,11 +513,14 @@
         });
         
         table.appendChild(tbody);
-        dom.contentArea.appendChild(table);
         
+        // מאזיני מיון
         thead.querySelectorAll('th[data-col]').forEach(th => {
             th.addEventListener('click', () => sortAndRender(parseInt(th.dataset.col)));
         });
+        
+        tableWrapper.appendChild(table);
+        dom.contentArea.appendChild(tableWrapper);
     }
 
     // === פגינציה ===
@@ -545,7 +641,59 @@
         showToast(labels.filter_reset_success[state.lang]);
     }
 
-    // === אתחול ===
+    // === אתחול פילטרים מובייל ===
+    function initializeMobileFilters() {
+        if (!dom.mobileFiltersToggle || !dom.filtersBar) return;
+        
+        dom.mobileFiltersToggle.addEventListener('click', function() {
+            const isActive = dom.filtersBar.classList.contains('active');
+            const newState = !isActive;
+            
+            dom.filtersBar.classList.toggle('active', newState);
+            dom.mobileFiltersToggle.setAttribute('aria-expanded', newState.toString());
+            
+            // עדכון טקסט וצבע כפתור
+            const icon = dom.mobileFiltersToggle.querySelector('i');
+            const span = dom.mobileFiltersToggle.querySelector('span');
+            
+            if (newState) {
+                if (icon) icon.className = 'fas fa-times';
+                if (span) span.textContent = state.lang === 'he' ? 'סגור פילטרים' : 'Close Filters';
+                dom.mobileFiltersToggle.style.background = '#dc2626'; // אדום לסגירה
+            } else {
+                if (icon) icon.className = 'fas fa-filter';
+                if (span) span.textContent = state.lang === 'he' ? 'פתח פילטרים' : 'Open Filters';
+                dom.mobileFiltersToggle.style.background = '#3b82f6'; // כחול לפתיחה
+            }
+        });
+        
+        // סגירה אוטומטית במסכים רחבים
+        const mediaQuery = window.matchMedia('(min-width: 769px)');
+        const handleResize = (e) => {
+            if (e.matches && dom.filtersBar.classList.contains('active')) {
+                dom.filtersBar.classList.remove('active');
+                dom.mobileFiltersToggle.setAttribute('aria-expanded', 'false');
+                updateMobileFiltersButton();
+            }
+        };
+        
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleResize);
+        } else {
+            mediaQuery.addListener(handleResize);
+        }
+    }
+
+    function updateMobileFiltersButton() {
+        if (!dom.mobileFiltersToggle) return;
+        
+        const icon = dom.mobileFiltersToggle.querySelector('i');
+        const span = dom.mobileFiltersToggle.querySelector('span');
+        
+        if (icon) icon.className = 'fas fa-filter';
+        if (span) span.textContent = state.lang === 'he' ? 'פתח פילטרים' : 'Open Filters';
+        dom.mobileFiltersToggle.style.background = '#3b82f6';
+    }
     function initialize() {
         console.log('Initializing app...');
         
@@ -639,19 +787,61 @@ styles.textContent = `
     font-size: 1.2rem; 
     margin-bottom: 0.5rem; 
 }
+.table-container { 
+    width: 100%; 
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 1rem 0;
+}
 .table-responsive { 
     width: 100%; 
     border-collapse: collapse; 
-}
-.table-responsive th, 
-.table-responsive td { 
-    padding: 0.5rem; 
-    border: 1px solid #ddd; 
-    text-align: right; 
+    min-width: 1000px;
+    background: white;
 }
 .table-responsive th { 
-    background: #f5f5f5; 
-    font-weight: bold; 
+    padding: 1rem 0.75rem; 
+    border: 1px solid #e5e7eb; 
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #374151;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: background 0.2s ease;
+}
+.table-responsive th:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+.table-responsive td {
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    vertical-align: top;
+    max-width: 200px;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.table-responsive tr:nth-child(even) {
+    background: #f9fafb;
+}
+.table-responsive tr:hover {
+    background: #f3f4f6 !important;
+}
+.sort-icon {
+    margin-left: 0.5rem;
+    font-size: 0.8em;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+.table-responsive th:hover .sort-icon {
+    opacity: 1;
+    color: #3b82f6;
 }
 .card-grid { 
     display: grid; 
