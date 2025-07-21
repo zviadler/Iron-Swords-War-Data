@@ -347,10 +347,10 @@ function normalizeHeader(header) {
             hideLoadingState();
         }
     }
-    // הוספת כפתור התפריט ל-HTML
-    document.querySelector('.container').insertAdjacentHTML('beforebegin', `
+       // הוספת כפתור התפריט לפני סרגל הפילטרים
+    document.querySelector('.filters-bar').insertAdjacentHTML('beforebegin', `
         <button class="mobile-filters-toggle">
-            פתח/סגור פילטרים
+            פתח פילטרים
         </button>
     `);
     
@@ -358,8 +358,6 @@ function normalizeHeader(header) {
     document.querySelector('.mobile-filters-toggle').addEventListener('click', function() {
         const filtersBar = document.querySelector('.filters-bar');
         filtersBar.classList.toggle('active');
-        
-        // עדכון טקסט הכפתור
         this.textContent = filtersBar.classList.contains('active') ? 'סגור פילטרים' : 'פתח פילטרים';
     });
     function populateFilters() {
