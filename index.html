@@ -30,7 +30,11 @@
             <h1 id="siteTitle" class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
             <p id="siteSub" class="mt-2 text-lg">נתונים מתעדכנים באופן רציף</p>
         </header>
-
+        <!-- כפתור לפתיחת הפילטרים, יוצג רק במובייל -->
+        <button class="mobile-filters-toggle" type="button">הצג סינון</button>
+        
+        <!-- סרגל הסינון -->
+        <div class="filters-bar">
         <!-- סרגל פילטרים -->
         <div class="filters-bar px-6 py-4 flex flex-wrap gap-4 items-end bg-gray-100 rounded-lg">
             <div class="filter-group flex flex-col">
@@ -69,7 +73,7 @@
                 <i class="fas fa-th-list"></i> עבור לתצוגת כרטיסים
             </button>
         </div>
-
+        
         <!-- מיכל התוכן (טבלה/כרטיסים) -->
         <div id="contentArea" class="table-container mt-4"></div>
 
@@ -78,6 +82,7 @@
             <button id="prevPageBtn" class="btn btn-secondary" disabled>הקודם</button>
             <span id="pageInfo" class="text-gray-700">עמוד 1 מתוך 1</span>
             <button id="nextPageBtn" class="btn btn-secondary" disabled>הבא</button>
+        </div>
         </div>
 
         <!-- Counter תוצאות -->
