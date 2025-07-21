@@ -502,16 +502,57 @@ table {
     font-size: var(--font-size-sm);
     min-width: 1200px;
     background: transparent;
+    table-layout: fixed; /* תיקון ברוחב עמודות */
 }
 
 th,
 td {
-    padding: var(--space-md) var(--space-sm);
+    padding: var(--space-sm) var(--space-xs);
     text-align: center;
     vertical-align: middle;
     color: var(--text-primary);
     border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative; /* להסרת בעיית הכוכב */
 }
+
+/* חלוקת רוחב עמודות קבועה */
+th:nth-child(1),  /* מס' פוסט */
+td:nth-child(1) { width: 6%; }
+
+th:nth-child(2),  /* מס' לוחם */
+td:nth-child(2) { width: 6%; }
+
+th:nth-child(3),  /* תאריך */
+td:nth-child(3) { width: 8%; }
+
+th:nth-child(4),  /* מיקום */
+td:nth-child(4) { width: 10%; }
+
+th:nth-child(5),  /* פירוט מיקום */
+td:nth-child(5) { width: 8%; }
+
+th:nth-child(6),  /* שם אנגלית */
+td:nth-child(6) { width: 12%; }
+
+th:nth-child(7),  /* שם ערבית */
+td:nth-child(7) { width: 12%; }
+
+th:nth-child(8),  /* כינוי */
+td:nth-child(8) { width: 8%; }
+
+th:nth-child(9),  /* תיאור ברשת */
+td:nth-child(9) { width: 10%; }
+
+th:nth-child(10), /* דרגה */
+td:nth-child(10) { width: 10%; }
+
+th:nth-child(11), /* ארגון */
+td:nth-child(11) { width: 10%; }
+
+/* שאר העמודות מתחלקות באופן שווה */
 
 th {
     position: sticky;
@@ -541,16 +582,22 @@ th:last-child {
     border-top-left-radius: var(--radius-md);
 }
 
-th.sort-asc::after,
-th.sort-desc::after {
-    content: '↑';
+/* תיקון אינדיקטורי מיון */
+.sort-indicator {
     margin-inline-start: var(--space-xs);
-    color: var(--sort-active);
-    font-weight: bold;
+    font-size: 0.8em;
+    opacity: 0.6;
+    display: inline-block;
 }
 
-th.sort-desc::after {
-    content: '↓';
+th[aria-sort="ascending"] .sort-indicator {
+    opacity: 1;
+    color: var(--sort-active);
+}
+
+th[aria-sort="descending"] .sort-indicator {
+    opacity: 1;
+    color: var(--sort-active);
 }
 
 tr {
@@ -609,11 +656,7 @@ tr:hover {
     opacity: 1;
 }
 
-.card.high-ranking {
-    border-left-color: var(--warning-color);
-    border-left-width: 4px;
-}
-
+/* הסרת סימוני בכירים */
 .card h2 {
     font-weight: 700;
     font-size: var(--font-size-xl);
