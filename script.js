@@ -545,6 +545,7 @@ tr:focus-visible {
         
         const rawHeaders = parseCsvLine(lines[0]);
         const headers = rawHeaders.map(normalizeHeader);
+        console.log('CSV headers:', headers);
         
         const data = lines.slice(1).map((line, index) => {
             try {
@@ -562,6 +563,7 @@ tr:focus-visible {
             }
         }).filter(record => record !== null);
         
+        console.log(`Parsed ${data.length} records from ${lines.length - 1} lines`);
         return data;
     }
 
@@ -1084,7 +1086,7 @@ tr:focus-visible {
     }
 
     /**
-     * בדיקת דרגה גבוהה
+     * בדיקת דרגה גבוהה (נשאר לצורך תאימות אבל לא בשימוש)
      */
     function isHighRankingRole(role) {
         if (!role) return false;
