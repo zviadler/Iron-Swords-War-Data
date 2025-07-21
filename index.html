@@ -1,139 +1,311 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מאגר זיהוי לוחמים</title>
+    <meta name="description" content="מאגר נתונים מתעדכן של לוחמים - נתונים מתעדכנים באופן רציף">
+    <meta name="keywords" content="מאגר, לוחמים, זיהוי, נתונים">
+    <meta name="author" content="@MiddleEastBuka">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="מאגר זיהוי לוחמים">
+    <meta property="og:description" content="מאגר נתונים מתעדכן של לוחמים - נתונים מתעדכנים באופן רציף">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="he_IL">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="מאגר זיהוי לוחמים">
+    <meta name="twitter:description" content="מאגר נתונים מתעדכן של לוחמים">
+    
+    <!-- Favicon and Icons -->
     <link rel="icon" href="https://pbs.twimg.com/profile_images/1734469370716274688/K7wQUSar_400x400.png" type="image/png">
-
-    <!-- במידת האפשר, העבר ל-PostCSS/CLI בייצור -->
-    <script defer src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-
-    <!-- שפת הדף -->
-    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="https://pbs.twimg.com/profile_images/1734469370716274688/K7wQUSar_400x400.png">
+    
+    <!-- Theme and PWA -->
+    <meta name="theme-color" content="#3b82f6">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="מאגר לוחמים">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <title>מאגר זיהוי לוחמים</title>
+    
+    <!-- CSS and Fonts -->
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
 </head>
 <body>
-    <!-- Toggle שפה -->
-    <div id="langBtn"
-         class="language-toggle p-2 cursor-pointer"
-         role="button" tabindex="0"
-         aria-label="החלף שפה">
-        English
-    </div>
+    <!-- Skip to main content for screen readers -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-500 text-white px-4 py-2 rounded-md z-50">
+        דילוג לתוכן הראשי
+    </a>
 
-    <div class="container relative mx-auto my-4">
-        <header class="site-header px-6 py-8 text-center" id="siteHeader">
-            <h1 id="siteTitle" class="text-3xl font-bold">מאגר זיהוי לוחמים</h1>
-            <p id="siteSub" class="mt-2 text-lg">נתונים מתעדכנים באופן רציף</p>
+    <!-- Language Toggle Button -->
+    <button id="langBtn"
+            class="language-toggle"
+            type="button"
+            aria-label="החלף שפה / Switch Language"
+            aria-pressed="false">
+        <span aria-hidden="true">English</span>
+    </button>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container relative mx-auto my-4">
+        <!-- Site Header -->
+        <header class="site-header" role="banner">
+            <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
+            <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
         </header>
         
-        <!-- סרגל פילטרים -->
-        <div class="filters-bar px-6 py-4 flex flex-wrap gap-4 items-end bg-gray-100 rounded-lg">
-        <!-- סרגל הסינון -->
-        <div class="filters-bar">
-            <div class="filter-group flex flex-col">
+        <!-- Mobile Filters Toggle -->
+        <button id="mobileFiltersToggle" 
+                class="mobile-filters-toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="filtersBar">
+            <i class="fas fa-filter" aria-hidden="true"></i>
+            <span>פתח פילטרים</span>
+        </button>
+        
+        <!-- Filters Bar -->
+        <section class="filters-bar" 
+                 id="filtersBar"
+                 role="search"
+                 aria-label="סינון והרשאות חיפוש">
+            
+            <div class="filter-group">
                 <label for="locationFilter">מיקום:</label>
-                <select id="locationFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
+                <select id="locationFilter" 
+                        name="location"
+                        aria-label="סינון לפי מיקום">
                     <option value="">הכל</option>
                 </select>
             </div>
-            <div class="filter-group flex flex-col">
+            
+            <div class="filter-group">
                 <label for="orgFilter">ארגון:</label>
-                <select id="orgFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
+                <select id="orgFilter" 
+                        name="organization"
+                        aria-label="סינון לפי ארגון">
                     <option value="">הכל</option>
                 </select>
             </div>
-            <div class="filter-group flex flex-col">
+            
+            <div class="filter-group">
                 <label for="rankFilter">דרגה:</label>
-                <select id="rankFilter" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-48 border-gray-300 rounded-md">
+                <select id="rankFilter" 
+                        name="rank"
+                        aria-label="סינון לפי דרגה">
                     <option value="">הכל</option>
                 </select>
             </div>
-            <div class="filter-group flex flex-col flex-grow">
+            
+            <div class="filter-group flex-grow">
                 <label for="searchBox">חיפוש:</label>
-                <input type="text"
+                <input type="search"
                        id="searchBox"
+                       name="search"
                        placeholder="🔍 חפש שם, מיקום או תיאור..."
-                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full border-gray-300 rounded-md">
+                       aria-label="חיפוש חופשי בנתונים"
+                       autocomplete="off"
+                       spellcheck="false">
             </div>
 
-            <button id="exportBtn" class="btn">
-                <i class="fas fa-download"></i> ייצא ל-CSV
+            <!-- Action Buttons -->
+            <button id="exportBtn" 
+                    class="btn"
+                    type="button"
+                    aria-label="ייצא נתונים לקובץ CSV">
+                <i class="fas fa-download" aria-hidden="true"></i>
+                <span>ייצא ל-CSV</span>
             </button>
-            <button id="resetBtn" class="btn btn-secondary">
-                <i class="fas fa-refresh"></i> איפוס פילטרים
+            
+            <button id="resetBtn" 
+                    class="btn btn-secondary"
+                    type="button"
+                    aria-label="איפוס כל הפילטרים">
+                <i class="fas fa-refresh" aria-hidden="true"></i>
+                <span>איפוס פילטרים</span>
             </button>
-            <button id="viewToggleBtn" class="btn btn-secondary">
-                <i class="fas fa-th-list"></i> עבור לתצוגת כרטיסים
+            
+            <button id="viewToggleBtn" 
+                    class="btn btn-secondary"
+                    type="button"
+                    aria-label="החלף בין תצוגת טבלה לכרטיסים"
+                    aria-pressed="false">
+                <i class="fas fa-th-list" aria-hidden="true"></i>
+                <span>עבור לתצוגת כרטיסים</span>
             </button>
+        </section>
+
+        <!-- Content Area -->
+        <section id="contentArea" 
+                 class="table-container mt-4"
+                 role="region"
+                 aria-label="תוצאות החיפוש והנתונים"
+                 aria-live="polite">
+            
+            <!-- Empty State (hidden by default) -->
+            <div id="emptyState" class="empty-state hidden" role="status">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <h3>לא נמצאו תוצאות</h3>
+                <p>נסה לשנות את קריטריוני החיפוש או לאפס את הפילטרים</p>
+            </div>
+            
+            <!-- Loading State will be inserted here by JavaScript -->
+        </section>
+
+        <!-- Pagination -->
+        <nav class="flex justify-center items-center gap-4 mt-4" 
+             role="navigation"
+             aria-label="ניווט בין עמודים">
+            <button id="prevPageBtn" 
+                    class="btn btn-secondary" 
+                    type="button"
+                    disabled
+                    aria-label="עמוד קודם">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                <span>הקודם</span>
+            </button>
+            
+            <span id="pageInfo" 
+                  class="text-gray-700 font-medium"
+                  role="status"
+                  aria-live="polite">
+                עמוד 1 מתוך 1
+            </span>
+            
+            <button id="nextPageBtn" 
+                    class="btn btn-secondary" 
+                    type="button"
+                    disabled
+                    aria-label="עמוד הבא">
+                <span>הבא</span>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </nav>
+
+        <!-- Results Counter -->
+        <div id="resultsCounter" 
+             class="results-counter mt-2 text-center hidden"
+             role="status"
+             aria-live="polite">
         </div>
-        </div>
 
-    
-        <!-- מיכל התוכן (טבלה/כרטיסים) -->
-        <div id="contentArea" class="table-container mt-4"></div>
-
-        <!-- פגינציה -->
-        <div class="flex justify-center items-center gap-4 mt-4">
-            <button id="prevPageBtn" class="btn btn-secondary" disabled>הקודם</button>
-            <span id="pageInfo" class="text-gray-700">עמוד 1 מתוך 1</span>
-            <button id="nextPageBtn" class="btn btn-secondary" disabled>הבא</button>
-        </div>
-
-        <!-- Counter תוצאות -->
-        <div id="resultsCounter" class="results-counter mt-2 text-center text-gray-700 font-bold hidden"></div>
-
-        <!-- Overlay טעינה -->
-        <div id="loadingOverlay" class="loading-overlay hidden">
-            <div class="spinner"></div>
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" 
+             class="loading-overlay hidden"
+             role="status"
+             aria-label="טוען נתונים">
+            <div class="spinner" aria-hidden="true"></div>
             <p class="loading-text">טוען נתונים...</p>
         </div>
-    </div>
+    </main>
 
-    <!-- סטטיסטיקות -->
-    <div class="container mx-auto my-8">
-        <div class="stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="stat-card">
-                <div class="stat-number" id="totalCombatants">0</div>
+    <!-- Statistics Section -->
+    <section class="container mx-auto my-8" 
+             role="region"
+             aria-label="סטטיסטיקות כלליות">
+        <div class="stats">
+            <div class="stat-card" role="group" aria-label="סך הכל לוחמים">
+                <div class="stat-number" id="totalCombatants" aria-live="polite">0</div>
                 <div>סה"כ לוחמים</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="familyCasualties">0</div>
+            
+            <div class="stat-card" role="group" aria-label="בני משפחה">
+                <div class="stat-number" id="familyCasualties" aria-live="polite">0</div>
                 <div>בני משפחה</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalCasualties">0</div>
+            
+            <div class="stat-card" role="group" aria-label="סך הכל קורבנות">
+                <div class="stat-number" id="totalCasualties" aria-live="polite">0</div>
                 <div>סה"כ קורבנות</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="highRanking">0</div>
+            
+            <div class="stat-card" role="group" aria-label="בכירים">
+                <div class="stat-number" id="highRanking" aria-live="polite">0</div>
                 <div>בכירים</div>
             </div>
         </div>
+    </section>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" 
+         class="toast-container"
+         role="region"
+         aria-live="assertive"
+         aria-label="התראות מערכת">
     </div>
 
-    <!-- Toast container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <!-- Back to Top Button -->
+    <button id="backToTop" 
+            class="back-to-top"
+            type="button"
+            aria-label="חזור לראש העמוד"
+            title="חזור לראש העמוד">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
+    </button>
 
-    <!-- Footer מידע משפטי -->
-    <div class="footer-info container mx-auto mb-8 text-center text-gray-600 text-sm">
+    <!-- Footer Legal Info -->
+    <footer class="footer-info container mx-auto mb-8" role="contentinfo">
         <div id="dataCollectionHebrew">
-            <p><strong>איסוף נתונים:</strong> הנתונים באתר זה נאספו על ידי <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
-                target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
+            <p><strong>איסוף נתונים:</strong> הנתונים באתר זה נאספו על ידי 
+                <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   aria-label="קישור לחשבון טוויטר של אוסף הנתונים (נפתח בחלון חדש)">
+                    @MiddleEastBuka
+                </a>
+            </p>
             <p><strong>הערה משפטית:</strong> הנתונים מוצגים כפי שנאספו ועלולים להכיל טעויות. האתר אינו אחראי לדיוק המידע.</p>
-            <p>© כל הזכויות שמורות</p>
+            <p>© <span id="currentYear">2025</span> כל הזכויות שמורות</p>
         </div>
+        
         <div id="dataCollectionEnglish" class="hidden">
-            <p><strong>Data Collection:</strong> The data on this website was collected by <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
-                target="_blank" rel="noopener noreferrer">@MiddleEastBuka</a></p>
+            <p><strong>Data Collection:</strong> The data on this website was collected by 
+                <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   aria-label="Link to data collector's Twitter account (opens in new window)">
+                    @MiddleEastBuka
+                </a>
+            </p>
             <p><strong>Legal Notice:</strong> Data is presented as collected and may contain errors. This website is not responsible for data accuracy.</p>
-            <p>© All rights reserved</p>
+            <p>© <span>2025</span> All rights reserved</p>
         </div>
-    </div>
+    </footer>
 
-    <!-- הסקריפט העיקרי -->
+    <!-- Main JavaScript -->
     <script defer src="script.js"></script>
+    
+    <!-- Service Worker Registration (Optional) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // Update current year
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
