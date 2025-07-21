@@ -489,12 +489,16 @@ tr:focus-visible {
      * טעינת נתונים מ-CSV
      */
     async function loadCSVData(url) {
+        console.log('Attempting to load CSV from:', url);
+        
         // אם זה file:// protocol, השתמש בנתונים משובצים
         if (window.location.protocol === 'file:') {
+            console.log('Using embedded data (file:// protocol)');
             return embeddedCombatantData;
         }
         
         try {
+            console.log('Fetching CSV file...');
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -503,16 +507,25 @@ tr:focus-visible {
                 }
             });
             
+            console.log('Response status:', response.status, response.statusText);
+            
             if (!response.ok) {
                 throw new Error(`${labels.error_http[state.lang]}${response.status} ${response.statusText}`);
             }
             
             const text = await response.text();
+            console.log('CSV text length:', text.length);
+            console.log('First 200 characters:', text.substring(0, 200));
+            
             if (!text.trim()) {
                 throw new Error(labels.error_empty_csv[state.lang]);
             }
             
-            return parseCSVData(text);
+            const parsedData = parseCSVData(text);
+            console.log('Parsed data length:', parsedData.length);
+            console.log('Sample record:', parsedData[0]);
+            
+            return parsedData;
             
         } catch (error) {
             console.error('CSV loading failed:', error);
@@ -556,22 +569,25 @@ tr:focus-visible {
      * טעינת נתונים עיקרית
      */
     async function loadData() {
+        console.log('=== Starting data load process ===');
         showLoadingState(labels.loading_data[state.lang]);
         
         try {
+            console.log('Attempting to load from data.csv');
             state.originalData = await loadCSVData('data.csv');
             
             if (!Array.isArray(state.originalData) || state.originalData.length === 0) {
                 throw new Error(labels.error_no_source[state.lang]);
             }
             
-            console.log(`Loaded ${state.originalData.length} records`);
+            console.log(`Successfully loaded ${state.originalData.length} records from CSV`);
             
         } catch (error) {
-            console.error('Data loading failed:', error);
+            console.error('CSV loading failed, falling back to embedded data:', error);
             
             // נסה להשתמש בנתונים משובצים כגיבוי
             state.originalData = embeddedCombatantData;
+            console.log(`Using ${state.originalData.length} embedded records as fallback`);
             
             const contextError = labels.error_data_load_context[state.lang] + 
                 (window.location.protocol !== 'file:' ? labels.csv_file_error[state.lang] : '');
@@ -580,12 +596,14 @@ tr:focus-visible {
             showToast(labels.error_loading_data[state.lang] + error.message, 'error', 5000);
             
         } finally {
+            console.log('Final data count:', state.originalData.length);
             state.filteredData = [...state.originalData];
             state.error = null;
             
             populateFilters();
             applySortAndRender();
             hideLoadingState();
+            console.log('=== Data load process completed ===');
         }
     }
 
@@ -1990,6 +2008,61 @@ tr:focus-visible {
     outline-offset: 2px;
 }
 
+// --- CSS Classes for dynamic styling ---
+const dynamicStyles = `
+<style id="dynamic-app-styles">
+/* Loading states */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 99;
+}
+
+/* Error banner */
+.error-banner {
+    position: relative;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 0.5rem;
+    color: #a00;
+}
+
+.error-banner button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.error-banner button:hover {
+    opacity: 1;
+}
+
+/* Focus indicators */
+.card:focus-visible,
+tr:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
 /* Sort indicators */
 .sort-indicator {
     margin-left: 0.5rem;
@@ -2032,6 +2105,11 @@ th[aria-sort="descending"] .sort-indicator {
 }
 </style>
 `;
+
+// הוספת הסגנונות הדינמיים
+if (typeof document !== 'undefined') {
+    document.head.insertAdjacentHTML('beforeend', dynamicStyles);
+}
 
 // הוספת הסגנונות הדינמיים
 if (typeof document !== 'undefined') {
