@@ -349,20 +349,20 @@ function normalizeHeader(header) {
     }
       
     document.addEventListener('DOMContentLoaded', function () {
-    // הוספת כפתור התפריט לפני סרגל הפילטרים
-    document.querySelector('.filters-bar').insertAdjacentHTML('beforebegin', `
-        <button class="mobile-filters-toggle">
-            פתח פילטרים
-        </button>
-    `);
+    const filtersBar = document.querySelector('.filters-bar');
+    if (!filtersBar) return;
 
-    // טיפול בלחיצה על כפתור התפריט
-    document.querySelector('.mobile-filters-toggle').addEventListener('click', function() {
-        const filtersBar = document.querySelector('.filters-bar');
+    const button = document.createElement('button');
+    button.className = 'mobile-filters-toggle';
+    button.textContent = 'פתח פילטרים';
+    filtersBar.parentNode.insertBefore(button, filtersBar);
+
+    button.addEventListener('click', function () {
         filtersBar.classList.toggle('active');
         this.textContent = filtersBar.classList.contains('active') ? 'סגור פילטרים' : 'פתח פילטרים';
     });
 });
+
 
     function populateFilters() {
         const sets = { location: new Set(), org: new Set(), rank: new Set() };
