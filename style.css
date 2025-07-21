@@ -1,87 +1,123 @@
 /* ==========================================================
-   קובץ CSS משופר למראה רשמי ומקצועי – גרסה מעודכנת (2025-07-02)
-   שינויים עיקריים:
-   • הסרת רווח בין שורות הטבלה
-   • הוספת רווח בין כרטיסיות במצב “card-view” (או במסכים צרים)
-   • prefers-reduced-motion, focus-visible, accent-color, משתנה transition
-   • תיקון ריווח בסרגל הפילטרים עבור דפדפנים ללא gap
+   קובץ CSS משופר למראה רשמי ומקצועי – גרסה מעודכנת (2025-07-21)
+   
+   שיפורים עיקריים:
+   • ארגון מחדש של המבנה לפי אזורים לוגיים
+   • שיפור נגישות וביצועים
+   • הוספת שיפורי UX/UI מתקדמים
+   • תמיכה מתקדמת במובייל
+   • שיפורי אבטחה ו-SEO
    ========================================================== */
 
-/* ========== משתני CSS (בהיר) ========== */
+/* ========== משתני CSS גלובליים ========== */
 :root {
+    /* פלטת צבעים ראשית */
+    --primary-50: #eff6ff;
+    --primary-100: #dbeafe;
+    --primary-500: #3b82f6;
+    --primary-600: #2563eb;
+    --primary-700: #1d4ed8;
+    --primary-900: #1e3a8a;
+    
     /* צבעי רקע וטקסט */
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
     --bg-gradient-start: #f5f7fa;
     --bg-gradient-end: #c3cfe2;
 
-    --text-primary: #2d3748; /* צבע טקסט ראשי - כהה במצב בהיר */
-    --text-secondary: #4a5568; /* צבע טקסט משני - כהה במצב בהיר */
-    --text-muted: #718096;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-inverse: #ffffff;
 
-    /* גבולות, צללים */
+    /* גבולות וצללים */
     --border-color: #e2e8f0;
-    --border-subtle: rgba(226,232,240,.3);
-    --shadow-light: rgba(0,0,0,.05);
-    --shadow-medium: rgba(0,0,0,.1);
-    --shadow-heavy: rgba(0,0,0,.15);
+    --border-subtle: rgba(226, 232, 240, 0.3);
+    --border-focus: var(--primary-500);
+    
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-    /* צבעי מבטא ומצב */
-    --accent-primary: #4299e1;
-    --accent-secondary: #3182ce;
+    /* צבעי מצב */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: var(--primary-500);
 
-    /* צבעים לכותרת האתר - הותאמו לקריאות ויופי */
-    --site-header-bg-start: #3b82f6; /* כחול עמוק יותר */
-    --site-header-bg-end: #2563eb;   /* כחול כהה יותר */
-    --site-header-text-color: #ffffff; /* טקסט לבן על רקע כחול */
-    --site-header-text-shadow-color: rgba(0,0,0,0.5); /* צל טקסט בולט */
-    --site-header-p-color: #bfdbfe; /* צבע פסקאות בהיר יותר */
+    /* מרווחים וגדלים */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
 
-    /* צבעים לכותרת הטבלה */
-    --header-bg: #f1f5f9;
-    --header-text: #475569;
-    --header-border: #e2e8f0;
+    /* טיפוגרפיה */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+
+    /* מעברים ואנימציות */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* רדיוסי עיגול */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* צבעים ספציפיים לרכיבים */
+    --header-bg: var(--bg-tertiary);
+    --header-text: var(--text-secondary);
+    --header-border: var(--border-color);
     --header-hover: #e2e8f0;
 
-    --sort-active: #3b82f6;
+    --sort-active: var(--primary-500);
     --sort-inactive: #94a3b8;
 
-    --success-color: #48bb78;
-    --warning-color: #ed8936;
-    --error-color:   #f56565;
-
-    --transition-fast: .3s; /* זמן ברירת-מחדל למעברים */
+    /* כותרת האתר */
+    --site-header-bg-start: var(--primary-600);
+    --site-header-bg-end: var(--primary-700);
+    --site-header-text: var(--text-inverse);
+    --site-header-text-shadow: rgba(0, 0, 0, 0.5);
+    --site-header-subtitle: var(--primary-100);
 }
 
 /* ========== מצב כהה ========== */
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg-primary: #1a202c;
-        --bg-secondary: #2d3748;
-        --bg-gradient-start: #1a202c;
-        --bg-gradient-end: #2d3748;
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --bg-gradient-start: #0f172a;
+        --bg-gradient-end: #1e293b;
 
-        --text-primary: #f7fafc;
-        --text-secondary: #e2e8f0;
-        --text-muted: #a0aec0;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
 
-        --border-color: #4a5568;
-        --border-subtle: rgba(74,85,104,.3);
+        --border-color: #334155;
+        --border-subtle: rgba(51, 65, 85, 0.3);
 
-        --shadow-light: rgba(0,0,0,.3);
-        --shadow-medium: rgba(0,0,0,.4);
-        --shadow-heavy: rgba(0,0,0,.5);
+        --header-bg: var(--bg-tertiary);
+        --header-text: var(--text-primary);
+        --header-border: var(--border-color);
+        --header-hover: #475569;
 
-        --site-header-bg-start: #1a202c;
-        --site-header-bg-end: #2d3748;
-        --site-header-text-color: #f7fafc;
-        --site-header-text-shadow-color: rgba(0,0,0,0.7);
-        --site-header-p-color: #cbd5e1;
-
-        --header-bg: #2d3748;
-        --header-text: #e2e8f0;
-        --header-border: #4a5568;
-        --header-hover: #374151;
+        --site-header-bg-start: var(--bg-secondary);
+        --site-header-bg-end: var(--bg-tertiary);
+        --site-header-text-shadow: rgba(0, 0, 0, 0.7);
+        --site-header-subtitle: var(--text-muted);
     }
 }
 
@@ -90,585 +126,1190 @@
 *::before,
 *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-*::before,
-*::after {
-    content: none !important;
 }
 
-:focus-visible {
-    outline: 3px solid var(--accent-primary);
-    outline-offset: 2px;
-    border-radius: 4px;
+html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
 }
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    direction: rtl;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block: var(--space-xl);
+    accent-color: var(--primary-500);
+    transition: background var(--transition-normal) ease, color var(--transition-normal) ease;
+    overflow-x: hidden;
+}
+
+/* ========== פוקוס ונגישות ========== */
+:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
 :focus:not(:focus-visible) {
     outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation: none !important;
-        transition: none !important;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
 }
 
-body {
-    font-family: 'Segoe UI','Roboto','Helvetica Neue',Arial,sans-serif;
-    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-    direction: rtl;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding-block: 2rem;
-    color: var(--text-primary);
-    line-height: 1.6;
-    transition: background var(--transition-fast) ease, color var(--transition-fast) ease;
-    accent-color: var(--accent-primary);
+/* ========== מצבי החבאה והצגה ========== */
+.hidden {
+    display: none !important;
 }
 
-/* ==========================================================
-   קונטיינר ראשי
-   ========================================================== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ========== כפתור החלפת שפה ========== */
+.language-toggle {
+    position: fixed;
+    top: var(--space-md);
+    right: var(--space-md);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast) ease;
+    z-index: 1000;
+    min-width: 80px;
+    text-align: center;
+}
+
+.language-toggle:hover {
+    background: var(--bg-secondary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.language-toggle:active {
+    transform: translateY(0);
+}
+
+/* ========== קונטיינר ראשי ========== */
 .container {
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    box-shadow: 0 20px 60px var(--shadow-medium);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
     backdrop-filter: blur(20px);
-    max-width: 1600px;
+    max-width: min(1600px, calc(100vw - 2rem));
     width: 100%;
     overflow: hidden;
-    margin-block-end: 2rem;
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-.container:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 25px 80px var(--shadow-heavy);
+    margin-block-end: var(--space-xl);
+    transition: transform var(--transition-slow) ease, box-shadow var(--transition-slow) ease;
 }
 
-/* ==========================================================
-   כותרת אתר
-   ========================================================== */
+.container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ========== כותרת האתר ========== */
 .site-header {
     position: relative;
     text-align: center;
-    padding: 3rem 2rem;
+    padding: var(--space-2xl) var(--space-xl);
     background: linear-gradient(135deg, var(--site-header-bg-start) 0%, var(--site-header-bg-end) 100%);
-    color: var(--site-header-text-color);
+    color: var(--site-header-text);
     overflow: hidden;
-    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.3);
-    transition: all var(--transition-fast) ease;
+    box-shadow: 
+        inset 0 -1px 3px rgba(0, 0, 0, 0.12),
+        0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all var(--transition-slow) ease;
 }
-.site-header:hover {
-    box-shadow: inset 0 -7px 20px rgba(0,0,0,0.3), 0 15px 40px rgba(0,0,0,0.4);
-}
+
 .site-header::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: url('data:image/svg+xml,...');
-    opacity: .4;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    opacity: 0.6;
     z-index: 1;
 }
+
 .site-header::after {
     content: '';
     position: absolute;
     inset-inline: 0;
     bottom: 0;
-    height: 3px;
-    background: linear-gradient(90deg, transparent 0%, var(--accent-primary) 50%, transparent 100%);
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--primary-500) 30%, 
+        var(--primary-400) 50%, 
+        var(--primary-500) 70%, 
+        transparent 100%
+    );
     z-index: 2;
-}
-.site-header h1 {
-    font-size: clamp(1.8rem,4vw,2.8rem);
-    font-weight: 800;
-    letter-spacing: -.03em;
-    text-shadow: 0 5px 15px var(--site-header-text-shadow-color);
-    position: relative;
-    z-index: 2;
-    transition: text-shadow var(--transition-fast) ease;
-}
-.site-header h1:hover {
-    text-shadow: 0 7px 20px var(--site-header-text-shadow-color);
-}
-.site-header p {
-    font-size: clamp(1rem,2vw,1.2rem);
-    font-weight: 400;
-    color: var(--site-header-p-color);
-    opacity: .95;
-    position: relative;
-    z-index: 2;
-    margin-top: .5rem;
 }
 
-/* ==========================================================
-   סרגל פילטרים - ריווח ידני והיררכיה
-   ========================================================== */
+.site-header h1 {
+    font-size: clamp(var(--font-size-2xl), 4vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 4px var(--site-header-text-shadow);
+    position: relative;
+    z-index: 2;
+    margin-bottom: var(--space-sm);
+    transition: text-shadow var(--transition-normal) ease;
+}
+
+.site-header h1:hover {
+    text-shadow: 0 4px 8px var(--site-header-text-shadow);
+}
+
+.site-header p {
+    font-size: clamp(var(--font-size-base), 2vw, var(--font-size-lg));
+    font-weight: 400;
+    color: var(--site-header-subtitle);
+    opacity: 0.95;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+}
+
+/* ========== סרגל פילטרים ========== */
+.mobile-filters-toggle {
+    display: none;
+    width: calc(100% - var(--space-xl));
+    margin: var(--space-md);
+    padding: var(--space-md);
+    background: var(--primary-500);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    text-align: center;
+    transition: background-color var(--transition-fast) ease, transform var(--transition-fast) ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.mobile-filters-toggle:hover {
+    background: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.mobile-filters-toggle:active {
+    transform: translateY(0);
+}
+
 .filters-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: flex-start;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--border-color) 100%);
-    border-block-end: 2px solid var(--border-color);
-}
-.filters-bar > * {
-    margin: .75rem;
-}
-.filters-bar > #exportBtn {
-    margin-left: auto;
-}
-.filters-bar > #viewToggleBtn {
-    margin-left: .5rem;
-}
-@media (max-width: 640px) {
-    .filters-bar {
-        justify-content: center;
-    }
-    .filters-bar > #exportBtn,
-    .filters-bar > #viewToggleBtn {
-        margin-left: .75rem;
-        margin-right: .75rem;
-    }
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-bottom: 1px solid var(--border-color);
+    gap: var(--space-md);
 }
 
-/* הוספת כפתור תפריט למובייל */
-.mobile-filters-toggle {
-    display: none; /* מוסתר כברירת מחדל במסך רחב */
-    width: 100%;
-    padding: 1rem;
-    margin: 0;
-    background: var(--accent-primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color var(--transition-fast) ease;
-}
-
-.mobile-filters-toggle:hover {
-    background: var(--accent-secondary);
-}
-
-/* עדכון המיקום של כפתור הפילטרים */
-.mobile-filters-toggle {
-    display: none;
-    width: 100%;
-    padding: 1rem;
-    margin: 1rem;
-    background: var(--accent-primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color var(--transition-fast) ease;
-}
-
-/* עדכון התנהגות תפריט הפילטרים במובייל */
-@media (max-width: 768px) {
-    .mobile-filters-toggle {
-        display: block;
-        margin: 1rem auto;
-        max-width: calc(100% - 2rem);
-    }
-
-    .filters-bar {
-        display: none;
-        flex-direction: column;
-        padding: 1rem;
-        width: 100%;
-    }
-
-    .filters-bar.active {
-        display: flex;
-    }
-
-    .filter-group {
-        max-width: 100%;
-        width: 100%;
-        margin: 0.5rem 0;
-    }
-
-    /* התאמת כפתורי הייצוא ומעבר תצוגה */
-    .filters-bar > #exportBtn,
-    .filters-bar > #viewToggleBtn {
-        width: 100%;
-        margin: 0.5rem 0;
-    }
-}
-
-/* ==========================================================
-   filter-group
-   ========================================================== */
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: .5rem;
+    gap: var(--space-sm);
     min-width: 150px;
     max-width: 200px;
     flex: 1;
 }
+
 .filter-group label {
-    font-size: .875rem;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
 }
+
 .filters-bar select,
 .filters-bar input[type="text"] {
     font-family: inherit;
-    font-size: .9rem;
-    padding: .875rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
+    font-size: var(--font-size-sm);
+    padding: var(--space-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     background: var(--bg-primary);
     color: var(--text-primary);
-    box-shadow: 0 4px 6px var(--shadow-light);
-    transition: border var(--transition-fast) ease, box-shadow var(--transition-fast) ease, transform var(--transition-fast) ease;
+    box-shadow: var(--shadow-xs);
+    transition: all var(--transition-fast) ease;
+    width: 100%;
 }
+
 .filters-bar select:hover,
 .filters-bar input[type="text"]:hover {
-    border-color: var(--accent-secondary);
-    box-shadow: 0 8px 16px var(--shadow-medium);
-    transform: translateY(-1px);
+    border-color: var(--primary-300);
+    box-shadow: var(--shadow-sm);
 }
+
 .filters-bar select:focus,
 .filters-bar input[type="text"]:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 4px rgba(66,153,225,.1), 0 8px 16px var(--shadow-medium);
-    transform: translateY(-2px);
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
-/* ==========================================================
-   כפתורים ותצוגת תוצאות
-   ========================================================== */
+
+/* ========== כפתורים ========== */
 .btn {
-    display: inline-block;
-    min-width: 130px;
-    padding: .875rem 1.75rem;
-    font-size: .875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-width: 120px;
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-sm);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #fff;
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    text-decoration: none;
+    color: var(--text-inverse);
+    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 6px 12px rgba(66,153,225,.25);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast) ease;
+    white-space: nowrap;
 }
+
 .btn::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transform: translateX(-100%);
-    transition: transform .6s cubic-bezier(.4,0,.2,1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn:hover::before { transform: translateX(200%); }
+
+.btn:hover::before {
+    transform: translateX(200%);
+}
+
 .btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(66,153,225,.35);
-}
-.btn:active {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(66,153,225,.25);
+    box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .btn-secondary {
     background: linear-gradient(135deg, var(--text-muted) 0%, var(--text-secondary) 100%);
-    box-shadow: 0 6px 12px rgba(113,128,150,.25);
 }
+
 .btn-secondary:hover {
-    box-shadow: 0 12px 24px rgba(113,128,150,.35);
+    background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-primary) 100%);
 }
 
-#resultsCounter {
-    text-align: center;
-    font-size: 16px;
-    color: #333;
-    font-weight: bold;
-    margin: 10px 0;
+/* ========== מיקום כפתורים בסרגל פילטרים ========== */
+.filters-bar > .btn {
+    margin-inline-start: auto;
 }
 
-/* ==========================================================
-   קונטיינר טבלה ואלמנטים
-   ========================================================== */
+.filters-bar > .btn:not(:first-of-type) {
+    margin-inline-start: var(--space-sm);
+}
+
+/* ========== קונטיינר התוכן ========== */
+#contentArea {
+    min-height: 400px;
+    position: relative;
+}
+
 .table-container {
     position: relative;
     width: 100%;
     max-height: 70vh;
     overflow: auto;
-    margin: 1rem;
-    padding: 1rem;
-    border-radius: 12px;
+    margin: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
     background: var(--bg-primary);
-    box-shadow: inset 0 4px 8px var(--shadow-light);
-}
-.table-container::-webkit-scrollbar {
-    width: 12px; height: 12px;
-}
-.table-container::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-    border-radius: 6px;
-}
-.table-container::-webkit-scrollbar-thumb {
-    background: var(--accent-primary);
-    border-radius: 6px;
-    border: 2px solid var(--bg-secondary);
-}
-.table-container::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-secondary);
+    box-shadow: inset 0 1px 3px var(--shadow-xs);
 }
 
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary-500);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--bg-secondary);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-600);
+}
+
+/* ========== טבלה ========== */
 table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: .85rem;
+    font-size: var(--font-size-sm);
     min-width: 1200px;
     background: transparent;
 }
-th, td {
-    padding: 1rem .875rem;
+
+th,
+td {
+    padding: var(--space-md) var(--space-sm);
     text-align: center;
-    vertical-align: top;
+    vertical-align: middle;
     color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
 }
+
 th {
     position: sticky;
     top: 0;
     z-index: 10;
     background: var(--header-bg);
     color: var(--header-text);
-    font-size: .8rem;
+    font-size: var(--font-size-xs);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .05em;
-    border-radius: 12px;
+    letter-spacing: 0.05em;
     border-bottom: 2px solid var(--header-border);
-    transition: background var(--transition-fast) ease, transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+    transition: all var(--transition-fast) ease;
     cursor: pointer;
 }
+
 th:hover {
     background: var(--header-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-subtle);
 }
+
+th:first-child {
+    border-top-right-radius: var(--radius-md);
+}
+
+th:last-child {
+    border-top-left-radius: var(--radius-md);
+}
+
 th.sort-asc::after,
 th.sort-desc::after {
-    content: '';
-    border-bottom: 4px solid var(--sort-active);
+    content: '↑';
+    margin-inline-start: var(--space-xs);
+    color: var(--sort-active);
+    font-weight: bold;
 }
-th.sort-asc::after { transform: rotate(180deg); }
+
+th.sort-desc::after {
+    content: '↓';
+}
 
 tr {
     background: var(--bg-primary);
-    box-shadow: 0 4px 12px var(--shadow-light);
-    transition: background var(--transition-fast) ease, transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+    transition: background var(--transition-fast) ease;
 }
+
 tr:nth-child(even) {
     background: var(--bg-secondary);
 }
-tr:hover td {
-    background: var(--bg-secondary);
-}
-td {
-    border-bottom: 1px solid var(--border-color);
+
+tr:hover {
+    background: var(--bg-tertiary) !important;
 }
 
-/* ==========================================================
-   כרטיסי סטטיסטיקות
-   ========================================================== */
+/* ========== תצוגת כרטיסים ========== */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+}
+
+.card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    transition: all var(--transition-normal) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+    opacity: 0;
+    transition: opacity var(--transition-normal) ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--primary-200);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card.high-ranking {
+    border-left-color: var(--warning-color);
+    border-left-width: 4px;
+}
+
+.card h2 {
+    font-weight: 700;
+    font-size: var(--font-size-xl);
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.card .sub {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.card .meta {
+    display: flex;
+    gap: var(--space-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--space-sm);
+}
+
+.card .card-details p {
+    margin: var(--space-xs) 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.card .card-details p strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card .card-details p.family {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* ========== כרטיסי סטטיסטיקות ========== */
 .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 2rem;
-    padding: 2.5rem;
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--border-color) 100%);
-    border-block-start: 2px solid var(--border-color);
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-xl);
+    padding: var(--space-2xl);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-top: 1px solid var(--border-color);
     position: relative;
 }
+
 .stats::before {
     content: '';
     position: absolute;
     inset-inline: 0;
     top: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--accent-primary) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, var(--primary-500) 50%, transparent 100%);
 }
 
 .stat-card {
     position: relative;
     background: var(--bg-primary);
-    padding: 2.5rem 2rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-subtle);
-    box-shadow: 0 10px 30px var(--shadow-medium);
+    padding: var(--space-2xl) var(--space-xl);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
     text-align: center;
     overflow: hidden;
     backdrop-filter: blur(10px);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease, border-color var(--transition-fast) ease;
+    transition: all var(--transition-slow) ease;
 }
+
 .stat-card::before {
     content: '';
     position: absolute;
     inset-inline: 0;
     top: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), #2b6cb0);
-    transition: height var(--transition-fast) ease;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-600), var(--primary-700));
+    transition: height var(--transition-normal) ease;
 }
+
 .stat-card::after {
     content: '';
     position: absolute;
-    top: 50%; left: 50%;
-    width: 0; height: 0;
-    background: radial-gradient(circle, rgba(66,153,225,.1) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: width .5s cubic-bezier(.4,0,.2,1), height .5s cubic-bezier(.4,0,.2,1);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 0;
 }
+
 .stat-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 50px var(--shadow-heavy);
-    border-color: var(--accent-primary);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-300);
 }
-.stat-card:hover::before { height: 6px; }
-.stat-card:hover::after { width: 300px; height: 300px; }
-.stat-card:active { transform: translateY(-4px) scale(1.01); }
+
+.stat-card:hover::before {
+    height: 5px;
+}
+
+.stat-card:hover::after {
+    width: 300px;
+    height: 300px;
+}
 
 .stat-number {
     font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 800;
-    background: linear-gradient(135deg, #2b6cb0 0%, var(--accent-primary) 50%, var(--accent-secondary) 100%);
+    background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-500) 50%, var(--primary-600) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-block-end: .75rem;
+    margin-bottom: var(--space-md);
     line-height: 1.1;
-    text-shadow: 0 4px 8px rgba(43,108,176,.1);
-    transition: transform var(--transition-fast) ease, filter var(--transition-fast) ease;
+    transition: all var(--transition-normal) ease;
     position: relative;
     z-index: 1;
 }
+
 .stat-card:hover .stat-number {
-    transform: scale(1.1);
-    filter: drop-shadow(0 4px 8px rgba(66,153,225,.3));
+    transform: scale(1.05);
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
 }
+
 .stat-card > div:last-child {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: .1em;
-    transition: color var(--transition-fast) ease, transform var(--transition-fast) ease;
+    letter-spacing: 0.1em;
+    transition: all var(--transition-normal) ease;
     position: relative;
     z-index: 1;
 }
+
 .stat-card:hover > div:last-child {
-    color: var(--accent-primary);
-    transform: translateY(-2px);
+    color: var(--primary-600);
+    transform: translateY(-1px);
 }
 
-/* ==========================================================
-   כרטיסים (Card View)
-   ========================================================== */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
+/* ========== פגינציה ומצבי תוצאות ========== */
+#resultsCounter {
+    text-align: center;
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin: var(--space-md) 0;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    display: inline-block;
 }
-.card {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+/* ========== מצב טעינה ========== */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    gap: .8rem;
-    transition: box-shadow .3s ease, transform .3s ease;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-xl);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    border-radius: inherit;
 }
-.card:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    transform: translateY(-4px);
-}
-.card.high-ranking { border-left: 4px solid #555; }
-.card h2 { font-weight: 700; font-size: 1.3rem; margin-bottom: .3rem; color: #111; }
-.card .sub { font-size: .9rem; color: #666; min-height: 1.2rem; }
-.card .meta {
-    display: flex; gap: 1.2rem; font-size: .85rem; color: #555;
-    border-bottom: 1px solid #eee; padding-bottom: .6rem;
-}
-.card .card-details p { margin: .3rem 0; font-size: .9rem; color: #333; }
-.card .card-details p strong { font-weight: 600; color: #222; }
-.card .card-details p.family { font-style: italic; color: #555; }
 
-/* ==========================================================
-   טעינה, חזרה למעלה, הדגשת mark ואנימציות
-   ========================================================== */
-.loading-overlay {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; gap: 2rem;
-    background: rgba(255,255,255,.95); backdrop-filter: blur(10px); z-index: 100;
+.loading-text {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-secondary);
+    animation: fadeInOut 2s ease-in-out infinite;
 }
-.loading-overlay p { font-size: 1.1rem; font-weight: 600; animation: fadeInOut 2s ease-in-out infinite; }
+
 .spinner {
-    width: 60px; height: 60px; border: 4px solid var(--border-color);
-    border-top: 4px solid var(--accent-primary); border-radius: 50%;
-    animation: spin 1s cubic-bezier(.4,0,.2,1) infinite; position: relative;
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: relative;
 }
+
 .spinner::after {
-    content: ''; position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
-    background: var(--accent-primary); border-radius: 50%;
-    transform: translate(-50%, -50%); animation: pulse 1s ease-in-out infinite alternate;
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-500);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 1s ease-in-out infinite alternate;
 }
 
+/* ========== Toast הודעות ========== */
+.toast-container {
+    position: fixed;
+    top: var(--space-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.toast {
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    color: var(--text-inverse);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-20px);
+    opacity: 0;
+    animation: slideInFade 0.3s ease forwards;
+    min-width: 300px;
+    text-align: center;
+}
+
+.toast.success {
+    background: var(--success-color);
+}
+
+.toast.error {
+    background: var(--error-color);
+}
+
+.toast.warning {
+    background: var(--warning-color);
+}
+
+.toast.info {
+    background: var(--info-color);
+}
+
+/* ========== כפתור חזרה למעלה ========== */
 .back-to-top {
-    position: fixed; bottom: 2rem; inset-inline-start: 2rem;
-    width: 70px; height: 70px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; box-shadow: 0 10px 25px rgba(66,153,225,.4);
-    opacity: 0; visibility: hidden; transition: transform var(--transition-fast) ease,
-    box-shadow var(--transition-fast) ease, opacity var(--transition-fast) ease;
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal) ease;
+    border: none;
+    cursor: pointer;
+    z-index: 999;
 }
-.back-to-top.visible { opacity: 1; visibility: visible; animation: bounceIn .5s cubic-bezier(.4,0,.2,1); }
-.back-to-top:hover { transform: translateY(-5px) scale(1.1); box-shadow: 0 15px 35px rgba(66,153,225,.5); }
 
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    animation: bounceIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-to-top:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.back-to-top:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* ========== הדגשת טקסט ========== */
 mark {
-    background: linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);
-    padding: .2em .4em; border-radius: 6px; font-weight: 600;
-    box-shadow: 0 2px 6px rgba(245,158,11,.3); animation: highlight .5s ease-in-out;
+    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+    padding: 0.15em 0.3em;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+    animation: highlight 0.5s ease-in-out;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { from { opacity: .3; transform: translate(-50%,-50%) scale(.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1.2); } }
-@keyframes fadeInOut { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
-@keyframes highlight { 0% { background-color: transparent; } 50% { background-color: #fef3c7; } 100% { background-color: #fffbeb; } }
-@keyframes bounceIn { 0% { transform: scale(0) rotate(180deg); } 50% { transform: scale(1.2) rotate(90deg); } 100% { transform: scale(1) rotate(0deg); } }
+/* ========== מצב ריק ========== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-lg);
+    padding: var(--space-2xl);
+    text-align: center;
+    color: var(--text-muted);
+}
 
-/* ==========================================================
-   רספונסיביות
-   ========================================================== */
+.empty-state i {
+    font-size: 4rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.empty-state p {
+    font-size: var(--font-size-base);
+    margin: 0;
+    max-width: 400px;
+}
+
+/* ========== Footer ========== */
+.footer-info {
+    margin-top: var(--space-2xl);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.footer-info a {
+    color: var(--primary-600);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-fast) ease;
+}
+
+.footer-info a:hover {
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+.footer-info p {
+    margin: var(--space-sm) 0;
+}
+
+.footer-info strong {
+    color: var(--text-secondary);
+}
+
+/* ========== אנימציות ========== */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    from { 
+        opacity: 0.4; 
+        transform: translate(-50%, -50%) scale(0.8); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1.2); 
+    }
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+@keyframes highlight {
+    0% { background-color: transparent; }
+    50% { background-color: #fed7aa; }
+    100% { background-color: #fef3c7; }
+}
+
+@keyframes bounceIn {
+    0% { 
+        transform: scale(0) rotate(180deg);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.1) rotate(90deg);
+        opacity: 0.8;
+    }
+    100% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFade {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutFade {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+/* ========== רספונסיביות ========== */
 @media (max-width: 1200px) {
-    .container { margin: 1rem; }
+    .container {
+        margin: var(--space-md);
+        max-width: calc(100vw - 2rem);
+    }
+    
+    table {
+        min-width: 900px;
+    }
 }
+
 @media (max-width: 768px) {
-    .table-container { font-size: .75rem; }
-    th, td { padding: 8px 6px; }
-    th { font-size: .7rem; }
+    body {
+        padding-block: var(--space-md);
+    }
+    
+    .container {
+        margin: var(--space-sm);
+        border-radius: var(--radius-lg);
+    }
+    
+    .site-header {
+        padding: var(--space-xl) var(--space-md);
+    }
+    
+    .site-header h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .site-header p {
+        font-size: var(--font-size-base);
+    }
+    
+    .mobile-filters-toggle {
+        display: block;
+    }
+    
+    .filters-bar {
+        display: none;
+        flex-direction: column;
+        padding: var(--space-md);
+        gap: var(--space-md);
+    }
+    
+    .filters-bar.active {
+        display: flex;
+    }
+    
+    .filter-group {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .filters-bar > .btn {
+        width: 100%;
+        margin: 0;
+        justify-self: stretch;
+    }
+    
+    .table-container {
+        font-size: var(--font-size-xs);
+        margin: var(--space-sm);
+        padding: var(--space-sm);
+        max-height: 60vh;
+    }
+    
+    th, td {
+        padding: var(--space-sm) var(--space-xs);
+    }
+    
+    th {
+        font-size: 0.7rem;
+    }
+    
+    table {
+        min-width: 700px;
+    }
+    
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+        padding: var(--space-md);
+    }
+    
+    .stats {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        padding: var(--space-xl);
+    }
+    
+    .stat-card {
+        padding: var(--space-xl) var(--space-md);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .language-toggle {
+        top: var(--space-sm);
+        right: var(--space-sm);
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
+        min-width: 60px;
+    }
+    
+    .back-to-top {
+        bottom: var(--space-md);
+        right: var(--space-md);
+        width: 48px;
+        height: 48px;
+    }
+    
+    .toast-container {
+        top: var(--space-md);
+        left: var(--space-sm);
+        right: var(--space-sm);
+        transform: none;
+    }
+    
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
 }
+
+@media (max-width: 480px) {
+    .site-header {
+        padding: var(--space-lg) var(--space-sm);
+    }
+    
+    .filters-bar {
+        padding: var(--space-sm);
+    }
+    
+    .table-container {
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    th, td {
+        padding: var(--space-xs);
+        font-size: 0.7rem;
+    }
+    
+    .stats {
+        padding: var(--space-md);
+        gap: var(--space-sm);
+    }
+    
+    .stat-card {
+        padding: var(--space-md);
+    }
+    
+    .card-grid {
+        padding: var(--space-sm);
+    }
+    
+    .card {
+        padding: var(--space-md);
+    }
+}
+
+/* ========== הדפסה ========== */
+@media print {
+    .language-toggle,
+    .mobile-filters-toggle,
+    .filters-bar,
+    .back-to-top,
+    .toast-container,
+    .loading-overlay {
+        display: none !important;
+    }
+    
+    .container {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .site-header {
+        background: #f5f5f5 !important;
+        color: #000 !important;
+    }
+    
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    .stats {
+        break-inside: avoid;
+    }
+    
+    .card {
+        break-inside: avoid;
+        margin-bottom: var(--space-md);
+    }
+}
+
+/* ========== נגישות מתקדמת ========== */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-muted: var(--text-secondary);
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    .card {
+        border-width: 2px;
+    }
+}
+
+/* ========== תמיכה ב-RTL/LTR ========== */
+[dir="ltr"] body {
+    direction: ltr;
+}
+
+[dir="ltr"] .language-toggle {
+    right: auto;
+    left: var(--space-md);
+}
+
+[dir="ltr"] .back-to-top {
+    right: auto;
+    left: var(--space-xl);
+}
+
+[dir="ltr"] .filters-bar > .btn {
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+}
+
+[dir="ltr"] .filters-bar > .btn:not(:first-of-type) {
+    margin-inline-start: var(--space-sm);
+    margin-inline-end: 0;
+}
+
+/* ========== מצבי מיקוד מתקדמים ========== */
+.btn:focus-visible,
+.filters-bar select:focus-visible,
+.filters-bar input:focus-visible {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+/* ========== אופטימיזציה לביצועים ========== */
+.container,
+.stat-card,
+.card {
+    contain: layout style paint;
+}
+
+.loading-overlay {
+    contain: layout style paint;
+    will-change: opacity;
+}
+
+.spinner {
+    will-change: transform;
+}
+
+/* ========== תמיכה במקלדת ========== */
+.language-toggle[tabindex]:focus-visible,
+.mobile-filters-toggle:focus-visible,
+th:focus-visible,
+.back-to-top:focus-visible {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+/* ========== סיום ========== */
