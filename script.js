@@ -349,7 +349,7 @@ function normalizeHeader(header) {
     }
       
     document.addEventListener('DOMContentLoaded', function () {
-    const filtersBar = document.querySelector('.filters-bar');
+    const filtersBar = document.querySelector('.filters-bar > .filters-bar');
     if (!filtersBar) return;
 
     const button = document.createElement('button');
