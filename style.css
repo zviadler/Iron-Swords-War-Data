@@ -1084,8 +1084,14 @@ mark {
         max-width: calc(100vw - 2rem);
     }
     
-    table {
-        min-width: 900px;
+    .filters-bar {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-md);
+    }
+    
+    .filter-group.search-group {
+        grid-column: span 1;
+        min-width: auto;
     }
 }
 
@@ -1112,29 +1118,33 @@ mark {
     }
     
     .mobile-filters-toggle {
-        display: block;
+        display: flex;
     }
     
     .filters-bar {
         display: none;
-        flex-direction: column;
+        grid-template-columns: 1fr;
         padding: var(--space-md);
         gap: var(--space-md);
     }
     
     .filters-bar.active {
-        display: flex;
+        display: grid;
     }
     
-    .filter-group {
-        max-width: 100%;
-        width: 100%;
+    .filter-group.search-group {
+        grid-column: 1;
+        min-width: auto;
     }
     
-    .filters-bar > .btn {
+    .filter-actions {
+        grid-column: 1;
+        flex-direction: column;
+    }
+    
+    .filter-actions .btn {
         width: 100%;
-        margin: 0;
-        justify-self: stretch;
+        justify-content: center;
     }
     
     .table-container {
@@ -1144,16 +1154,14 @@ mark {
         max-height: 60vh;
     }
     
-    th, td {
+    .table-responsive th, 
+    .table-responsive td {
         padding: var(--space-sm) var(--space-xs);
+        font-size: var(--font-size-xs);
     }
     
-    th {
-        font-size: 0.7rem;
-    }
-    
-    table {
-        min-width: 700px;
+    .table-responsive th {
+        font-size: 0.65rem;
     }
     
     .card-grid {
