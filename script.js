@@ -648,6 +648,7 @@ function normalizeHeader(header) {
         dom.orgFilter.value      = '';
         dom.rankFilter.value     = '';
         dom.searchBox.value      = '';
+        state.filters = { location: '', org: '', rank: '', search: '' };
         state.sort.column = null;
         state.sort.direction = 'asc';
         filterData();
