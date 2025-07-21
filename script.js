@@ -347,7 +347,21 @@ function normalizeHeader(header) {
             hideLoadingState();
         }
     }
-
+    // הוספת כפתור התפריט ל-HTML
+    document.querySelector('.container').insertAdjacentHTML('beforebegin', `
+        <button class="mobile-filters-toggle">
+            פתח/סגור פילטרים
+        </button>
+    `);
+    
+    // טיפול בלחיצה על כפתור התפריט
+    document.querySelector('.mobile-filters-toggle').addEventListener('click', function() {
+        const filtersBar = document.querySelector('.filters-bar');
+        filtersBar.classList.toggle('active');
+        
+        // עדכון טקסט הכפתור
+        this.textContent = filtersBar.classList.contains('active') ? 'סגור פילטרים' : 'פתח פילטרים';
+    });
     function populateFilters() {
         const sets = { location: new Set(), org: new Set(), rank: new Set() };
         state.originalData.forEach(r => {
