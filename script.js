@@ -1,4 +1,61 @@
-(function() {
+// --- CSS Classes for dynamic styling ---
+const dynamicStyles = `
+<style id="dynamic-app-styles">
+/* Loading states */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 99;
+}
+
+/* Error banner */
+.error-banner {
+    position: relative;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 0.5rem;
+    color: #a00;
+}
+
+.error-banner button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.error-banner button:hover {
+    opacity: 1;
+}
+
+/* Focus indicators */
+.card:focus-visible,
+tr:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Sort indicators */
+.sort-indicator {
+    margin-(function() {
     'use strict';
 
     // --- מצב מרכזי לניהול המצב ---
@@ -819,11 +876,7 @@
             card.setAttribute('role', 'gridcell');
             card.setAttribute('tabindex', '0');
             
-            // בדיקה אם זה דרגה גבוהה
-            const isHighRanking = isHighRankingRole(record.rank_role);
-            if (isHighRanking) {
-                card.classList.add('high-ranking');
-            }
+            // הסרת סימון בכירים מהכרטיסים
             
             card.innerHTML = `
                 <h2>
@@ -935,11 +988,7 @@
             tr.setAttribute('role', 'row');
             tr.setAttribute('tabindex', '0');
             
-            // בדיקה אם זה דרגה גבוהה
-            const isHighRanking = isHighRankingRole(record.rank_role);
-            if (isHighRanking) {
-                tr.classList.add('high-ranking');
-            }
+            // הסרת סימון בכירים מהטבלה
             
             dataFieldKeys.forEach((key, colIndex) => {
                 const td = document.createElement('td');
