@@ -309,7 +309,6 @@ body {
 
 /* ========== סרגל פילטרים ========== */
 .mobile-filters-toggle {
-    display: none;
     width: calc(100% - var(--space-xl));
     margin: var(--space-md);
     padding: var(--space-md);
