@@ -643,6 +643,7 @@
 
     // === אתחול פילטרים מובייל ===
     function initializeMobileFilters() {
+        console.log('initializeMobileFilters', dom.mobileFiltersToggle, dom.filtersBar);
         if (!dom.mobileFiltersToggle || !dom.filtersBar) return;
         
         dom.mobileFiltersToggle.addEventListener('click', function() {
