@@ -132,7 +132,7 @@
     /**
      * מנקה קלט מחשש ל-XSS על ידי המרת תווי HTML.
      * @param {string} input - המחרוזת לניקוי.
-     * @returns {string} - המחרוזת המנוקה.
+     * @returns {string} - המחרושקת המנוקה.
      */
     function sanitize(input) {
         if (input === null || input === undefined) return '';
@@ -172,41 +172,8 @@
     }
 
     /**
-     * מנתח שורת CSV אחת, כולל טיפול במרכאות כפולות.
-     * @param {string} line - שורת ה-CSV לניתוח.
-     * @returns {Array<string>} - מערך של שדות.
-     */
-    function parseCsvLine(line) {
-        const result = [];
-        let inQuote = false;
-        let currentField = '';
-
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const nextChar = line[i + 1];
-
-            if (char === '"') {
-                // טיפול במרכאות כפולות בתוך שדה.
-                if (inQuote && nextChar === '"') {
-                    currentField += '"';
-                    i++;
-                } else {
-                    inQuote = !inQuote; // כניסה/יציאה ממצב מרכאות.
-                }
-            } else if (char === ',' && !inQuote) {
-                // הפרדת שדה בסוף פסיק, רק אם לא נמצאים בתוך מרכאות.
-                result.push(currentField.trim());
-                currentField = '';
-            } else {
-                currentField += char;
-            }
-        }
-        result.push(currentField.trim()); // הוספת השדה האחרון.
-        return result;
-    }
-
-    /**
      * ממיר כותרות CSV מוכרות למפתחות אחידים וסטנדרטיים.
+     * פונקציה זו עדיין רלוונטית כדי להבטיח עקביות במפתחות האובייקטים.
      * @param {string} header - כותרת העמודה.
      * @returns {string} - מפתח השדה המנורמל.
      */
@@ -276,7 +243,7 @@
     // === טעינת נתונים ===
 
     /**
-     * טוען נתונים מקובץ CSV או משתמש בנתונים משובצים אם הטעינה נכשלת.
+     * טוען נתונים מקובץ CSV באמצעות PapaParse או משתמש בנתונים משובצים.
      * @param {string} url - כתובת ה-URL של קובץ ה-CSV.
      * @returns {Promise<Array<Object>>} - Promise המכיל את הנתונים המנותחים.
      */
@@ -289,37 +256,37 @@
             return embeddedData;
         }
 
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`); // בדיקת תגובה תקינה.
-            const text = await response.text();
-            if (!text.trim()) throw new Error('Empty CSV'); // בדיקה אם הקובץ ריק.
-            return parseCSV(text);
-        } catch (error) {
-            console.error('CSV load failed:', error);
-            throw error; // זריקת השגיאה הלאה לטיפול בפונקציה הקוראת.
-        }
-    }
-
-    /**
-     * מנתח מחרוזת CSV לפורמט של מערך אובייקטים.
-     * @param {string} text - תוכן קובץ ה-CSV.
-     * @returns {Array<Object>} - מערך של אובייקטים, כאשר כל אובייקט מייצג שורה.
-     */
-    function parseCSV(text) {
-        // פיצול לפי שורות וסינון שורות ריקות.
-        const lines = text.split(/\r?\n/).filter(line => line.trim());
-        if (lines.length <= 1) throw new Error('No data in CSV'); // לפחות שורה אחת (כותרות).
-
-        const headers = parseCsvLine(lines[0]).map(normalizeHeader); // ניתוח ונירמול כותרות.
-        return lines.slice(1).map(line => { // דילוג על שורת הכותרות.
-            const values = parseCsvLine(line);
-            const record = {};
-            // יצירת אובייקט עבור כל שורה.
-            headers.forEach((header, i) => {
-                record[header] = values[i] ? values[i].trim() : '';
+        return new Promise((resolve, reject) => {
+            Papa.parse(url, {
+                download: true, // PapaParse יטפל בהורדת הקובץ.
+                header: true,   // PapaParse ינתח את השורה הראשונה ככותרות.
+                skipEmptyLines: true, // ידלג על שורות ריקות.
+                worker: true,   // השתמש ב-Web Worker לניתוח קבצים גדולים (משפר ביצועים).
+                transformHeader: normalizeHeader, // השתמש בפונקציית normalizeHeader שלנו.
+                complete: (results) => {
+                    if (results.errors.length) {
+                        console.error('PapaParse errors:', results.errors);
+                        // ניתן לטפל בשגיאות ספציפיות כאן אם רוצים.
+                    }
+                    if (!results.data || results.data.length === 0) {
+                        return reject(new Error('Empty or invalid CSV data after parsing.'));
+                    }
+                    // PapaParse כבר מחזיר מערך של אובייקטים, כל שורה היא אובייקט עם מפתחות הכותרות.
+                    // ננקה ערכים ריקים או null ל-'' כדי לשמור על עקביות.
+                    const parsedData = results.data.map(row => {
+                        const newRow = {};
+                        for (const key in row) {
+                            newRow[key] = row[key] === null || row[key] === undefined ? '' : String(row[key]).trim();
+                        }
+                        return newRow;
+                    });
+                    resolve(parsedData);
+                },
+                error: (err) => {
+                    console.error('PapaParse failed:', err);
+                    reject(err);
+                }
             });
-            return record;
         });
     }
 
@@ -330,19 +297,19 @@
     async function loadData() {
         showLoading(labels.loading_data[state.lang]);
         try {
+            // הקריאה ל-loadCSVData תשתמש כעת ב-PapaParse
             state.originalData = await loadCSVData('data.csv');
             console.log(`Loaded ${state.originalData.length} records`);
         } catch (error) {
-            console.error('Failed to load CSV, using embedded data');
+            console.error('Failed to load CSV, using embedded data:', error);
             state.originalData = embeddedData; // שימוש בנתונים משובצים במקרה של כשל.
             showToast(labels.error_loading_data[state.lang] + error.message, 'error');
-            showToast(labels.using_sample_data[state.lang], 'info'); // הודעה למשתמש.
+            showToast(state.lang === 'he' ? 'משתמש בנתונים לדוגמה.' : 'Using sample data.', 'info'); // הודעה למשתמש.
         } finally {
-            // פעולות המבוצעות תמיד לאחר ניסיון הטעינה.
-            state.filteredData = [...state.originalData]; // אתחול הנתונים המסוננים.
-            populateFilters(); // מילוי אפשרויות הפילטרים.
-            applySortAndRender(); // מיון ורינדור הנתונים.
-            hideLoading(); // הסתרת שכבת הטעינה.
+            state.filteredData = [...state.originalData];
+            populateFilters();
+            applySortAndRender();
+            hideLoading();
         }
     }
 
@@ -669,8 +636,10 @@
         if (dom.langBtn) dom.langBtn.textContent = state.lang === 'he' ? 'English' : 'עברית';
 
         // עדכון כותרות האתר.
-        document.getElementById('siteTitle').textContent = labels.site_title[state.lang];
-        document.getElementById('siteSub').textContent = labels.site_sub[state.lang];
+        const siteTitle = document.getElementById('siteTitle');
+        const siteSub = document.getElementById('siteSub');
+        if (siteTitle) siteTitle.textContent = labels.site_title[state.lang];
+        if (siteSub) siteSub.textContent = labels.site_sub[state.lang];
 
         // עדכון טקסט placeholder בתיבת החיפוש.
         if (dom.searchBox) dom.searchBox.placeholder = labels.search_placeholder[state.lang];
