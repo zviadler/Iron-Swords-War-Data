@@ -1,89 +1,23 @@
-// === אתחול ===
-    function initialize() {
-        console.log('Initializing app...');
-        
-        // עדכון שפה
-        document.documentElement.lang = state.lang;
-        document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
-        collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
-        
-        // אתחול פילטרים מובייל
-        initializeMobileFilters();
-        
-        updateTextByLang();
-        loadData();
-        
-        // מאזינים
-        if (dom.langBtn) {
-            dom.langBtn.addEventListener('click', () => {
-                state.lang = state.lang === 'he' ? 'en' : 'he';
-                document.documentElement.lang = state.lang;
-                document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
-                collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
-                updateTextByLang();
-                updateMobileFiltersButton(); // עדכון כפתור מובייל
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.locationFilter) {
-            dom.locationFilter.addEventListener('change', () => {
-                state.filters.location = dom.locationFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.orgFilter) {
-            dom.orgFilter.addEventListener('change', () => {
-                state.filters.org = dom.orgFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.rankFilter) {
-            dom.rankFilter.addEventListener('change', () => {
-                state.filters.rank = dom.rankFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.searchBox) {
-            dom.searchBox.addEventListener('input', debouncedFilter);
-        }
-        
-        if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
-        if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
-        
-        if (dom.viewToggleBtn) {
-            dom.viewToggleBtn.addEventListener('click', () => {
-                state.isCardView = !state.isCardView;
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetFilters);
-        if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
-        
-        console.log('App initialized');
-    }(function() {
+(function () {
     'use strict';
-window.addEventListener('click', (e) => { console.log('clicked', e.target); });
-    // === מצב מרכזי ===
+
+    // === מצב מרכזי של האפליקציה ===
+    // 'state' אובייקט המכיל את כל הנתונים הדינמיים וההגדרות של האפליקציה.
+    // שימוש באובייקט אחד לניהול מצב משפר את הקריאות והתחזוקה.
     const state = {
-        originalData: [],
-        filteredData: [],
-        currentPage: 0,
-        VISIBLE_ROWS: 50,
-        sort: { column: null, direction: 'asc' },
-        filters: { location: '', org: '', rank: '', search: '' },
-        lang: (navigator.language || navigator.userLanguage).startsWith('he') ? 'he' : 'en',
-        isCardView: window.innerWidth <= 768
+        originalData: [], // מערך הנתונים המקוריים שנטענו (לא מסוננים).
+        filteredData: [], // מערך הנתונים הנוכחיים לאחר סינון.
+        currentPage: 0, // העמוד הנוכחי בתצוגת טבלה.
+        VISIBLE_ROWS: 50, // מספר השורות המוצגות לעמוד בתצוגת טבלה.
+        sort: { column: null, direction: 'asc' }, // הגדרות מיון: עמודה וכיוון (עלייה/ירידה).
+        filters: { location: '', org: '', rank: '', search: '' }, // פילטרים נוכחיים.
+        lang: (navigator.language || navigator.userLanguage).startsWith('he') ? 'he' : 'en', // שפת האפליקציה (עברית/אנגלית).
+        isCardView: window.innerWidth <= 768 // קובע האם להציג בתצוגת כרטיסים (למובייל).
     };
 
-    // === אלמנטים DOM ===
+    // === אלמנטי DOM ===
+    // 'dom' אובייקט המכיל הפניות לכל האלמנטים ב-DOM שיש איתם אינטראקציה.
+    // מרכז את כל בחירות ה-DOM במקום אחד, מה שמשפר ביצועים וקריאות.
     const dom = {
         contentArea: document.getElementById('contentArea'),
         loadingOverlay: document.getElementById('loadingOverlay'),
@@ -108,15 +42,18 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         filtersBar: document.getElementById('filtersBar')
     };
 
-    // === מפת שדות ===
+    // === מפת שדות נתונים ===
+    // הגדרה מפורשת של מפתחות השדות בנתונים, לשמירה על עקביות.
     const dataFieldKeys = [
-        'post_id','combatant_id','date','location','location_details',
-        'name_english','name_arabic','nickname','description_online',
-        'rank_role','organization','activity','family_casualties_info',
-        'casualties_count','additional_combatants','notes'
+        'post_id', 'combatant_id', 'date', 'location', 'location_details',
+        'name_english', 'name_arabic', 'nickname', 'description_online',
+        'rank_role', 'organization', 'activity', 'family_casualties_info',
+        'casualties_count', 'additional_combatants', 'notes'
     ];
 
     // === תרגומים ===
+    // 'labels' אובייקט המכיל את כל הטקסטים באפליקציה בשפות שונות.
+    // מאפשר לוקליזציה קלה ומרכזית.
     const labels = {
         site_title: { he: "מאגר זיהוי לוחמים", en: "Combatant Identification Database" },
         site_sub: { he: "נתונים מתעדכנים באופן רציף", en: "Data updated continuously" },
@@ -155,10 +92,14 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         export_no_data: { he: "אין נתונים לייצוא.", en: "No data to export." },
         filter_reset_success: { he: "הפילטרים אופסו.", en: "Filters reset." },
         results_found: { he: "נמצאו {count} תוצאות", en: "{count} results found" },
-        result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" }
+        result_found: { he: "נמצאה תוצאה אחת", en: "1 result found" },
+        open_filters: { he: "פתח פילטרים", en: "Open Filters" },
+        close_filters: { he: "סגור פילטרים", en: "Close Filters" },
+        all: { he: "הכל", en: "All" }
     };
 
-    // === נתונים משובצים ===
+    // === נתונים משובצים (Embedded Data) ===
+    // נתונים סטטיים לשימוש במקרה של כשל בטעינת קובץ ה-CSV.
     const embeddedData = [
         {
             "post_id": "1", "combatant_id": "1", "date": "25-APR-2025", "location": "Unknown", "location_details": "-",
@@ -183,21 +124,45 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         }
     ];
 
-    // === פונקציות עזר ===
+    // אובייקט Collator למיון טקסט רגיש לשפה (כולל מספרים ותווים מיוחדים).
+    let collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+
+    // === פונקציות עזר כלליות ===
+
+    /**
+     * מנקה קלט מחשש ל-XSS על ידי המרת תווי HTML.
+     * @param {string} input - המחרוזת לניקוי.
+     * @returns {string} - המחרוזת המנוקה.
+     */
     function sanitize(input) {
-        if (!input) return '';
+        if (input === null || input === undefined) return '';
         const div = document.createElement('div');
         div.textContent = String(input);
         return div.innerHTML;
     }
 
+    /**
+     * מדגיש מונח חיפוש בתוך טקסט.
+     * @param {string} text - הטקסט המקורי.
+     * @param {string} term - מונח החיפוש להדגשה.
+     * @returns {string} - הטקסט עם הדגשות HTML.
+     */
     function highlight(text, term) {
         if (!term || !text) return sanitize(text);
         const safeText = sanitize(text);
+        // יצירת ביטוי רגולרי מהמונח, תוך כדי בריחת תווים מיוחדים.
         const safeTerm = sanitize(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // החלפת המופעים של המונח בתגית <mark> (לא רגיש לרישיות).
         return safeText.replace(new RegExp(`(${safeTerm})`, 'gi'), '<mark>$1</mark>');
     }
 
+    /**
+     * פונקציית Debounce למניעת הפעלה מרובה ומהירה של פונקציות.
+     * שימושי לחיפוש בזמן הקלדה (input events).
+     * @param {function} fn - הפונקציה להפעלה.
+     * @param {number} ms - זמן ההמתנה במילישניות לפני הפעלת הפונקציה.
+     * @returns {function} - הפונקציה שעברה Debounce.
+     */
     function debounce(fn, ms = 300) {
         let timer;
         return (...args) => {
@@ -206,34 +171,47 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         };
     }
 
+    /**
+     * מנתח שורת CSV אחת, כולל טיפול במרכאות כפולות.
+     * @param {string} line - שורת ה-CSV לניתוח.
+     * @returns {Array<string>} - מערך של שדות.
+     */
     function parseCsvLine(line) {
         const result = [];
         let inQuote = false;
         let currentField = '';
-        
+
         for (let i = 0; i < line.length; i++) {
             const char = line[i];
             const nextChar = line[i + 1];
-            
+
             if (char === '"') {
+                // טיפול במרכאות כפולות בתוך שדה.
                 if (inQuote && nextChar === '"') {
                     currentField += '"';
                     i++;
                 } else {
-                    inQuote = !inQuote;
+                    inQuote = !inQuote; // כניסה/יציאה ממצב מרכאות.
                 }
             } else if (char === ',' && !inQuote) {
+                // הפרדת שדה בסוף פסיק, רק אם לא נמצאים בתוך מרכאות.
                 result.push(currentField.trim());
                 currentField = '';
             } else {
                 currentField += char;
             }
         }
-        result.push(currentField.trim());
+        result.push(currentField.trim()); // הוספת השדה האחרון.
         return result;
     }
 
+    /**
+     * ממיר כותרות CSV מוכרות למפתחות אחידים וסטנדרטיים.
+     * @param {string} header - כותרת העמודה.
+     * @returns {string} - מפתח השדה המנורמל.
+     */
     function normalizeHeader(header) {
+        // מפה של כותרות נפוצות (בעברית ובאנגלית) למפתחות אחידים.
         const map = {
             "מס' פוסט": 'post_id', "post no.": 'post_id',
             "מס' לוחם": 'combatant_id', "fighter no.": 'combatant_id',
@@ -252,12 +230,16 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
             'לוחמים נוספים': 'additional_combatants', 'additional fighters': 'additional_combatants',
             'הערות': 'notes', 'notes': 'notes'
         };
+        // המרה ל-lower case והחלפת רווחים בקו תחתון עבור כותרות לא מוגדרות מראש.
         return map[header.trim().toLowerCase()] || header.trim().toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '');
     }
 
-    let collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+    // === מצב טעינה והתראות ===
 
-    // === מצב טעינה ===
+    /**
+     * מציג את שכבת הטעינה עם הודעה נתונה.
+     * @param {string} message - ההודעה להצגה.
+     */
     function showLoading(message) {
         if (dom.loadingOverlay) {
             const text = dom.loadingOverlay.querySelector('.loading-text');
@@ -266,50 +248,74 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         }
     }
 
+    /**
+     * מסתיר את שכבת הטעינה.
+     */
     function hideLoading() {
         if (dom.loadingOverlay) {
             dom.loadingOverlay.classList.add('hidden');
         }
     }
 
+    /**
+     * מציג הודעת טוסט (הודעה קצרה נעלמת).
+     * @param {string} message - ההודעה להצגה.
+     * @param {string} [type='success'] - סוג ההודעה (success, error, info).
+     * @param {number} [duration=3000] - משך ההצגה במילישניות.
+     */
     function showToast(message, type = 'success', duration = 3000) {
         if (!dom.toastContainer) return;
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
+        toast.className = `toast ${type}`; // הוספת קלאס לסגנון.
         toast.textContent = message;
         dom.toastContainer.appendChild(toast);
+        // הסרת הטוסט לאחר משך זמן נתון.
         setTimeout(() => toast.remove(), duration);
     }
 
     // === טעינת נתונים ===
+
+    /**
+     * טוען נתונים מקובץ CSV או משתמש בנתונים משובצים אם הטעינה נכשלת.
+     * @param {string} url - כתובת ה-URL של קובץ ה-CSV.
+     * @returns {Promise<Array<Object>>} - Promise המכיל את הנתונים המנותחים.
+     */
     async function loadCSVData(url) {
         console.log('Loading from:', url);
-        
+
+        // במצב של טעינה מקומית (פרוטוקול file:), השתמש בנתונים המשובצים.
         if (window.location.protocol === 'file:') {
             console.log('Using embedded data');
             return embeddedData;
         }
-        
+
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`); // בדיקת תגובה תקינה.
             const text = await response.text();
-            if (!text.trim()) throw new Error('Empty CSV');
+            if (!text.trim()) throw new Error('Empty CSV'); // בדיקה אם הקובץ ריק.
             return parseCSV(text);
         } catch (error) {
             console.error('CSV load failed:', error);
-            throw error;
+            throw error; // זריקת השגיאה הלאה לטיפול בפונקציה הקוראת.
         }
     }
 
+    /**
+     * מנתח מחרוזת CSV לפורמט של מערך אובייקטים.
+     * @param {string} text - תוכן קובץ ה-CSV.
+     * @returns {Array<Object>} - מערך של אובייקטים, כאשר כל אובייקט מייצג שורה.
+     */
     function parseCSV(text) {
+        // פיצול לפי שורות וסינון שורות ריקות.
         const lines = text.split(/\r?\n/).filter(line => line.trim());
-        if (lines.length <= 1) throw new Error('No data in CSV');
-        
-        const headers = parseCsvLine(lines[0]).map(normalizeHeader);
-        return lines.slice(1).map(line => {
+        if (lines.length <= 1) throw new Error('No data in CSV'); // לפחות שורה אחת (כותרות).
+
+        const headers = parseCsvLine(lines[0]).map(normalizeHeader); // ניתוח ונירמול כותרות.
+        return lines.slice(1).map(line => { // דילוג על שורת הכותרות.
             const values = parseCsvLine(line);
             const record = {};
+            // יצירת אובייקט עבור כל שורה.
             headers.forEach((header, i) => {
                 record[header] = values[i] ? values[i].trim() : '';
             });
@@ -317,6 +323,10 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         });
     }
 
+    /**
+     * פונקציה ראשית לטעינת הנתונים (מ-CSV או משובצים).
+     * מציגה הודעות טעינה ושגיאה, ומפעילה עדכוני UI לאחר הטעינה.
+     */
     async function loadData() {
         showLoading(labels.loading_data[state.lang]);
         try {
@@ -324,73 +334,113 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
             console.log(`Loaded ${state.originalData.length} records`);
         } catch (error) {
             console.error('Failed to load CSV, using embedded data');
-            state.originalData = embeddedData;
-            showToast('Using sample data', 'info');
+            state.originalData = embeddedData; // שימוש בנתונים משובצים במקרה של כשל.
+            showToast(labels.error_loading_data[state.lang] + error.message, 'error');
+            showToast(labels.using_sample_data[state.lang], 'info'); // הודעה למשתמש.
         } finally {
-            state.filteredData = [...state.originalData];
-            populateFilters();
-            applySortAndRender();
-            hideLoading();
+            // פעולות המבוצעות תמיד לאחר ניסיון הטעינה.
+            state.filteredData = [...state.originalData]; // אתחול הנתונים המסוננים.
+            populateFilters(); // מילוי אפשרויות הפילטרים.
+            applySortAndRender(); // מיון ורינדור הנתונים.
+            hideLoading(); // הסתרת שכבת הטעינה.
         }
     }
 
     // === פילטרים ===
+
+    /**
+     * ממלא את תיבות הבחירה של הפילטרים (מיקום, ארגון, דרגה) עם ערכים ייחודיים מהנתונים.
+     */
     function populateFilters() {
+        // שימוש ב-Set לאיסוף ערכים ייחודיים.
         const sets = { location: new Set(), org: new Set(), rank: new Set() };
         state.originalData.forEach(r => {
             if (r.location && r.location !== '-') sets.location.add(r.location);
             if (r.organization && r.organization !== '-') sets.org.add(r.organization);
             if (r.rank_role && r.rank_role !== '-') sets.rank.add(r.rank_role);
         });
-        
+
+        // יצירה דינמית של אפשרויות בתיבות הבחירה.
         [
             ['locationFilter', 'location'],
             ['orgFilter', 'org'],
             ['rankFilter', 'rank']
         ].forEach(([id, key]) => {
             const select = dom[id];
-            if (!select) return;
-            const allText = state.lang === 'he' ? 'הכל' : 'All';
-            select.innerHTML = `<option value="">${allText}</option>`;
-            Array.from(sets[key]).sort().forEach(val => {
+            if (!select) return; // וודא שהאלמנט קיים.
+            const allText = labels.all[state.lang];
+            select.innerHTML = `<option value="">${allText}</option>`; // הוספת אפשרות "הכל".
+            // הוספת הערכים הייחודיים ממוינים.
+            Array.from(sets[key]).sort((a, b) => collator.compare(a, b)).forEach(val => {
                 select.insertAdjacentHTML('beforeend', `<option value="${sanitize(val)}">${sanitize(val)}</option>`);
             });
+            // שיחזור הערך הנבחר לאחר עדכון האפשרויות.
+            select.value = state.filters[key];
         });
     }
 
+    /**
+     * מסנן את הנתונים בהתאם לפילטרים הנוכחיים באובייקט 'state.filters'.
+     */
     function filterData() {
         const { location, org, rank, search } = state.filters;
         state.filteredData = state.originalData.filter(r => {
             const loc = (r.location || '').toLowerCase();
             const o = (r.organization || '').toLowerCase();
             const rk = (r.rank_role || '').toLowerCase();
-            const txt = [r.name_english, r.name_arabic, r.description_online, loc, o].join(' ').toLowerCase();
-            
+            // יצירת מחרוזת חיפוש כוללת ממספר שדות רלוונטיים.
+            const searchString = [r.name_english, r.name_arabic, r.description_online, loc, o, rk, r.notes].join(' ').toLowerCase();
+
+            // בדיקת התאמה לכל הפילטרים.
             return (!location || loc.includes(location)) &&
-                   (!org || o.includes(org)) &&
-                   (!rank || rk.includes(rank)) &&
-                   (!search || txt.includes(search));
+                (!org || o.includes(org)) &&
+                (!rank || rk.includes(rank)) &&
+                (!search || searchString.includes(search));
         });
-        state.currentPage = 0;
+        state.currentPage = 0; // איפוס עמוד נוכחי לאחר סינון.
     }
 
+    // פונקציית סינון עם Debounce עבור תיבת החיפוש.
     const debouncedFilter = debounce(() => {
         state.filters.search = dom.searchBox.value.toLowerCase();
         filterData();
         applySortAndRender();
     });
 
-    // === מיון ===
+    // === מיון נתונים ===
+
+    /**
+     * ממיין את הנתונים המסוננים בהתאם להגדרות המיון ב-'state.sort'.
+     */
     function sortData() {
         const { column, direction } = state.sort;
-        if (column === null) return;
-        const key = dataFieldKeys[column];
+        if (column === null) return; // אין עמודה למיון.
+
+        const key = dataFieldKeys[column]; // מציאת מפתח השדה למיון.
         state.filteredData.sort((a, b) => {
-            const cmp = collator.compare(a[key] || '', b[key] || '');
+            const valA = a[key] || '';
+            const valB = b[key] || '';
+
+            // טיפול מיוחד למיון תאריכים אם יש פורמט אחיד
+            // (נניח "DD-MMM-YYYY" כמו בדוגמה)
+            if (key === 'date') {
+                const dateA = new Date(valA.replace(/-/g, ' '));
+                const dateB = new Date(valB.replace(/-/g, ' '));
+                if (dateA > dateB) return direction === 'asc' ? 1 : -1;
+                if (dateA < dateB) return direction === 'asc' ? -1 : 1;
+                return 0;
+            }
+
+            // מיון רגיל באמצעות collator.
+            const cmp = collator.compare(valA, valB);
             return direction === 'asc' ? cmp : -cmp;
         });
     }
 
+    /**
+     * משנה את הגדרות המיון (עמודה וכיוון) ומפעילה מיון ורינדור מחדש.
+     * @param {number} colIndex - אינדקס העמודה למיון.
+     */
     function sortAndRender(colIndex) {
         if (state.sort.column === colIndex) {
             state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
@@ -401,6 +451,9 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         applySortAndRender();
     }
 
+    /**
+     * פונקציה כללית המפעילה את כל שלבי העדכון לאחר שינוי (סינון, מיון, שפה).
+     */
     function applySortAndRender() {
         sortData();
         renderData();
@@ -410,22 +463,30 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         updateResultsCounter();
     }
 
-    // === רינדור ===
+    // === רינדור נתונים ל-UI ===
+
+    /**
+     * מוחק את תוכן ה-contentArea ומרנדר את הנתונים הנוכחיים (כרטיסים או טבלה).
+     */
     function renderData() {
-        dom.contentArea.innerHTML = '';
+        if (!dom.contentArea) return;
+        dom.contentArea.innerHTML = ''; // ניקוי אזור התוכן.
         const data = state.filteredData;
-        
+
         if (!data.length) {
-            dom.contentArea.innerHTML = `<div class="empty-state">
-                <i class="fas fa-search"></i>
-                <h3>לא נמצאו תוצאות</h3>
-                <p>נסה לשנות את קריטריוני החיפוש</p>
-            </div>`;
+            // הצגת הודעת "אין תוצאות" אם הנתונים ריקים.
+            dom.contentArea.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>${labels.no_matching_data[state.lang]}</h3>
+                    <p>${state.lang === 'he' ? 'נסה לשנות את קריטריוני החיפוש' : 'Try changing your search criteria'}</p>
+                </div>
+            `;
             return;
         }
-        
+
         const term = state.filters.search;
-        
+
         if (state.isCardView) {
             renderCardView(data, term);
         } else {
@@ -433,11 +494,20 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
         }
     }
 
+    /**
+     * מרנדר את הנתונים בתצוגת כרטיסים.
+     * @param {Array<Object>} data - הנתונים לרינדור.
+     * @param {string} term - מונח החיפוש להדגשה.
+     */
     function renderCardView(data, term) {
         const grid = document.createElement('div');
         grid.className = 'card-grid';
-        
-        data.forEach(record => {
+
+        // הגבלת הנתונים המוצגים לפי פגינציה.
+        const start = state.currentPage * state.VISIBLE_ROWS;
+        const chunk = data.slice(start, start + state.VISIBLE_ROWS);
+
+        chunk.forEach(record => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
@@ -448,9 +518,10 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
                     ${record.date && record.date !== '-' ? `<span>📅 ${highlight(record.date, term)}</span>` : ''}
                 </div>
             `;
-            
+
             const details = document.createElement('div');
             details.className = 'card-details';
+            // לולאה על שדות ספציפיים ליצירת פרטי כרטיס.
             ['rank_role', 'organization', 'family_casualties_info', 'casualties_count', 'notes'].forEach(key => {
                 const val = record[key];
                 if (val && val !== '-') {
@@ -459,443 +530,407 @@ window.addEventListener('click', (e) => { console.log('clicked', e.target); });
                     details.appendChild(p);
                 }
             });
-            
+
             card.appendChild(details);
             grid.appendChild(card);
         });
-        
+
         dom.contentArea.appendChild(grid);
     }
 
+    /**
+     * מרנדר את הנתונים בתצוגת טבלה.
+     * @param {Array<Object>} data - הנתונים לרינדור.
+     * @param {string} term - מונח החיפוש להדגשה.
+     */
     function renderTableView(data, term) {
         const tableWrapper = document.createElement('div');
         tableWrapper.className = 'table-container';
-        
+
         const table = document.createElement('table');
         table.className = 'table-responsive';
-        
+
         // כותרות עמודות
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        
+
         dataFieldKeys.forEach((key, index) => {
             const th = document.createElement('th');
-            th.dataset.col = index;
+            th.dataset.col = index; // שמירת אינדקס העמודה למיון.
             th.style.cursor = 'pointer';
             th.innerHTML = `${labels[key][state.lang]} <span class="sort-icon">↕</span>`;
-            
-            // עדכון אינדיקטור מיון
+
+            // עדכון אינדיקטור מיון (חץ למעלה/למטה).
             if (state.sort.column === index) {
                 const icon = th.querySelector('.sort-icon');
-                icon.textContent = state.sort.direction === 'asc' ? '↑' : '↓';
-                icon.style.color = '#3b82f6';
+                if (icon) {
+                    icon.textContent = state.sort.direction === 'asc' ? '↑' : '↓';
+                    icon.style.color = '#3b82f6'; // צבע הדגשה.
+                }
             }
-            
+
             headerRow.appendChild(th);
         });
-        
+
         thead.appendChild(headerRow);
         table.appendChild(thead);
-        
+
         // גוף טבלה
         const tbody = document.createElement('tbody');
         const start = state.currentPage * state.VISIBLE_ROWS;
-        const chunk = data.slice(start, start + state.VISIBLE_ROWS);
-        
+        const chunk = data.slice(start, start + state.VISIBLE_ROWS); // הגבלת שורות לפי פגינציה.
+
         chunk.forEach(record => {
             const tr = document.createElement('tr');
             dataFieldKeys.forEach(key => {
                 const td = document.createElement('td');
+                // הדגשת מונחי חיפוש בתא.
                 td.innerHTML = highlight(String(record[key] || ''), term);
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
         });
-        
+
         table.appendChild(tbody);
-        
-        // מאזיני מיון
+
+        // מאזיני אירועים לכותרות העמודות לצורך מיון.
         thead.querySelectorAll('th[data-col]').forEach(th => {
             th.addEventListener('click', () => sortAndRender(parseInt(th.dataset.col)));
         });
-        
+
         tableWrapper.appendChild(table);
         dom.contentArea.appendChild(tableWrapper);
     }
 
-    // === פגינציה ===
+    // === פגינציה (חלוקה לעמודים) ===
+
+    /**
+     * מעדכן את מצב כפתורי הפגינציה ואת תצוגת מספר העמוד.
+     */
     function updatePagination() {
+        if (!dom.pageInfo || !dom.prevPageBtn || !dom.nextPageBtn) return;
+
         const totalPages = Math.ceil(state.filteredData.length / state.VISIBLE_ROWS) || 1;
         dom.pageInfo.textContent = labels.page_info[state.lang]
             .replace('{current}', state.currentPage + 1)
             .replace('{total}', totalPages);
-        dom.prevPageBtn.disabled = state.currentPage === 0;
-        dom.nextPageBtn.disabled = state.currentPage >= totalPages - 1;
+        dom.prevPageBtn.disabled = state.currentPage === 0; // השבת כפתור "קודם" בעמוד הראשון.
+        dom.nextPageBtn.disabled = state.currentPage >= totalPages - 1; // השבת כפתור "הבא" בעמוד האחרון.
     }
 
+    /**
+     * משנה את העמוד הנוכחי ומפעילה רינדור מחדש.
+     * @param {number} delta - השינוי במספר העמודים (1 עבור הבא, -1 עבור הקודם).
+     */
     function changePage(delta) {
         const totalPages = Math.ceil(state.filteredData.length / state.VISIBLE_ROWS) || 1;
         state.currentPage = Math.max(0, Math.min(totalPages - 1, state.currentPage + delta));
-        renderData();
-        updatePagination();
+        renderData(); // רינדור הנתונים עבור העמוד החדש.
+        updatePagination(); // עדכון מצב הפגינציה.
+        // אין צורך ב applySortAndRender, רק ב renderData ו- updatePagination.
     }
 
     // === סטטיסטיקות ===
+
+    /**
+     * מחשב ומעדכן את הסטטיסטיקות המוצגות ב-UI (סה"כ לוחמים, קורבנות וכו').
+     */
     function updateStats() {
         let totalCombatants = 0, totalCasualties = 0, familyCasualties = 0, highRanking = 0;
-        
+
         state.filteredData.forEach(r => {
             totalCombatants += 1;
             const casualties = parseInt(r.casualties_count) || 0;
             totalCasualties += casualties;
+            // בדיקה אם קיימים פרטי בני משפחה.
             if (r.family_casualties_info && r.family_casualties_info !== '-') {
                 familyCasualties += casualties;
             }
+            // בדיקה אם הדרגה/תפקיד מכיל 'leader' (לא רגיש לרישיות).
             if ((r.rank_role || '').toLowerCase().includes('leader')) {
                 highRanking += 1;
             }
         });
-        
+
+        // עדכון אלמנטי ה-DOM עם הסטטיסטיקות.
         if (dom.totalCombatants) dom.totalCombatants.textContent = totalCombatants;
         if (dom.totalCasualties) dom.totalCasualties.textContent = totalCasualties;
         if (dom.familyCasualties) dom.familyCasualties.textContent = familyCasualties;
         if (dom.highRanking) dom.highRanking.textContent = highRanking;
     }
 
-    // === עדכון טקסט ===
+    // === עדכון טקסט לפי שפה ===
+
+    /**
+     * מעדכן את כל הטקסטים ב-UI שמשתנים לפי השפה.
+     */
     function updateTextByLang() {
+        // עדכון כפתור שינוי השפה.
         if (dom.langBtn) dom.langBtn.textContent = state.lang === 'he' ? 'English' : 'עברית';
-        
-        const siteTitle = document.getElementById('siteTitle');
-        const siteSub = document.getElementById('siteSub');
-        if (siteTitle) siteTitle.textContent = labels.site_title[state.lang];
-        if (siteSub) siteSub.textContent = labels.site_sub[state.lang];
-        
+
+        // עדכון כותרות האתר.
+        document.getElementById('siteTitle').textContent = labels.site_title[state.lang];
+        document.getElementById('siteSub').textContent = labels.site_sub[state.lang];
+
+        // עדכון טקסט placeholder בתיבת החיפוש.
         if (dom.searchBox) dom.searchBox.placeholder = labels.search_placeholder[state.lang];
-        
+
+        // עדכון כפתור החלפת תצוגה (טבלה/כרטיסים).
         if (dom.viewToggleBtn) {
-            dom.viewToggleBtn.innerHTML = state.isCardView 
+            dom.viewToggleBtn.innerHTML = state.isCardView
                 ? `<i class="fas fa-table"></i> ${labels.toggle_view_table[state.lang]}`
                 : `<i class="fas fa-th-list"></i> ${labels.toggle_view_card[state.lang]}`;
         }
-        
+
+        // עדכון טקסט כפתורי איפוס וייצוא.
         if (dom.resetBtn) dom.resetBtn.innerHTML = `<i class="fas fa-refresh"></i> ${labels.reset_filters[state.lang]}`;
         if (dom.exportBtn) dom.exportBtn.innerHTML = `<i class="fas fa-download"></i> ${labels.export_csv[state.lang]}`;
-        
+
+        // עדכון הכפתור של פילטרים במובייל.
+        updateMobileFiltersButton();
+
+        // עדכון נראות סקשן טקסט הסבר בהתאם לשפה.
         const hebrewSection = document.getElementById('dataCollectionHebrew');
         const englishSection = document.getElementById('dataCollectionEnglish');
         if (hebrewSection && englishSection) {
             hebrewSection.classList.toggle('hidden', state.lang !== 'he');
             englishSection.classList.toggle('hidden', state.lang === 'he');
         }
+
+        // עדכון אפשרויות הפילטרים הקיימים (כדי לשקף את ה"הכל" בשפה הנכונה)
+        populateFilters();
     }
 
+    /**
+     * מעדכן את מונה התוצאות המוצג.
+     */
     function updateResultsCounter() {
         if (!dom.resultsCounter) return;
         const count = state.filteredData.length;
         if (count === 0) {
-            dom.resultsCounter.classList.add('hidden');
+            dom.resultsCounter.classList.add('hidden'); // הסתר אם אין תוצאות.
         } else {
             dom.resultsCounter.classList.remove('hidden');
-            const message = count === 1 
-                ? labels.result_found[state.lang] 
+            // בחירת הודעה מתאימה (יחיד/רבים).
+            const message = count === 1
+                ? labels.result_found[state.lang]
                 : labels.results_found[state.lang].replace('{count}', count);
             dom.resultsCounter.textContent = message;
         }
     }
 
-    // === פעולות ===
+    // === פעולות עיקריות ===
+
+    /**
+     * מייצא את הנתונים המסוננים הנוכחיים לקובץ CSV.
+     */
     function exportToCSV() {
         if (!state.filteredData.length) {
             showToast(labels.export_no_data[state.lang], 'error');
             return;
         }
-        
+
+        // יצירת כותרות ה-CSV עם תרגום.
         const headers = dataFieldKeys.map(k => `"${labels[k][state.lang]}"`).join(',') + '\n';
         let csv = headers;
-        
+
+        // יצירת שורות הנתונים, תוך טיפול במרכאות כפולות בתוך שדות.
         state.filteredData.forEach(r => {
             csv += dataFieldKeys.map(k => `"${String(r[k] || '').replace(/"/g, '""')}"`).join(',') + '\n';
         });
-        
-        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+
+        // יצירת Blob ולינק להורדה.
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // הוספת BOM לעברית.
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'combatants_data.csv';
         document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
+        link.click(); // הפעלת ההורדה.
+        document.body.removeChild(link); // ניקוי האלמנט מה-DOM.
+
         showToast(labels.export_success[state.lang]);
     }
 
+    /**
+     * מאפס את כל הפילטרים ומצב המיון, ומפעיל רינדור מחדש.
+     */
     function resetFilters() {
-        dom.locationFilter.value = '';
-        dom.orgFilter.value = '';
-        dom.rankFilter.value = '';
-        dom.searchBox.value = '';
+        // איפוס ערכים בתיבות הבחירה ובתיבת החיפוש.
+        if (dom.locationFilter) dom.locationFilter.value = '';
+        if (dom.orgFilter) dom.orgFilter.value = '';
+        if (dom.rankFilter) dom.rankFilter.value = '';
+        if (dom.searchBox) dom.searchBox.value = '';
+
+        // איפוס מצב הפילטרים והמיון ב-state.
         state.filters = { location: '', org: '', rank: '', search: '' };
         state.sort = { column: null, direction: 'asc' };
-        filterData();
-        applySortAndRender();
+
+        filterData(); // סינון מחדש (כעת ללא פילטרים).
+        applySortAndRender(); // מיון ורינדור.
         showToast(labels.filter_reset_success[state.lang]);
     }
 
-    // === אתחול פילטרים מובייל ===
+    // === לוגיקה של פילטרים במובייל ===
+
+    /**
+     * מאתחל את לוגיקת ההפעלה/כיבוי של סרגל הפילטרים במובייל.
+     */
     function initializeMobileFilters() {
         console.log('initializeMobileFilters', dom.mobileFiltersToggle, dom.filtersBar);
         if (!dom.mobileFiltersToggle || !dom.filtersBar) return;
-        
-        dom.mobileFiltersToggle.addEventListener('click', function() {
+
+        // Listener ללחיצה על כפתור הפילטרים במובייל.
+        dom.mobileFiltersToggle.addEventListener('click', function () {
             const isActive = dom.filtersBar.classList.contains('active');
             const newState = !isActive;
-            
-            dom.filtersBar.classList.toggle('active', newState);
-            dom.mobileFiltersToggle.setAttribute('aria-expanded', newState.toString());
-            
-            // עדכון טקסט וצבע כפתור
+
+            dom.filtersBar.classList.toggle('active', newState); // הוספה/הסרה של קלאס 'active'.
+            dom.mobileFiltersToggle.setAttribute('aria-expanded', newState.toString()); // עדכון ARIA.
+
+            // עדכון טקסט וצבע הכפתור בהתאם למצב.
             const icon = dom.mobileFiltersToggle.querySelector('i');
             const span = dom.mobileFiltersToggle.querySelector('span');
-            
+
             if (newState) {
-                if (icon) icon.className = 'fas fa-times';
-                if (span) span.textContent = state.lang === 'he' ? 'סגור פילטרים' : 'Close Filters';
-                dom.mobileFiltersToggle.style.background = '#dc2626'; // אדום לסגירה
+                if (icon) icon.className = 'fas fa-times'; // אייקון X.
+                if (span) span.textContent = labels.close_filters[state.lang];
+                dom.mobileFiltersToggle.style.background = '#dc2626'; // אדום לסגירה.
             } else {
-                if (icon) icon.className = 'fas fa-filter';
-                if (span) span.textContent = state.lang === 'he' ? 'פתח פילטרים' : 'Open Filters';
-                dom.mobileFiltersToggle.style.background = '#3b82f6'; // כחול לפתיחה
+                if (icon) icon.className = 'fas fa-filter'; // אייקון פילטר.
+                if (span) span.textContent = labels.open_filters[state.lang];
+                dom.mobileFiltersToggle.style.background = '#3b82f6'; // כחול לפתיחה.
             }
         });
-        
-        // סגירה אוטומטית במסכים רחבים
+
+        // סגירה אוטומטית של סרגל הפילטרים במובייל כאשר עוברים למסך רחב.
         const mediaQuery = window.matchMedia('(min-width: 769px)');
         const handleResize = (e) => {
             if (e.matches && dom.filtersBar.classList.contains('active')) {
                 dom.filtersBar.classList.remove('active');
                 dom.mobileFiltersToggle.setAttribute('aria-expanded', 'false');
-                updateMobileFiltersButton();
+                updateMobileFiltersButton(); // עדכון מצב הכפתור.
             }
         };
-        
+
+        // הוספת מאזין לאירועי שינוי גודל מסך.
         if (mediaQuery.addEventListener) {
             mediaQuery.addEventListener('change', handleResize);
         } else {
-            mediaQuery.addListener(handleResize);
+            mediaQuery.addListener(handleResize); // תמיכה בדפדפנים ישנים.
         }
     }
 
+    /**
+     * מעדכן את הטקסט והאייקון של כפתור הפילטרים במובייל למצב סגור.
+     * נדרש לאחר שינוי שפה או שינוי גודל מסך.
+     */
     function updateMobileFiltersButton() {
         if (!dom.mobileFiltersToggle) return;
-        
+
         const icon = dom.mobileFiltersToggle.querySelector('i');
         const span = dom.mobileFiltersToggle.querySelector('span');
-        
+
+        // תמיד יציג את מצב הפתיחה כאשר הפילטרים סגורים.
         if (icon) icon.className = 'fas fa-filter';
-        if (span) span.textContent = state.lang === 'he' ? 'פתח פילטרים' : 'Open Filters';
+        if (span) span.textContent = labels.open_filters[state.lang];
         dom.mobileFiltersToggle.style.background = '#3b82f6';
+        dom.mobileFiltersToggle.setAttribute('aria-expanded', 'false');
+        // ודא שסרגל הפילטרים סגור כאשר הכפתור במצב "פתח".
+        if (dom.filtersBar) dom.filtersBar.classList.remove('active');
     }
+
+    // === פונקציית אתחול ראשית ===
+
+    /**
+     * פונקציית האתחול של האפליקציה.
+     * מוגדרת פעם אחת ומפעילה את כל הלוגיקה הראשונית.
+     */
     function initialize() {
         console.log('Initializing app...');
-        
-        // עדכון שפה
+
+        // הגדרת שפה וכיווניות מסמך ראשוניים.
         document.documentElement.lang = state.lang;
         document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
+        // אתחול Collator עבור השפה הנוכחית.
         collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
-        
+
+        // עדכון טקסטים ראשוני לפי השפה.
         updateTextByLang();
+        // טעינת הנתונים (אסינכרונית).
         loadData();
-        
-        // מאזינים
+        // אתחול לוגיקת פילטרים למובייל.
+        initializeMobileFilters();
+
+        // === הגדרת מאזיני אירועים (Event Listeners) ===
+        // שימוש בפונקציה ייעודית לניהול ה-Event Listeners משפר קריאות.
+        setupEventListeners();
+
+        console.log('App initialized');
+    }
+
+    /**
+     * מרכז את כל הגדרות ה-Event Listeners במקום אחד.
+     */
+    function setupEventListeners() {
+        // מאזין לשינוי שפה.
         if (dom.langBtn) {
             dom.langBtn.addEventListener('click', () => {
                 state.lang = state.lang === 'he' ? 'en' : 'he';
                 document.documentElement.lang = state.lang;
                 document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
                 collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+                // לאחר שינוי שפה, יש לעדכן את כל הטקסטים ואת התצוגה.
                 updateTextByLang();
-                applySortAndRender();
+                applySortAndRender(); // מפעיל רינדור מחדש.
             });
         }
-        
-        if (dom.locationFilter) {
-            dom.locationFilter.addEventListener('change', () => {
-                state.filters.location = dom.locationFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.orgFilter) {
-            dom.orgFilter.addEventListener('change', () => {
-                state.filters.org = dom.orgFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
-        if (dom.rankFilter) {
-            dom.rankFilter.addEventListener('change', () => {
-                state.filters.rank = dom.rankFilter.value.toLowerCase();
-                filterData();
-                applySortAndRender();
-            });
-        }
-        
+
+        // מערך של פילטרי בחירה עם מפתחות ה-DOM וה-state המתאימים.
+        const selectFilters = [
+            { element: dom.locationFilter, key: 'location' },
+            { element: dom.orgFilter, key: 'org' },
+            { element: dom.rankFilter, key: 'rank' }
+        ];
+
+        // לולאה ליצירת מאזיני שינוי (change) עבור פילטרי הבחירה.
+        selectFilters.forEach(({ element, key }) => {
+            if (element) {
+                element.addEventListener('change', () => {
+                    state.filters[key] = element.value.toLowerCase();
+                    filterData();
+                    applySortAndRender();
+                });
+            }
+        });
+
+        // מאזין לתיבת החיפוש עם debounce.
         if (dom.searchBox) {
             dom.searchBox.addEventListener('input', debouncedFilter);
         }
-        
+
+        // מאזינים לכפתורי פגינציה.
         if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
         if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
-        
+
+        // מאזין לכפתור החלפת תצוגה.
         if (dom.viewToggleBtn) {
             dom.viewToggleBtn.addEventListener('click', () => {
                 state.isCardView = !state.isCardView;
                 applySortAndRender();
             });
         }
-        
+
+        // מאזינים לכפתורי איפוס וייצוא.
         if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetFilters);
         if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
-        
-        console.log('App initialized');
     }
 
-    // === הפעלה ===
+
+    // === הפעלת האפליקציה ===
+    // ודא שה-DOM נטען במלואו לפני אתחול האפליקציה.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initialize);
     } else {
         initialize();
     }
-
-})();
-
-// === CSS נוסף ===
-const styles = document.createElement('style');
-styles.textContent = `
-.empty-state { 
-    text-align: center; 
-    padding: 2rem; 
-    color: #666; 
-}
-.empty-state i { 
-    font-size: 3rem; 
-    margin-bottom: 1rem; 
-    opacity: 0.5; 
-}
-.empty-state h3 { 
-    font-size: 1.2rem; 
-    margin-bottom: 0.5rem; 
-}
-.table-container { 
-    width: 100%; 
-    overflow-x: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 1rem 0;
-}
-.table-responsive { 
-    width: 100%; 
-    border-collapse: collapse; 
-    min-width: 1000px;
-    background: white;
-}
-.table-responsive th { 
-    padding: 1rem 0.75rem; 
-    border: 1px solid #e5e7eb; 
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #374151;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    transition: background 0.2s ease;
-}
-.table-responsive th:hover {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-.table-responsive td {
-    padding: 0.75rem;
-    border: 1px solid #e5e7eb;
-    font-size: 0.875rem;
-    vertical-align: top;
-    max-width: 200px;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.table-responsive tr:nth-child(even) {
-    background: #f9fafb;
-}
-.table-responsive tr:hover {
-    background: #f3f4f6 !important;
-}
-.sort-icon {
-    margin-left: 0.5rem;
-    font-size: 0.8em;
-    opacity: 0.6;
-    transition: all 0.2s ease;
-}
-.table-responsive th:hover .sort-icon {
-    opacity: 1;
-    color: #3b82f6;
-}
-.card-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: 1rem; 
-    padding: 1rem; 
-}
-.card { 
-    background: white; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    padding: 1rem; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-}
-.card h2 { 
-    font-size: 1.1rem; 
-    margin-bottom: 0.5rem; 
-}
-.card .sub { 
-    font-size: 0.9rem; 
-    color: #666; 
-    margin-bottom: 0.5rem; 
-}
-.card .meta { 
-    font-size: 0.8rem; 
-    color: #888; 
-    border-bottom: 1px solid #eee; 
-    padding-bottom: 0.5rem; 
-    margin-bottom: 0.5rem; 
-}
-.card-details p { 
-    margin: 0.3rem 0; 
-    font-size: 0.9rem; 
-}
-.toast { 
-    position: fixed; 
-    top: 20px; 
-    right: 20px; 
-    background: #4CAF50; 
-    color: white; 
-    padding: 1rem; 
-    border-radius: 4px; 
-    z-index: 1000; 
-}
-.toast.error { 
-    background: #f44336; 
-}
-.toast.info { 
-    background: #2196F3; 
-}
-mark { 
-    background: #ffeb3b; 
-    padding: 0.1em 0.2em; 
-}
-`;
-document.head.appendChild(styles);
+})(); // IIFE (Immediately Invoked Function Expression) לשמירה על סקופ פרטי.
