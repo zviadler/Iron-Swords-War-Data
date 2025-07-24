@@ -1122,6 +1122,7 @@ mark {
     }
     
     .filters-bar {
+        display: none;
         grid-template-columns: 1fr;
         padding: var(--space-md);
         gap: var(--space-md);
