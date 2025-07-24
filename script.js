@@ -261,7 +261,6 @@
                 download: true, // PapaParse יטפל בהורדת הקובץ.
                 header: true,   // PapaParse ינתח את השורה הראשונה ככותרות.
                 skipEmptyLines: true, // ידלג על שורות ריקות.
-                worker: true,   // השתמש ב-Web Worker לניתוח קבצים גדולים (משפר ביצועים).
                 transformHeader: normalizeHeader, // השתמש בפונקציית normalizeHeader שלנו.
                 complete: (results) => {
                     if (results.errors.length) {
