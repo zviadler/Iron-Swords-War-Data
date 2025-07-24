@@ -45,6 +45,114 @@
     <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <!-- Navigation Styles -->
+    <style>
+        .page-navigation {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            padding: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #64748b;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item.active:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .nav-item i {
+            font-size: 16px;
+        }
+
+        .current-page-indicator {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .container {
+            margin-top: 120px !important;
+        }
+
+        @media (max-width: 768px) {
+            .page-navigation {
+                position: static;
+                transform: none;
+                margin: 16px;
+                margin-bottom: 0;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .nav-item span {
+                display: none;
+            }
+
+            .nav-item i {
+                font-size: 18px;
+            }
+
+            .container {
+                margin-top: 16px !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Skip to main content for screen readers -->
@@ -61,12 +169,22 @@
         <span aria-hidden="true">English</span>
     </button>
 
+    <!-- Navigation Menu -->
+    <nav class="page-navigation" role="navigation" aria-label="ניווט עמודים">
+        <div class="nav-container">
+            <!-- הניווט ייווצר דינמית על ידי JavaScript -->
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main id="main-content" class="container relative mx-auto my-4">
         <!-- Site Header -->
         <header class="site-header" role="banner">
             <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
             <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
+            <div class="current-page-indicator">
+                <span id="currentPageName">מאגר ראשי</span>
+            </div>
         </header>
         
         <!-- Mobile Filters Toggle -->
@@ -289,12 +407,15 @@
         </div>
     </footer>
 
-    <!-- Main JavaScript -->
-    <script defer src="script.js"></script>
+    <!-- JavaScript Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
-    <!-- Service Worker Registration (Optional) -->
+    <!-- Main Application Script -->
+    <script defer src="script.js"></script>
+    
+    <!-- Update current year -->
     <script>
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js')
@@ -306,8 +427,6 @@
                     });
             });
         }
-        
-        // Update current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
     </script>
 </body>
