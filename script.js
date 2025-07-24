@@ -262,6 +262,7 @@
                 header: true,   // PapaParse ינתח את השורה הראשונה ככותרות.
                 skipEmptyLines: true, // ידלג על שורות ריקות.
                 transformHeader: normalizeHeader, // השתמש בפונקציית normalizeHeader שלנו.
+                worker: false,
                 complete: (results) => {
                     if (results.errors.length) {
                         console.error('PapaParse errors:', results.errors);
