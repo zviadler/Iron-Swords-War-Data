@@ -70,7 +70,7 @@
         console.log('App initialized');
     }(function() {
     'use strict';
-
+window.addEventListener('click', (e) => { console.log('clicked', e.target); });
     // === מצב מרכזי ===
     const state = {
         originalData: [],
