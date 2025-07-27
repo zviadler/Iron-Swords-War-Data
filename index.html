@@ -32,7 +32,7 @@
     
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
+    <!-- ה-X-Frame-Options צריך להיות מוגדר ככותרת HTTP בלבד, לא בתוך <meta> -->
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
     <title>מאגר זיהוי לוחמים</title>
@@ -45,6 +45,9 @@
     <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <!-- Preload JS -->
+    <link rel="preload" href="script.js" as="script">
 </head>
 <body>
     <!-- Skip to main content for screen readers -->
@@ -246,8 +249,9 @@
     <!-- Toast Notifications Container -->
     <div id="toastContainer" 
          class="toast-container"
-         role="region"
+         role="log"
          aria-live="assertive"
+         aria-atomic="true"
          aria-label="התראות מערכת">
     </div>
 
@@ -275,7 +279,7 @@
             <p>© <span id="currentYear">2025</span> כל הזכויות שמורות</p>
         </div>
         
-        <div id="dataCollectionEnglish" class="hidden">
+        <div id="dataCollectionEnglish" class="hidden" lang="en">
             <p><strong>Data Collection:</strong> The data on this website was collected by 
                 <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
                    target="_blank" 
@@ -285,13 +289,13 @@
                 </a>
             </p>
             <p><strong>Legal Notice:</strong> Data is presented as collected and may contain errors. This website is not responsible for data accuracy.</p>
-            <p>© <span>2025</span> All rights reserved</p>
+            <p>© <span id="currentYear">2025</span> All rights reserved</p>
         </div>
     </footer>
 
     <!-- Main JavaScript -->
     <script defer src="script.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
     <!-- Service Worker Registration (Optional) -->
     <script>
