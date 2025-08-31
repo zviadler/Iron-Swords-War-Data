@@ -745,92 +745,94 @@ function sortData() {
     /**
      * מאזין לשינויים ב-DOM (כפתורים, קלטים) ומעדכן את ה-state.
      */
-    function setupEventListeners() {
-        // מאזין לשינוי שפה.
-        if (dom.langBtn) {
-            dom.langBtn.addEventListener('click', () => {
-                state.lang = state.lang === 'he' ? 'en' : 'he';
-                document.documentElement.lang = state.lang;
-                document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
-                collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
-                // לאחר שינוי שפה, יש לעדכן את כל הטקסטים ואת התצוגה.
-                updateTextByLang();
-                applySortAndRender(); // מפעיל רינדור מחדש.
-            });
-        }
-    // מערך של פילטרי בחירה עם מפתחות ה-DOM וה-state המתאימים.
-        const selectFilters = [
-            { element: dom.locationFilter, key: 'location' },
-            { element: dom.orgFilter, key: 'org' },
-            { element: dom.rankFilter, key: 'rank' }
-        ];
+    
+    
+function setupEventListeners() {
+  // שינוי שפה
+  if (dom.langBtn) {
+    dom.langBtn.addEventListener('click', () => {
+      state.lang = state.lang === 'he' ? 'en' : 'he';
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
+      collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+      updateTextByLang();
+      applySortAndRender();
+    });
+  }
 
-        // לולאה ליצירת מאזיני שינוי (change) עבור פילטרי הבחירה.
-        selectFilters.forEach(({ element, key }) => {
-            if (element) {
-                element.addEventListener('change', () => {
-                    state.filters[key] = element.value.toLowerCase();
-                    filterData();
-                    applySortAndRender();
-                });
-            }
-        });
-
-        // מאזין לתיבת החיפוש עם debounce.
-        if (dom.searchBox) {
-            dom.searchBox.addEventListener('input', debouncedFilter);
-        }
-
-            // מאזיני שינוי לטווח תאריכים (אם קיימים)
-        function onDateChange() {
-            state.filters.dateFrom = dom.dateFromInput?.value || '';
-            state.filters.dateTo   = dom.dateToInput?.value   || '';
-            if (state.filters.dateFrom && state.filters.dateTo && state.filters.dateFrom > state.filters.dateTo) {
-                showToast(labels.invalid_date_range[state.lang], 'warning');
-                const tmp = state.filters.dateFrom;...
-            }
-            filterData();
-            applySortAndRender();
-        }
-        if (dom.dateFromInput) dom.dateFromInput.addEventListener('change', onDateChange);
-        if (dom.dateToInput)   dom.dateToInput.addEventListener('change', onDateChange);
-        if (dom.clearDatesBtn) dom.clearDatesBtn.addEventListener('click', () => {
-            if (dom.dateFromInput) dom.dateFromInput.value = '';
-            if (dom.dateToInput)   dom.dateToInput.value   = '';
-            state.filters.dateFrom = '';
-            state.filters.dateTo   = '';
-            filterData();
-            applySortAndRender();
-        });
-
-        // מאזינים לכפתורי פגינציה.
-        if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
-        if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
-         
-        // מאזין לכפתור החלפת תצוגה.
-        if (dom.viewToggleBtn) {
-            dom.viewToggleBtn.addEventListener('click', () => {
-                state.isCardView = !state.isCardView;
-                dom.viewToggleBtn.setAttribute('aria-pressed', String(state.isCardView));
-                applySortAndRender();
-            });
-        }
-
-        // מאזינים לכפתורי איפוס וייצוא.
-        if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetFilters);
-        if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
-        
-        // כפתור "חזרה לראש העמוד"
-        if (dom.backToTop) {
-            window.addEventListener('scroll', () => {
-                const on = window.scrollY > 600;
-                dom.backToTop.classList.toggle('visible', on);
-            });
-            dom.backToTop.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
+  // פילטרים מסוג select (שמות תואמים ל-dom)
+  const selectFilters = [
+    { element: dom.locationFilter,      key: 'location' },
+    { element: dom.organizationFilter,  key: 'org' },
+    { element: dom.rankFilter,          key: 'rank' }
+  ];
+  selectFilters.forEach(({ element, key }) => {
+    if (element) {
+      element.addEventListener('change', () => {
+        state.filters[key] = (element.value || '').toLowerCase();
+        filterData();
+        applySortAndRender();
+      });
     }
+  });
+
+  // טווח תאריכים
+  function onDateChange() {
+    state.filters.dateFrom = dom.dateFromInput?.value || '';
+    state.filters.dateTo   = dom.dateToInput?.value   || '';
+
+    if (state.filters.dateFrom && state.filters.dateTo &&
+        state.filters.dateFrom > state.filters.dateTo) {
+      showToast(labels.invalid_date_range[state.lang], 'warning');
+      // החלפה אוטומטית
+      [state.filters.dateFrom, state.filters.dateTo] = [state.filters.dateTo, state.filters.dateFrom];
+      if (dom.dateFromInput) dom.dateFromInput.value = state.filters.dateFrom;
+      if (dom.dateToInput)   dom.dateToInput.value   = state.filters.dateTo;
+    }
+
+    filterData();
+    applySortAndRender();
+  }
+  if (dom.dateFromInput) dom.dateFromInput.addEventListener('change', onDateChange);
+  if (dom.dateToInput)   dom.dateToInput.addEventListener('change', onDateChange);
+  if (dom.clearDatesBtn) dom.clearDatesBtn.addEventListener('click', () => {
+    if (dom.dateFromInput) dom.dateFromInput.value = '';
+    if (dom.dateToInput)   dom.dateToInput.value   = '';
+    state.filters.dateFrom = '';
+    state.filters.dateTo   = '';
+    filterData();
+    applySortAndRender();
+  });
+
+  // פגינציה
+  if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
+  if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
+
+  // החלפת תצוגה
+  if (dom.viewToggleBtn) {
+    dom.viewToggleBtn.addEventListener('click', () => {
+      state.isCardView = !state.isCardView;
+      dom.viewToggleBtn.setAttribute('aria-pressed', String(state.isCardView));
+      applySortAndRender();
+    });
+  }
+
+  // איפוס/ייצוא
+  if (dom.resetBtn)  dom.resetBtn.addEventListener('click', resetFilters);
+  if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
+
+  // חזרה לראש העמוד
+  if (dom.backToTop) {
+    window.addEventListener('scroll', () => {
+      const on = window.scrollY > 600;
+      dom.backToTop.classList.toggle('visible', on);
+    });
+    dom.backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+                                   }
+    
 
     /**
      * מאזין לקלט חיפוש עם debounce.
