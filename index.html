@@ -28,26 +28,31 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="מאגר לוחמים">
-
-  <!-- Security Headers -->
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <!-- שים לב: X-Frame-Options יש להגדיר בצד השרת, לא כאן -->
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
   <title>מאגר זיהוי לוחמים</title>
 
-  <!-- CSS and Fonts -->
-  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+
+  <!-- Main Styles -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Preload Critical Resources -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://cdn.tailwindcss.com">
-
-  <!-- Preload JS -->
-  <link rel="preload" href="script.js" as="script">
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "מאגר זיהוי לוחמים",
+    "description": "מאגר נתונים מתעדכן של לוחמים",
+    "creator": {
+      "@type": "Person",
+      "name": "@MiddleEastBuka"
+    },
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  }
+  </script>
 </head>
 <body>
   <!-- Skip to main content for screen readers -->
@@ -83,98 +88,56 @@
     </button>
 
     <!-- Filters Bar -->
-    <section class="filters-bar"
-             id="filtersBar"
-             role="search"
-             aria-label="סינון והרשאות חיפוש">
+    <section id="filtersBar" class="filters-bar" role="region" aria-label="סרגל פילטרים">
+      <div class="filters-row">
+        <div class="filter-item">
+          <label for="searchBox">חיפוש חופשי</label>
+          <input id="searchBox" type="text" placeholder="🔍 חפש שם, מיקום או תיאור…">
+        </div>
 
-      <div class="filter-group">
-        <label for="locationFilter">מיקום:</label>
-        <select id="locationFilter"
-                name="location"
-                aria-label="סינון לפי מיקום">
-          <option value="">הכל</option>
-        </select>
-      </div>
+        <div class="filter-item">
+          <label for="locationFilter">מיקום</label>
+          <select id="locationFilter"><option value="">הכול</option></select>
+        </div>
 
-      <div class="filter-group">
-        <label for="orgFilter">ארגון:</label>
-        <select id="orgFilter"
-                name="organization"
-                aria-label="סינון לפי ארגון">
-          <option value="">הכל</option>
-        </select>
-      </div>
+        <div class="filter-item">
+          <label for="orgFilter">ארגון</label>
+          <select id="orgFilter"><option value="">הכול</option></select>
+        </div>
 
-      <div class="filter-group">
-        <label for="rankFilter">דרגה:</label>
-        <select id="rankFilter"
-                name="rank"
-                aria-label="סינון לפי דרגה">
-          <option value="">הכל</option>
-        </select>
-      </div>
+        <div class="filter-item">
+          <label for="rankFilter">תפקיד/דרגה</label>
+          <select id="rankFilter"><option value="">הכול</option></select>
+        </div>
 
-      <div class="filter-group search-group">
-        <label for="searchBox">חיפוש:</label>
-        <input type="search"
-               id="searchBox"
-               name="search"
-               placeholder="🔍 חפש שם, מיקום או תיאור..."
-               aria-label="חיפוש חופשי בנתונים"
-               autocomplete="off"
-               spellcheck="false">
-      </div>
+        <div id="dateRangeGroup" class="filter-item">
+          <label>טווח תאריכים</label>
+          <div class="date-range">
+            <input id="dateFrom" type="date" aria-label="תאריך התחלה">
+            <span class="date-sep">—</span>
+            <input id="dateTo" type="date" aria-label="תאריך סיום">
+            <button id="clearDatesBtn" type="button" class="btn btn-link">נקה תאריכים</button>
+          </div>
+        </div>
 
-      <!-- NEW: טווח תאריכים (מותאם ל-script (3).js) -->
-      <div class="filter-group" id="dateRangeGroup">
-        <label for="dateFrom">טווח תאריכים:</label>
-        <div class="flex items-center gap-2">
-          <input type="date"
-                 id="dateFrom"
-                 name="dateFrom"
-                 aria-label="סנן מתאריך">
-          <span aria-hidden="true">–</span>
-          <input type="date"
-                 id="dateTo"
-                 name="dateTo"
-                 aria-label="סנן עד תאריך">
-          <button id="clearDatesBtn"
-                  class="btn btn-secondary btn-small"
+        <div class="filter-actions">
+          <button id="resetBtn"
+                  class="btn btn-outline"
                   type="button"
-                  aria-label="נקה תאריכים">
-            <i class="fas fa-times" aria-hidden="true"></i>
-            <span>נקה</span>
+                  aria-label="איפוס כל הפילטרים">
+            <i class="fas fa-refresh" aria-hidden="true"></i>
+            <span>איפוס פילטרים</span>
+          </button>
+
+          <button id="viewToggleBtn"
+                  class="btn btn-secondary"
+                  type="button"
+                  aria-label="החלף בין תצוגת טבלה לכרטיסים"
+                  aria-pressed="false">
+            <i class="fas fa-th-list" aria-hidden="true"></i>
+            <span>עבור לתצוגת כרטיסים</span>
           </button>
         </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="filter-actions">
-        <button id="exportBtn"
-                class="btn"
-                type="button"
-                aria-label="ייצא נתונים לקובץ CSV">
-          <i class="fas fa-download" aria-hidden="true"></i>
-          <span>ייצא ל-CSV</span>
-        </button>
-
-        <button id="resetBtn"
-                class="btn btn-secondary"
-                type="button"
-                aria-label="איפוס כל הפילטרים">
-          <i class="fas fa-refresh" aria-hidden="true"></i>
-          <span>איפוס פילטרים</span>
-        </button>
-
-        <button id="viewToggleBtn"
-                class="btn btn-secondary"
-                type="button"
-                aria-label="החלף בין תצוגת טבלה לכרטיסים"
-                aria-pressed="false">
-          <i class="fas fa-th-list" aria-hidden="true"></i>
-          <span>עבור לתצוגת כרטיסים</span>
-        </button>
       </div>
     </section>
 
@@ -182,45 +145,17 @@
     <section id="contentArea"
              class="table-container mt-4"
              role="region"
-             aria-label="תוצאות החיפוש והנתונים"
-             aria-live="polite">
-
-      <!-- Empty State (hidden by default) -->
-      <div id="emptyState" class="empty-state hidden" role="status">
-        <i class="fas fa-search" aria-hidden="true"></i>
-        <h3>לא נמצאו תוצאות</h3>
-        <p>נסה לשנות את קריטריוני החיפוש או לאפס את הפילטרים</p>
-      </div>
-
-      <!-- Loading State will be inserted here by JavaScript -->
+             aria-label="תוצאות החיפוש">
+      <!-- JS will render table/cards here -->
     </section>
 
     <!-- Pagination -->
-    <nav class="flex justify-center items-center gap-4 mt-4"
-         role="navigation"
-         aria-label="ניווט בין עמודים">
-      <button id="prevPageBtn"
-              class="btn btn-secondary"
-              type="button"
-              disabled
-              aria-label="עמוד קודם">
+    <nav class="pagination" aria-label="דפדוף בין עמודים">
+      <button id="prevPageBtn" class="btn btn-light" type="button" aria-label="עמוד קודם">
         <i class="fas fa-chevron-right" aria-hidden="true"></i>
-        <span>הקודם</span>
       </button>
-
-      <span id="pageInfo"
-            class="text-gray-700 font-medium"
-            role="status"
-            aria-live="polite">
-        עמוד 1 מתוך 1
-      </span>
-
-      <button id="nextPageBtn"
-              class="btn btn-secondary"
-              type="button"
-              disabled
-              aria-label="עמוד הבא">
-        <span>הבא</span>
+      <span id="pageInfo" class="page-info" aria-live="polite" aria-atomic="true">עמוד 1 מתוך 1</span>
+      <button id="nextPageBtn" class="btn btn-light" type="button" aria-label="עמוד הבא">
         <i class="fas fa-chevron-left" aria-hidden="true"></i>
       </button>
     </nav>
@@ -243,37 +178,56 @@
   </main>
 
   <!-- Statistics Section -->
-  <section class="container mx-auto my-8"
-           role="region"
-           aria-label="סטטיסטיקות כלליות">
-    <div class="stats">
-      <div class="stat-card" role="group" aria-label="סך הכל לוחמים">
-        <div class="stat-number" id="totalCombatants" aria-live="polite">0</div>
-        <div>סה"כ לוחמים</div>
+  <section class="container mx-auto my-8" role="region" aria-label="סטטיסטיקות">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>סה״כ לוחמים</h3>
+        <p id="totalCombatants">—</p>
       </div>
-
-      <div class="stat-card" role="group" aria-label="בני משפחה">
-        <div class="stat-number" id="familyCasualties" aria-live="polite">0</div>
-        <div>בני משפחה</div>
+      <div class="stat-card">
+        <h3>סה״כ נפגעים</h3>
+        <p id="totalCasualties">—</p>
       </div>
-
-      <div class="stat-card" role="group" aria-label="סך הכל קורבנות">
-        <div class="stat-number" id="totalCasualties" aria-live="polite">0</div>
-        <div>סה"כ קורבנות</div>
+      <div class="stat-card">
+        <h3>בני משפחה שנפגעו</h3>
+        <p id="familyCasualties">—</p>
       </div>
+      <div class="stat-card">
+        <h3>בכירים</h3>
+        <p id="highRanking">—</p>
+      </div>
+    </div>
 
-      <div class="stat-card" role="group" aria-label="בכירים">
-        <div class="stat-number" id="highRanking" aria-live="polite">0</div>
-        <div>בכירים</div>
+    <!-- Optional: English stats placeholders -->
+    <div class="stats-grid mt-4">
+      <div class="stat-card">
+        <h3>Total Records</h3>
+        <p id="statsTotal">—</p>
+      </div>
+      <div class="stat-card">
+        <h3>By Location</h3>
+        <p id="statsByLocation">—</p>
+      </div>
+      <div class="stat-card">
+        <h3>By Organization</h3>
+        <p id="statsByOrg">—</p>
+      </div>
+      <div class="stat-card">
+        <h3>By Rank</h3>
+        <p id="statsByRank">—</p>
       </div>
     </div>
   </section>
 
-  <!-- Toast Notifications Container -->
+  <!-- Empty State -->
+  <div id="emptyState" class="empty-state" hidden>
+    <p>אין תוצאות התואמות את החיפוש שלך.</p>
+  </div>
+
+  <!-- Toast Container -->
   <div id="toastContainer"
        class="toast-container"
-       role="log"
-       aria-live="assertive"
+       aria-live="polite"
        aria-atomic="true"
        aria-label="התראות מערכת">
   </div>
@@ -292,34 +246,18 @@
 
   <!-- Footer Legal Info -->
   <footer class="footer-info container mx-auto mb-8" role="contentinfo">
-    <div id="dataCollectionHebrew">
-      <p><strong>איסוף נתונים:</strong> הנתונים באתר זה נאספו על ידי
-        <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
-           target="_blank"
-           rel="noopener noreferrer"
-           aria-label="קישור לחשבון טוויטר של אוסף הנתונים (נפתח בחלון חדש)">
-          @MiddleEastBuka
-        </a>
-      </p>
-      <p><strong>הערה משפטית:</strong> הנתונים מוצגים כפי שנאספו ועלולים להכיל טעויות. האתר אינו אחראי לדיוק המידע.</p>
-      <p>© <span id="currentYear">2025</span> כל הזכויות שמורות</p>
-    </div>
-
-    <div id="dataCollectionEnglish" class="hidden" lang="en">
-      <p><strong>Data Collection:</strong> The data on this website was collected by
-        <a href="https://x.com/MiddleEastBuka/status/1916380369030369745"
-           target="_blank"
-           rel="noopener noreferrer"
-           aria-label="Link to data collector's Twitter account (opens in new window)">
-          @MiddleEastBuka
-        </a>
-      </p>
-      <p><strong>Legal Notice:</strong> Data is presented as collected and may contain errors. This website is not responsible for data accuracy.</p>
-      <p>© <span id="currentYear">2025</span> All rights reserved</p>
+    <p>© <span id="currentYear">2025</span> מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.</p>
+    <p id="dataCollectionHebrew">המידע נאסף ממקורות פתוחים ומתעדכן באופן שוטף.</p>
+    <p id="dataCollectionEnglish">Data is collected from open sources and updated continuously.</p>
+    <div class="footer-actions">
+      <button id="exportBtn" class="btn btn-outline" type="button">
+        <i class="fas fa-file-export" aria-hidden="true"></i>
+        <span>ייצא CSV</span>
+      </button>
     </div>
   </footer>
 
-  <!-- Main JavaScript -->
+  <!-- Scripts -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script defer src="script.js"></script>
 
