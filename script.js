@@ -34,20 +34,30 @@
     // מיפוי שדות באנגלית -> כותרות לפי שפה
     // המפתח הוא שם השדה בנתונים; הערך הוא אובייקט עם 'he' ו-'en' לכותרת.
     const headerLabels = {
-        name_english: { he: 'שם באנגלית', en: 'Name (English)' },
-        name_arabic: { he: 'שם בערבית', en: 'Name (Arabic)' },
-        description_online: { he: 'תיאור מסור', en: 'Description' },
-        location: { he: 'מיקום', en: 'Location' },
-        organization: { he: 'ארגון', en: 'Organization' },
-        rank_role: { he: 'דרגה/תפקיד', en: 'Rank/Role' },
-        date: { he: 'תאריך', en: 'Date' },
-        notes: { he: 'הערות', en: 'Notes' }
+        'Post No.': { he: 'מספר פוסט', en: 'Post No.' },
+        'Fighter No.': { he: 'מספר לוחם', en: 'Fighter No.' },
+        'Date': { he: 'תאריך', en: 'Date' },
+        'Location': { he: 'מיקום', en: 'Location' },
+        'Location Details': { he: 'פרטי מיקום', en: 'Location Details' },
+        'Name in English': { he: 'שם באנגלית', en: 'Name in English' },
+        'Name in Arabic': { he: 'שם בערבית', en: 'Name in Arabic' },
+        'Nickname': { he: 'כינוי', en: 'Nickname' },
+        'Social Media Description': { he: 'תיאור מדיה חברתית', en: 'Social Media Description' },
+        'Rank/Role': { he: 'דרגה/תפקיד', en: 'Rank/Role' },
+        'Organization': { he: 'ארגון', en: 'Organization' },
+        'Activity': { he: 'פעילות', en: 'Activity' },
+        'Family Members': { he: 'בני משפחה', en: 'Family Members' },
+        'No. of Victims': { he: 'מספר קורבנות', en: 'No. of Victims' },
+        'Additional Fighters': { he: 'לוחמים נוספים', en: 'Additional Fighters' },
+        'Notes': { he: 'הערות', en: 'Notes' }
     };
 
     // מפתחי השדות לתצוגה טבלאית (סדר העמודות).
     const dataFieldKeys = [
-        'name_english', 'name_arabic', 'description_online',
-        'location', 'organization', 'rank_role', 'date', 'notes'
+        'Post No.', 'Fighter No.', 'Date', 'Location', 'Location Details', 'Name in English',
+        'Name in Arabic', 'Nickname', 'Social Media Description', 'Rank/Role',
+        'Organization', 'Activity', 'Family Members', 'No. of Victims',
+        'Additional Fighters', 'Notes'
     ];
 
     // מחרוזות טקסטים לתרגום UI
@@ -376,21 +386,25 @@
      * @returns {Object}
      */
     function normalizeRecord(rec) {
-        // דואגים שהשדה 'date' יתקיים גם אם המקור הוא 'Date'/'DATE'.
-        if (rec.date == null && (rec.Date != null || rec.DATE != null)) {
-            rec.date = rec.Date ?? rec.DATE;
-        }
         // לוודא ששאר השדות קיימים.
         const def = (v) => (v == null ? '' : String(v));
         return {
-            name_english: def(rec.name_english),
-            name_arabic: def(rec.name_arabic),
-            description_online: def(rec.description_online),
-            location: def(rec.location),
-            organization: def(rec.organization),
-            rank_role: def(rec.rank_role),
-            date: def(rec.date),
-            notes: def(rec.notes)
+            'Post No.': def(rec['Post No.']),
+            'Fighter No.': def(rec['Fighter No.']),
+            'Date': def(rec['Date']),
+            'Location': def(rec['Location']),
+            'Location Details': def(rec['Location Details']),
+            'Name in English': def(rec['Name in English']),
+            'Name in Arabic': def(rec['Name in Arabic']),
+            'Nickname': def(rec['Nickname']),
+            'Social Media Description': def(rec['Social Media Description']),
+            'Rank/Role': def(rec['Rank/Role']),
+            'Organization': def(rec['Organization']),
+            'Activity': def(rec['Activity']),
+            'Family Members': def(rec['Family Members']),
+            'No. of Victims': def(rec['No. of Victims']),
+            'Additional Fighters': def(rec['Additional Fighters']),
+            'Notes': def(rec['Notes']),
         };
     }
 
@@ -400,11 +414,10 @@
     function computeStats() {
         const data = state.originalData;
         state.stats.total = data.length;
-        state.stats.withOnlineDesc = data.filter(r => r.description_online && r.description_online.trim() !== '').length;
-        state.stats.withRank = data.filter(r => r.rank_role && r.rank_role.trim() !== '').length;
+        state.stats.withOnlineDesc = data.filter(r => r['Social Media Description'] && r['Social Media Description'].trim() !== '').length;
+        state.stats.withRank = data.filter(r => r['Rank/Role'] && r['Rank/Role'].trim() !== '').length;
         // "leaders" מזוהה ע"י מחרוזת 'leader' (ניתן לשכלל בעתיד)
-        state.stats.leaders = data.filter(r => (r.rank_role || '').toLowerCase().includes('leader')).length;
-
+        state.stats.leaders = data.filter(r => (r['Rank/Role'] || '').toLowerCase().includes('leader')).length;
         // עדכון זמן אחרון (נניח על בסיס היום הנוכחי)
         const now = new Date();
         const pad2 = (n) => String(n).padStart(2, '0');
@@ -414,6 +427,9 @@
     }
 
     /**
+     * מעדכן את הרכיבים הסטטיסטיים ב-DOM.
+     */
+/**
      * מעדכן את הרכיבים הסטטיסטיים ב-DOM.
      */
     function updateStatsUI() {
@@ -431,19 +447,17 @@
         const locations = new Set();
         const orgs = new Set();
         const ranks = new Set();
-
         state.originalData.forEach(r => {
-            if (r.location) locations.add(r.location.trim());
-            if (r.organization) orgs.add(r.organization.trim());
-            if (r.rank_role) ranks.add(r.rank_role.trim());
+            if (r.Location) locations.add(r.Location.trim());
+            if (r.Organization) orgs.add(r.Organization.trim());
+            if (r['Rank/Role']) ranks.add(r['Rank/Role'].trim());
         });
-
         fillSelect(dom.locationFilter, Array.from(locations).sort(collator.compare));
         fillSelect(dom.organizationFilter, Array.from(orgs).sort(collator.compare));
         fillSelect(dom.rankFilter, Array.from(ranks).sort(collator.compare));
     }
 
-      /**
+    /**
      * ממלא <select> בערכים.
      * @param {HTMLSelectElement} selectEl
      * @param {string[]} options
@@ -456,7 +470,6 @@
         optEmpty.value = '';
         optEmpty.textContent = state.lang === 'he' ? 'הכל' : 'All';
         selectEl.appendChild(optEmpty);
-
         options.forEach(val => {
             const opt = document.createElement('option');
             opt.value = val;
@@ -466,434 +479,392 @@
     }
 
     // === לוגיקה של פילטרים, מיון ורינדור ===
-
     /**
      * מפעיל פילטרים על בסיס ה-state.filters,
      * ומעדכן state.filteredData.
      */
     function filterData() {
         const { location, org, rank, search, dateFrom, dateTo } = state.filters;
-        const from = dateFrom ? new Date(dateFrom + 'T00:00:00Z') : null;
-        const to   = dateTo   ? new Date(dateTo   + 'T23:59:59.999Z') : null;
+        const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
 
-        state.filteredData = state.originalData.filter(r => {
-            const loc = (r.location || '').toLowerCase();
-            const o   = (r.organization || '').toLowerCase();
-            const rk  = (r.rank_role || '').toLowerCase();
-            const searchString = [r.name_english, r.name_arabic, r.description_online, loc, o, rk, r.notes].join(' ').toLowerCase();
-            const rawDate = r.date ?? r.Date ?? r.DATE ?? '';
-            const recRange = parseDateRange(rawDate);
-            const datePass = (!from && !to) || (recRange && rangesOverlap(recRange.start, recRange.end, from, to));
+        state.filteredData = state.originalData.filter(record => {
+            const recordNameEn = (record['Name in English'] || '').toLowerCase();
+            const recordNameAr = (record['Name in Arabic'] || '').toLowerCase();
+            const recordDesc = (record['Social Media Description'] || '').toLowerCase();
+            const recordLocation = (record.Location || '').toLowerCase();
+            const recordOrg = (record.Organization || '').toLowerCase();
+            const recordRank = (record['Rank/Role'] || '').toLowerCase();
 
-            return (!location || loc.includes(location)) &&
-                   (!org || o.includes(org)) &&
-                   (!rank || rk.includes(rank)) &&
-                   (!search || searchString.includes(search)) &&
-                   datePass;
+            // פילטר חיפוש חופשי
+            const matchesSearch = searchTerms.length === 0 || searchTerms.every(term =>
+                recordNameEn.includes(term) ||
+                recordNameAr.includes(term) ||
+                recordDesc.includes(term)
+            );
+
+            // פילטר מיקום
+            const matchesLocation = !location || recordLocation === location.toLowerCase();
+
+            // פילטר ארגון
+            const matchesOrg = !org || recordOrg === org.toLowerCase();
+
+            // פילטר דרגה
+            const matchesRank = !rank || recordRank === rank.toLowerCase();
+
+            // פילטר תאריכים
+            const recordDateRange = parseDateRange(record['Date']);
+            const filterStartDate = dateFrom ? new Date(dateFrom) : null;
+            const filterEndDate = dateTo ? new Date(dateTo) : null;
+            const matchesDateRange = !recordDateRange || rangesOverlap(recordDateRange.start, recordDateRange.end, filterStartDate, filterEndDate);
+
+            return matchesSearch && matchesLocation && matchesOrg && matchesRank && matchesDateRange;
         });
-        state.currentPage = 0;
-    }
-function sortData() {
-        const { column, direction } = state.sort;
-        if (column === null) return;
-        const key = dataFieldKeys[column];
-
-        state.filteredData.sort((a, b) => {
-            const valA = a[key] || '';
-            const valB = b[key] || '';
-
-            if (key === 'date') {
-                const ra = parseDateRange(valA);
-                const rb = parseDateRange(valB);
-                const aTime = ra ? ra.start.getTime() : -Infinity;
-                const bTime = rb ? rb.start.getTime() : -Infinity;
-                if (aTime > bTime) return direction === 'asc' ? 1 : -1;
-                if (aTime < bTime) return direction === 'asc' ? -1 : 1;
-                return 0;
-            }
-
-            const cmp = ('' + valA).localeCompare(('' + valB), undefined, { numeric: true, sensitivity: 'base' });
-            return direction === 'asc' ? cmp : -cmp;
-        });
+        state.pagination.currentPage = 0; // חזרה לעמוד הראשון לאחר סינון
+        updateResultsCount();
+        applySortAndRender();
     }
 
     /**
-     * מחיל מיון על הנתונים המסוננים ובסוף מרנדר אותם.
+     * מיישם את הגדרות המיון הנוכחיות על הנתונים המסוננים
+     * ומבצע רינדור מחדש.
      */
     function applySortAndRender() {
-        sortData();
-        updateResultsCount();
-        updatePaginationInfo();
-        render();
-    }
-
-    /**
-     * מעדכן את מונה התוצאות בתצוגה.
-     */
-    function updateResultsCount() {
-        if (!dom.resultsCount) return;
-        const count = state.filteredData.length;
-        const text = `${labels.results_count[state.lang]}: ${count}`;
-        dom.resultsCount.textContent = text;
-    }
-
-    /**
-     * מעדכן מידע פגינציה (עמוד X מתוך Y).
-     */
-    function updatePaginationInfo() {
-        if (!dom.paginationInfo) return;
-        const total = state.filteredData.length;
-        const pages = Math.max(1, Math.ceil(total / state.pagination.pageSize));
-        const currentPage = state.pagination.currentPage + 1;
-        dom.paginationInfo.textContent = `${labels.page[state.lang]} ${currentPage} ${labels.of[state.lang]} ${pages}`;
-        dom.paginationInfo.setAttribute('aria-live', 'polite');
-    }
-
-    /**
-     * שינוי עמוד בפגינציה.
-     * @param {number} delta - שינוי (למשל +1 או -1).
-     */
-    function changePage(delta) {
-        const total = state.filteredData.length;
-        const pages = Math.max(1, Math.ceil(total / state.pagination.pageSize));
-        let next = state.pagination.currentPage + delta;
-        if (next < 0) next = 0;
-        if (next >= pages) next = pages - 1;
-        if (next !== state.pagination.currentPage) {
-            state.pagination.currentPage = next;
-            updatePaginationInfo();
-            render();
-            // גלילה לראש האזור
-            if (dom.contentArea) dom.contentArea.scrollIntoView({ behavior: 'smooth' });
+        const { column, direction } = state.sort;
+        if (column) {
+            state.filteredData.sort((a, b) => {
+                const aVal = a[column] || '';
+                const bVal = b[column] || '';
+                let res;
+                if (column === 'Date') {
+                    const aDate = parseDateRange(aVal)?.start || new Date(0);
+                    const bDate = parseDateRange(bVal)?.start || new Date(0);
+                    res = aDate.getTime() - bDate.getTime();
+                } else {
+                    res = collator.compare(aVal, bVal);
+                }
+                return direction === 'asc' ? res : -res;
+            });
         }
+        renderContent();
     }
 
     /**
-     * רינדור לפי מצב (כרטיסים/טבלה).
+     * מרנדר את התוכן הראשי (כרטיסים או טבלה) על בסיס הנתונים המסוננים
+     * והגדרות הפגינציה הנוכחיות.
      */
-    function render() {
+    function renderContent() {
         if (!dom.contentArea) return;
-        dom.contentArea.innerHTML = '';
+
+        const { currentPage, pageSize } = state.pagination;
+        const start = currentPage * pageSize;
+        const end = start + pageSize;
+        const dataToRender = state.filteredData.slice(start, end);
 
         if (state.isCardView) {
-            renderCardsView();
+            renderCards(dataToRender);
         } else {
-            renderTableView();
+            renderTable(dataToRender);
         }
-    }
 
+        updatePaginationUI();
+    }
     /**
-     * רינדור תצוגת כרטיסים.
+     * מרנדר את התוכן כרשימת כרטיסים.
+     * @param {Object[]} data - הנתונים לרינדור.
      */
-    function renderCardsView() {
-        const data = state.filteredData;
-        if (!data.length) {
-            const empty = document.createElement('div');
-            empty.className = 'empty';
-            empty.textContent = labels.no_data[state.lang];
-            dom.contentArea.appendChild(empty);
+    function renderCards(data) {
+        if (!dom.contentArea) return;
+        dom.contentArea.innerHTML = '';
+        dom.contentArea.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+
+        if (data.length === 0) {
+            dom.contentArea.innerHTML = `<p class="no-data">${labels.no_data[state.lang]}</p>`;
             return;
         }
 
-        // בחירה האם להציג את כל הנתונים או רק חלק
-        data.forEach(record => {
-            const card = document.createElement('article');
+        data.forEach(item => {
+            const card = document.createElement('div');
             card.className = 'card';
-            card.setAttribute('tabindex', '0');
-            // כותרת
-            const h3 = document.createElement('h3');
-            h3.className = 'card-title';
-            h3.textContent = record.name_english || record.name_arabic || '(No name)';
-            card.appendChild(h3);
-            
-            const fields = [
-                { key: 'name_arabic', label: headerLabels.name_arabic[state.lang], value: record.name_arabic },
-                { key: 'description_online', label: headerLabels.description_online[state.lang], value: record.description_online },
-                { key: 'location', label: headerLabels.location[state.lang], value: record.location },
-                { key: 'organization', label: headerLabels.organization[state.lang], value: record.organization },
-                { key: 'rank_role', label: headerLabels.rank_role[state.lang], value: record.rank_role },
-                { key: 'date', label: headerLabels.date[state.lang], value: record.date },
-                { key: 'notes', label: headerLabels.notes[state.lang], value: record.notes }
-            ];
-
-            const list = document.createElement('dl');
-            list.className = 'card-list';
-            fields.forEach(f => {
-                if (!f.value) return;
-                const dt = document.createElement('dt');
-                dt.textContent = f.label;
-                const dd = document.createElement('dd');
-                dd.textContent = f.value;
-                list.appendChild(dt);
-                list.appendChild(dd);
+            // יצירת תוכן ה-HTML לכרטיס
+            let cardContent = `<div class="card-header">`;
+            if (item['Name in English']) {
+                cardContent += `<h3>${item['Name in English']}</h3>`;
+            }
+            if (item['Name in Arabic']) {
+                cardContent += `<p class="arabic-name">${item['Name in Arabic']}</p>`;
+            }
+            cardContent += `</div><div class="card-body">`;
+            cardContent += `<ul>`;
+            dataFieldKeys.forEach(key => {
+                const value = item[key];
+                if (key !== 'Name in English' && key !== 'Name in Arabic' && value) {
+                    cardContent += `<li><strong>${getHeaderLabel(key)}:</strong> ${value}</li>`;
+                }
             });
-
-            card.appendChild(list);
+            cardContent += `</ul></div>`;
+            card.innerHTML = cardContent;
             dom.contentArea.appendChild(card);
         });
     }
 
     /**
-     * רינדור תצוגת טבלה.
+     * מרנדר את התוכן כטבלה.
+     * @param {Object[]} data - הנתונים לרינדור.
      */
-    function renderTableView() {
-        const data = state.filteredData;
-        const table = document.createElement('table');
-        table.className = 'data-table';
-        table.setAttribute('role', 'table');
+    function renderTable(data) {
+        if (!dom.contentArea) return;
+        dom.contentArea.innerHTML = '';
+        dom.contentArea.className = 'table-container';
 
-        // אם אין נתונים
-        if (!data.length) {
-            const caption = document.createElement('caption');
-            caption.textContent = state.lang === 'he' ? 'טבלת תוצאות' : 'Results table';
-            table.appendChild(caption);
-            const thead = document.createElement('thead');
-            const trHead = document.createElement('tr');
-            dataFieldKeys.forEach(k => {
-                const th = document.createElement('th');
-                th.textContent = getHeaderLabel(k);
-                trHead.appendChild(th);
-            });
-            thead.appendChild(trHead);
-            table.appendChild(thead);
-
-            const tbody = document.createElement('tbody');
-            const trEmpty = document.createElement('tr');
-            const tdEmpty = document.createElement('td');
-            tdEmpty.colSpan = dataFieldKeys.length;
-            tdEmpty.textContent = labels.no_data[state.lang];
-            trEmpty.appendChild(tdEmpty);
-            tbody.appendChild(trEmpty);
-            table.appendChild(tbody);
-            dom.contentArea.appendChild(table);
+        if (data.length === 0) {
+            dom.contentArea.innerHTML = `<p class="no-data">${labels.no_data[state.lang]}</p>`;
             return;
         }
 
-        // יצירת כותרת טבלה עם אפשרות מיון
+        const table = document.createElement('table');
+        table.className = 'records-table';
         const thead = document.createElement('thead');
-        const caption = document.createElement('caption');
-        caption.textContent = state.lang === 'he' ? 'טבלת תוצאות' : 'Results table';
-        table.appendChild(caption);
-        const trHead = document.createElement('tr');
-        dataFieldKeys.forEach((key, index) => {
-            const th = document.createElement('th');
-            th.textContent = getHeaderLabel(key);
-            th.setAttribute('data-col', index.toString());
-            th.dataset.col = index; // שמירת אינדקס העמודה למיון.
-            th.style.cursor = 'pointer';
-            th.setAttribute('scope','col');
-            th.setAttribute('aria-sort', state.sort.column === index ? (state.sort.direction === 'asc' ? 'ascending' : 'descending') : 'none');
-            th.tabIndex = 0;
-
-            if (state.sort.column === index) {
-                const icon = document.createElement('span');
-                icon.className = `sort-icon ${state.sort.direction}`;
-                icon.setAttribute('aria-hidden', 'true');
-                icon.textContent = state.sort.direction === 'asc' ? '▲' : '▼';
-                th.appendChild(icon);
-            }
-
-            th.addEventListener('click', () => sortAndRender(parseInt(th.dataset.col)));
-            th.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    sortAndRender(parseInt(th.dataset.col));
-                }
-            });
-            trHead.appendChild(th);
-        });
-        thead.appendChild(trHead);
-        table.appendChild(thead);
-
-        // יצירת גוף הטבלה עם פגינציה
         const tbody = document.createElement('tbody');
 
-        const pageSize = state.pagination.pageSize;
-        const start = state.pagination.currentPage * pageSize;
-        const end = Math.min(start + pageSize, data.length);
-        for (let i = start; i < end; i++) {
-            const record = data[i];
+        // יצירת כותרות הטבלה
+        const headerRow = document.createElement('tr');
+        dataFieldKeys.forEach(key => {
+            const th = document.createElement('th');
+            th.textContent = getHeaderLabel(key);
+            th.dataset.sortKey = key;
+            th.className = 'sortable-header';
+            if (state.sort.column === key) {
+                th.classList.add(state.sort.direction);
+            }
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // יצירת שורות הטבלה
+        data.forEach(item => {
             const tr = document.createElement('tr');
             dataFieldKeys.forEach(key => {
                 const td = document.createElement('td');
-                td.textContent = record[key] || '';
+                td.textContent = item[key] || '';
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
-        }
-
+        });
         table.appendChild(tbody);
         dom.contentArea.appendChild(table);
     }
 
     /**
-     * פונקציה שמבצעת מיון לפי עמודה מסוימת ואז מרנדרת מחדש.
-     * @param {number} colIndex - אינדקס העמודה למיון.
+     * מעדכן את ממשק המשתמש של הפגינציה.
      */
-    function sortAndRender(colIndex) {
-        if (state.sort.column === colIndex) {
-            state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            state.sort.column = colIndex;
-            state.sort.direction = 'asc';
+    function updatePaginationUI() {
+        const { currentPage, pageSize } = state.pagination;
+        const totalPages = Math.ceil(state.filteredData.length / pageSize);
+
+        if (dom.paginationInfo) {
+            if (state.filteredData.length === 0) {
+                dom.paginationInfo.textContent = '';
+            } else {
+                dom.paginationInfo.textContent = `${labels.page[state.lang]} ${currentPage + 1} ${labels.of[state.lang]} ${totalPages}`;
+            }
         }
-        applySortAndRender();
+
+        if (dom.prevPageBtn) {
+            dom.prevPageBtn.disabled = currentPage === 0;
+            dom.prevPageBtn.classList.toggle('disabled', currentPage === 0);
+        }
+        if (dom.nextPageBtn) {
+            dom.nextPageBtn.disabled = currentPage >= totalPages - 1;
+            dom.nextPageBtn.classList.toggle('disabled', currentPage >= totalPages - 1);
+        }
     }
 
-    // === אירועים והאזנות ===
+ /**
+     * מעדכן את מספר התוצאות המוצגות.
+     */
+    function updateResultsCount() {
+        if (dom.resultsCount) {
+            dom.resultsCount.textContent = `${labels.results_count[state.lang]}: ${state.filteredData.length}`;
+        }
+    }
+
+    // === איוונטים (מאזינים) ===
 
     /**
-     * מאזין לשינויים ב-DOM (כפתורים, קלטים) ומעדכן את ה-state.
+     * הגדרת כל המאזינים לאירועי DOM.
      */
-    
-    
-function setupEventListeners() {
-  // שינוי שפה
-  if (dom.langBtn) {
-    dom.langBtn.addEventListener('click', () => {
-      state.lang = state.lang === 'he' ? 'en' : 'he';
-      document.documentElement.lang = state.lang;
-      document.documentElement.dir = state.lang === 'he' ? 'rtl' : 'ltr';
-      collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
-      updateTextByLang();
-      applySortAndRender();
-    });
-  }
-
-  // פילטרים מסוג select (שמות תואמים ל-dom)
-  const selectFilters = [
-    { element: dom.locationFilter,      key: 'location' },
-    { element: dom.organizationFilter,  key: 'org' },
-    { element: dom.rankFilter,          key: 'rank' }
-  ];
-  selectFilters.forEach(({ element, key }) => {
-    if (element) {
-      element.addEventListener('change', () => {
-        state.filters[key] = (element.value || '').toLowerCase();
-        filterData();
-        applySortAndRender();
-      });
-    }
-  });
-
-  // טווח תאריכים
-  function onDateChange() {
-    state.filters.dateFrom = dom.dateFromInput?.value || '';
-    state.filters.dateTo   = dom.dateToInput?.value   || '';
-
-    if (state.filters.dateFrom && state.filters.dateTo &&
-        state.filters.dateFrom > state.filters.dateTo) {
-      showToast(labels.invalid_date_range[state.lang], 'warning');
-      // החלפה אוטומטית
-      [state.filters.dateFrom, state.filters.dateTo] = [state.filters.dateTo, state.filters.dateFrom];
-      if (dom.dateFromInput) dom.dateFromInput.value = state.filters.dateFrom;
-      if (dom.dateToInput)   dom.dateToInput.value   = state.filters.dateTo;
-    }
-
-    filterData();
-    applySortAndRender();
-  }
-  if (dom.dateFromInput) dom.dateFromInput.addEventListener('change', onDateChange);
-  if (dom.dateToInput)   dom.dateToInput.addEventListener('change', onDateChange);
-  if (dom.clearDatesBtn) dom.clearDatesBtn.addEventListener('click', () => {
-    if (dom.dateFromInput) dom.dateFromInput.value = '';
-    if (dom.dateToInput)   dom.dateToInput.value   = '';
-    state.filters.dateFrom = '';
-    state.filters.dateTo   = '';
-    filterData();
-    applySortAndRender();
-  });
-
-  // פגינציה
-  if (dom.prevPageBtn) dom.prevPageBtn.addEventListener('click', () => changePage(-1));
-  if (dom.nextPageBtn) dom.nextPageBtn.addEventListener('click', () => changePage(1));
-
-  // החלפת תצוגה
-  if (dom.viewToggleBtn) {
-    dom.viewToggleBtn.addEventListener('click', () => {
-      state.isCardView = !state.isCardView;
-      dom.viewToggleBtn.setAttribute('aria-pressed', String(state.isCardView));
-      applySortAndRender();
-    });
-  }
-
-  // איפוס/ייצוא
-  if (dom.resetBtn)  dom.resetBtn.addEventListener('click', resetFilters);
-  if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
-
-  // חזרה לראש העמוד
-  if (dom.backToTop) {
-    window.addEventListener('scroll', () => {
-      const on = window.scrollY > 600;
-      dom.backToTop.classList.toggle('visible', on);
-    });
-    dom.backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  }
-                                   }
-    
-
-    /**
-     * מאזין לקלט חיפוש עם debounce.
-     */
-    function setupSearchDebounce() {
-        if (!dom.searchInput) return;
-        let timer = null;
-        dom.searchInput.addEventListener('input', () => {
-            const val = dom.searchInput.value.trim().toLowerCase();
-            state.filters.search = val;
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(() => {
+    function setupEventListeners() {
+        if (dom.langBtn) {
+            dom.langBtn.addEventListener('click', () => {
+                state.lang = state.lang === 'he' ? 'en' : 'he';
+                collator = new Intl.Collator(state.lang, { numeric: true, sensitivity: 'base' });
+                updateTextByLang();
+                renderContent(); // רינדור מחדש עם הכותרות בשפה החדשה
+            });
+        }
+        if (dom.viewToggleBtn) {
+            dom.viewToggleBtn.addEventListener('click', () => {
+                state.isCardView = !state.isCardView;
+                updateTextByLang();
+                renderContent();
+            });
+        }
+        if (dom.searchInput) {
+            dom.searchInput.addEventListener('input', () => {
+                state.filters.search = dom.searchInput.value;
+                debounceFilter();
+            });
+        }
+        if (dom.locationFilter) {
+            dom.locationFilter.addEventListener('change', () => {
+                state.filters.location = dom.locationFilter.value;
                 filterData();
-                applySortAndRender();
-            }, 250);
-        });
+            });
+        }
+        if (dom.organizationFilter) {
+            dom.organizationFilter.addEventListener('change', () => {
+                state.filters.org = dom.organizationFilter.value;
+                filterData();
+            });
+        }
+        if (dom.rankFilter) {
+            dom.rankFilter.addEventListener('change', () => {
+                state.filters.rank = dom.rankFilter.value;
+                filterData();
+            });
+        }
+        if (dom.resetBtn) {
+            dom.resetBtn.addEventListener('click', () => {
+                state.filters = { location: '', org: '', rank: '', search: '', dateFrom: '', dateTo: '' };
+                dom.searchInput.value = '';
+                dom.locationFilter.value = '';
+                dom.organizationFilter.value = '';
+                dom.rankFilter.value = '';
+                dom.dateFromInput.value = '';
+                dom.dateToInput.value = '';
+                filterData();
+            });
+        }
+        if (dom.exportBtn) {
+            dom.exportBtn.addEventListener('click', () => {
+                exportFilteredDataToCSV();
+            });
+        }
+        if (dom.prevPageBtn) {
+            dom.prevPageBtn.addEventListener('click', () => {
+                if (state.pagination.currentPage > 0) {
+                    state.pagination.currentPage--;
+                    renderContent();
+                }
+            });
+        }
+        if (dom.nextPageBtn) {
+            dom.nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(state.filteredData.length / state.pagination.pageSize);
+                if (state.pagination.currentPage < totalPages - 1) {
+                    state.pagination.currentPage++;
+                    renderContent();
+                }
+            });
+        }
+        // מאזין לאירועי לחיצה על כותרות הטבלה למיון
+        if (dom.contentArea) {
+            dom.contentArea.addEventListener('click', (e) => {
+                if (!state.isCardView) {
+                    const header = e.target.closest('th');
+                    if (header && header.dataset.sortKey) {
+                        const newColumn = header.dataset.sortKey;
+                        if (state.sort.column === newColumn) {
+                            state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            state.sort.column = newColumn;
+                            state.sort.direction = 'asc';
+                        }
+                        applySortAndRender();
+                    }
+                }
+            });
+        }
+        if (dom.dateFromInput) {
+            dom.dateFromInput.addEventListener('change', () => {
+                state.filters.dateFrom = dom.dateFromInput.value;
+                filterData();
+            });
+        }
+        if (dom.dateToInput) {
+            dom.dateToInput.addEventListener('change', () => {
+                state.filters.dateTo = dom.dateToInput.value;
+                filterData();
+            });
+        }
+        if (dom.clearDatesBtn) {
+            dom.clearDatesBtn.addEventListener('click', () => {
+                dom.dateFromInput.value = '';
+                dom.dateToInput.value = '';
+                state.filters.dateFrom = '';
+                state.filters.dateTo = '';
+                filterData();
+            });
+        }
+        if (dom.backToTop) {
+            dom.backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 200) {
+                    dom.backToTop.classList.add('visible');
+                } else {
+                    dom.backToTop.classList.remove('visible');
+                }
+            });
+        }
+    }
+
+    let debounceTimeout;
+    function setupSearchDebounce() {
+        if (dom.searchInput) {
+            dom.searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimeout);
+                state.filters.search = dom.searchInput.value;
+                debounceTimeout = setTimeout(() => {
+                    filterData();
+                }, 300); // השהייה של 300ms
+            });
+        }
     }
 
     /**
-     * איפוס כל הפילטרים והחזרת התצוגה למצב התחלתי.
+     * ייצוא נתונים ל-CSV.
      */
-    function resetFilters() {
-        if (dom.locationFilter) dom.locationFilter.value = '';
-        if (dom.organizationFilter) dom.organizationFilter.value = '';
-        if (dom.rankFilter) dom.rankFilter.value = '';
-        if (dom.searchInput) dom.searchInput.value = '';
+    function exportFilteredDataToCSV() {
+        if (state.filteredData.length === 0) {
+            showToast('אין נתונים לייצוא.', 'warning');
+            return;
+        }
 
-        if (dom.dateFromInput) dom.dateFromInput.value = '';
-        if (dom.dateToInput)   dom.dateToInput.value   = '';
-        state.filters = { location: '', org: '', rank: '', search: '', dateFrom: '', dateTo: '' };
+        const headers = dataFieldKeys.map(key => getHeaderLabel(key));
+        const dataRows = state.filteredData.map(row =>
+            dataFieldKeys.map(key => `"${(row[key] || '').replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
 
-        filterData();
-        applySortAndRender();
-        showToast(state.lang === 'he' ? 'הפילטרים אופסו' : 'Filters reset', 'info');
-    }
-
-    /**
-     * ייצוא הנתונים המסוננים לקובץ CSV להורדה.
-     */
-    function exportToCSV() {
-        const headers = dataFieldKeys.map(k => `"${getHeaderLabel(k).replace(/"/g, '""')}"`).join(',');
-        const rows = state.filteredData.map(r => {
-            return dataFieldKeys.map(k => `"${String(r[k] || '').replace(/"/g, '""')}"`).join(',');
-        });
-        const csvContent = [headers, ...rows].join('\n');
+        const csvContent = `${headers.join(',')}\n${dataRows}`;
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'export.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'filtered_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     }
-
     // קביעת min/max לשדות תאריך לפי הנתונים
     function initDateInputsRange() {
         if (!dom.dateFromInput || !dom.dateToInput) return;
-        const ranges = state.originalData.map(r => parseDateRange(r.date ?? r.Date ?? r.DATE)).filter(Boolean);
+        const ranges = state.originalData.map(r => parseDateRange(r['Date'])).filter(Boolean);
         if (!ranges.length) return;
         const minStart = ranges.reduce((a, r) => r.start < a ? r.start : a, ranges[0].start);
         const maxEnd   = ranges.reduce((a, r) => r.end   > a ? r.end   : a, ranges[0].end);
@@ -917,16 +888,13 @@ function setupEventListeners() {
         loadData();
         // רישום Service Worker (אם קיים), לצורך קאשינג משאבים.
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed:', err));
+            navigator.serviceWorker.register('/service-worker.js').then(
+                () => console.log('Service Worker registered successfully.'),
+                (err) => console.error('Service Worker registration failed:', err)
+            );
         }
     }
 
-    // מפעילים את האתחול כאשר ה-DOM מוכן.
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    window.addEventListener('DOMContentLoaded', init);
 
 })();
-        
