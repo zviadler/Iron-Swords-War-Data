@@ -211,115 +211,92 @@ function loadData() {
   const csvDiv = d('dataCSV');
   const url = csvDiv?.dataset?.url;
 
-if (url) {
-  // --- CSV loader (עמיד לנתיבים יחסיים ולסביבות שונות) ---
+  if (url) {
+    // --- CSV loader (עמיד לנתיבים יחסיים ולסביבות שונות) ---
 
-  // הפוך את הנתיב לאבסולוטי כדי למנוע "Invalid URL" ב-XHR/Worker
-  const csvPath = url || 'data.csv';
-  const csvURL = new URL(csvPath, document.baseURI).href;
+    // הפוך את הנתיב לאבסולוטי כדי למנוע "Invalid URL" ב-XHR/Worker
+    const csvURL = new URL(url || 'data.csv', document.baseURI).href;
 
-  // פונקציית עזר ל-Papa.parse
-  function parseWithPapa(u, useWorker) {
-    return new Promise((resolve, reject) => {
-      Papa.parse(u, {
-        download: true,
-        header: true,
-        worker: useWorker,
-        transformHeader: (h) => normalizeHeader(h),
-        error: reject,
-        complete: (res) => resolve(res?.data || [])
+    // פונקציית עזר ל-Papa.parse
+    const parseWithPapa = (u, useWorker) =>
+      new Promise((resolve, reject) => {
+        Papa.parse(u, {
+          download: true,
+          header: true,
+          worker: !!useWorker,
+          transformHeader: (h) => normalizeHeader(h),
+          error: reject,
+          complete: (res) => resolve(res?.data || [])
+        });
       });
-    });
-  }
 
-(async () => {
-  try {
-    // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
-    const rows = await parseWithPapa(csvURL, true);
-    state.originalData = rows.map(rec => {
-      // מנרמלים את הכותרות מה-CSV לשמות אחידים
-      const norm = {};
-      Object.entries(rec).forEach(([h, v]) => {
-        norm[normalizeHeader(h)] = (v ?? '').toString().trim();
-      });
-      const r = {};
-      FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
-      return r;
-    });
-
-    state.filteredData = state.originalData.slice(0);
-    populateFilters();
-    applyAll();
-    showLoading(false);
-
-  } catch (e1) {
-    console.warn('[CSV] Papa worker failed, retrying without worker', e1);
-    try {
-      // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
-      const rows = await parseWithPapa(csvURL, false);
-      state.originalData = rows.map(rec => {
+    // נרמול רשומות לסט שדות אחיד
+    const mapRows = (rows) =>
+      (rows || []).map((rec) => {
         const norm = {};
-        Object.entries(rec).forEach(([h, v]) => {
+        Object.entries(rec || {}).forEach(([h, v]) => {
           norm[normalizeHeader(h)] = (v ?? '').toString().trim();
         });
         const r = {};
-        FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+        FIELDS.forEach((k) => { r[k] = norm[k] ?? ''; });
         return r;
       });
 
+    (async () => {
+      try {
+        // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
+        const rows = await parseWithPapa(csvURL, true);
+        state.originalData = mapRows(rows);
+      } catch (e1) {
+        console.warn('[CSV] Papa worker failed, retrying without worker', e1);
+        try {
+          // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
+          const rows = await parseWithPapa(csvURL, false);
+          state.originalData = mapRows(rows);
+        } catch (e2) {
+          console.warn('[CSV] Fallback to fetch+parse', e2);
+          try {
+            // נסיון שלישי: fetch ואז פרס דרך Papa מקומית (ללא XHR של Papa)
+            const text = await fetch(csvURL).then((r) => {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.text();
+            });
+            const parsed = Papa.parse(text, {
+              header: true,
+              transformHeader: (h) => normalizeHeader(h)
+            });
+            const rows = parsed?.data || [];
+            state.originalData = mapRows(rows);
+          } catch (e3) {
+            console.error('[CSV] All strategies failed', e3);
+            showToast('שגיאה בטעינת CSV', 'error');
+            showLoading(false);
+            return; // חשוב: לא להמשיך לאתחול אם כשל
+          }
+        }
+      }
+
+      // אתחול לאחר טעינה מוצלחת
       state.filteredData = state.originalData.slice(0);
       populateFilters();
       applyAll();
       showLoading(false);
+    })();
 
-    } catch (e2) {
-      console.error('[CSV] Papa failed without worker too', e2);
-      showLoading(false);
-    }
-  }
-})();
-
-        state.filteredData = state.originalData.slice(0);
-        populateFilters();
-        applyAll();
-        showLoading(false);
-      } catch (e2) {
-        console.warn('[CSV] Fallback to fetch+parse', e2);
-        try {
-          // נסיון שלישי: fetch ואז פרס דרך Papa מקומית (ללא XHR של Papa)
-          const text = await fetch(csvURL).then(r => {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.text();
-          });
-          const parsed = Papa.parse(text, { header: true, transformHeader: (h) => normalizeHeader(h) });
-          state.originalData = rows.map(rec => {
-  const norm = {};
-  Object.entries(rec).forEach(([h, v]) => {
-    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
-  });
-  const r = {};
-  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
-  return r;
-});
-
-          state.filteredData = state.originalData.slice(0);
-          populateFilters();
-          applyAll();
-          showLoading(false);
-        } catch (e3) {
-          showToast('שגיאה בטעינת CSV', 'error');
-          showLoading(false);
-        }
-      }
-    }
-  })();
-}
-else {
+  } else {
     // Fallback: EMBEDDED_DATA וכו'
-    const embedded = window.EMBEDDED_DATA || window.embeddedData || window.EMBEDDED || window.embedded || [];
-    state.originalData = (embedded || []).map(rec => {
+    const embedded =
+      window.EMBEDDED_DATA ||
+      window.embeddedData ||
+      window.EMBEDDED ||
+      window.embedded ||
+      [];
+
+    state.originalData = (embedded || []).map((rec) => {
       const r = {};
-      FIELDS.forEach(k => { r[k] = (rec[k] ?? rec[prettyToSnake(k)] ?? '').toString().trim(); });
+      FIELDS.forEach((k) => {
+        r[k] = (rec?.[k] ?? rec?.[prettyToSnake(k)] ?? '').toString().trim();
+      });
       return r;
     });
 
@@ -331,18 +308,33 @@ else {
   }
 }
 
-function prettyToSnake(k){
+function prettyToSnake(k) {
   // מאפשר מפה הפוכה בסיסית במקרה של EMBEDDED בפורמט "יפה"
   const reverseMap = {
-    "Post No.":"post_id","Fighter No.":"combatant_id","Date":"date","Location":"location",
-    "Location Details":"location_details","Name in English":"name_english","Name in Arabic":"name_arabic",
-    "Nickname":"nickname","Social Media Description":"description_online","Rank/Role":"rank_role",
-    "Organization":"organization","Activity":"activity","Family Members":"family_members",
-    "No. of Victims":"casualties_count","Additional Fighters":"additional_combatants","Notes":"notes"
+    "Post No.": "post_id",
+    "Fighter No.": "combatant_id",
+    "Date": "date",
+    "Location": "location",
+    "Location Details": "location_details",
+    "Name in English": "name_english",
+    "Name in Arabic": "name_arabic",
+    "Nickname": "nickname",
+    "Social Media Description": "description_online",
+    "Rank/Role": "rank_role",
+    "Organization": "organization",
+    "Activity": "activity",
+    "Family Members": "family_members",
+    "No. of Victims": "casualties_count",
+    "Additional Fighters": "additional_combatants",
+    "Notes": "notes"
   };
-  for (const [pretty,snake] of Object.entries(reverseMap)) if (snake===k) return pretty;
+  // קלט: snake-case (k) => פלט: התווית ה"יפה" אם קיימת
+  for (const [pretty, snake] of Object.entries(reverseMap)) {
+    if (snake === k) return pretty;
+  }
   return k;
 }
+
 
 /* =============================
    פילטרים + חיפוש + תאריכים
