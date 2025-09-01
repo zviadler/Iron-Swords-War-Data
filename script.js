@@ -225,6 +225,7 @@ if (url) {
         download: true,
         header: true,
         worker: useWorker,
+        transformHeader: (h) => normalizeHeader(h),
         error: reject,
         complete: (res) => resolve(res?.data || [])
       });
@@ -277,7 +278,7 @@ if (url) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.text();
           });
-          const parsed = Papa.parse(text, { header: true });
+          const parsed = Papa.parse(text, { header: true, transformHeader: (h) => normalizeHeader(h) });
           state.originalData = rows.map(rec => {
   const norm = {};
   Object.entries(rec).forEach(([h, v]) => {
