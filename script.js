@@ -237,10 +237,16 @@ if (url) {
       const rows = await parseWithPapa(csvURL, true);
       state.originalData = rows.map(rec => {
         // שמירה על המיפוי הקיים שלך → FIELDS + normalizeHeader
-        const r = {};
-        FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
-        return r;
-      });
+        state.originalData = rows.map(rec => {
+  // מנרמלים את הכותרות מה-CSV לשמות אחידים
+  const norm = {};
+  Object.entries(rec).forEach(([h, v]) => {
+    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
+  });
+  const r = {};
+  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+  return r;
+});
       state.filteredData = state.originalData.slice(0);
       populateFilters();
       applyAll();
@@ -251,10 +257,14 @@ if (url) {
         // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
         const rows = await parseWithPapa(csvURL, false);
         state.originalData = rows.map(rec => {
-          const r = {};
-          FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
-          return r;
-        });
+  const norm = {};
+  Object.entries(rec).forEach(([h, v]) => {
+    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
+  });
+  const r = {};
+  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+  return r;
+});
         state.filteredData = state.originalData.slice(0);
         populateFilters();
         applyAll();
@@ -268,12 +278,16 @@ if (url) {
             return r.text();
           });
           const parsed = Papa.parse(text, { header: true });
-          const rows = parsed?.data || [];
           state.originalData = rows.map(rec => {
-            const r = {};
-            FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
-            return r;
-          });
+  const norm = {};
+  Object.entries(rec).forEach(([h, v]) => {
+    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
+  });
+  const r = {};
+  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+  return r;
+});
+
           state.filteredData = state.originalData.slice(0);
           populateFilters();
           applyAll();
