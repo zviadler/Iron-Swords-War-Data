@@ -633,3 +633,20 @@ input::placeholder{ color:#6b7280; }
 .filter-group{ display:grid; gap: var(--space-xs); } /* ensure older CSS keeps working */
 .pagination-controls{ display:flex; align-items:center; gap: var(--space-sm); } /* legacy */
 .pagination-info{ color: var(--text-secondary); min-width: 8ch; text-align:center; } /* legacy */
+
+/* === BiDi (RTL/LTR) – בידוד טקסטים מעורבים === */
+.data-table th,
+.data-table td,
+.card__title,
+.card__list { unicode-bidi: isolate; }
+
+.bidi-auto { direction: auto; unicode-bidi: isolate; }
+.bidi-rtl  { direction: rtl;  unicode-bidi: isolate; }
+.bidi-ltr  { direction: ltr;  unicode-bidi: isolate; text-align: left; }
+
+.data-table td.center { text-align: center; }
+
+/* אופציונלי: עוזר במסכים צרים */
+.table-container { overflow-x: auto; }
+.data-table { min-width: 960px; } /* הורידו אם לא צריך גלילה אופקית */
+
