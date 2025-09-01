@@ -257,22 +257,31 @@
     </div>
   </footer>
 
-  <!-- Scripts -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script defer src="script.js"></script>
+<!-- Scripts -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="" crossorigin="anonymous"></script>
+<script defer src="script.js"></script>
 
-  <!-- Service Worker Registration (Optional) -->
+<script>
+  // Service Worker Registration (Optional)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
         .register('./sw.js', { scope: './' })
-        .then(() => { /* success */ })
         .catch(err => console.warn('[SW] registration failed:', err));
     });
   }
 
-    // Update current year
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-  </script>
+  // Update current year
+  document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+  // Example: toggle aria-pressed for language button (אם יש לוגיקה)
+  const langBtn = document.getElementById('langBtn');
+  if (langBtn) {
+    langBtn.addEventListener('click', () => {
+      const pressed = langBtn.getAttribute('aria-pressed') === 'true';
+      langBtn.setAttribute('aria-pressed', String(!pressed));
+    });
+  }
+</script>
 </body>
 </html>
