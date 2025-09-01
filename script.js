@@ -232,40 +232,53 @@ if (url) {
     });
   }
 
-  (async () => {
+(async () => {
+  try {
+    // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
+    const rows = await parseWithPapa(csvURL, true);
+    state.originalData = rows.map(rec => {
+      // מנרמלים את הכותרות מה-CSV לשמות אחידים
+      const norm = {};
+      Object.entries(rec).forEach(([h, v]) => {
+        norm[normalizeHeader(h)] = (v ?? '').toString().trim();
+      });
+      const r = {};
+      FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+      return r;
+    });
+
+    state.filteredData = state.originalData.slice(0);
+    populateFilters();
+    applyAll();
+    showLoading(false);
+
+  } catch (e1) {
+    console.warn('[CSV] Papa worker failed, retrying without worker', e1);
     try {
-      // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
-      const rows = await parseWithPapa(csvURL, true);
+      // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
+      const rows = await parseWithPapa(csvURL, false);
       state.originalData = rows.map(rec => {
-        // שמירה על המיפוי הקיים שלך → FIELDS + normalizeHeader
-        state.originalData = rows.map(rec => {
-  // מנרמלים את הכותרות מה-CSV לשמות אחידים
-  const norm = {};
-  Object.entries(rec).forEach(([h, v]) => {
-    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
-  });
-  const r = {};
-  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
-  return r;
-});
+        const norm = {};
+        Object.entries(rec).forEach(([h, v]) => {
+          norm[normalizeHeader(h)] = (v ?? '').toString().trim();
+        });
+        const r = {};
+        FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
+        return r;
+      });
+
       state.filteredData = state.originalData.slice(0);
       populateFilters();
       applyAll();
       showLoading(false);
-    } catch (e1) {
-      console.warn('[CSV] Papa worker failed, retrying without worker', e1);
-      try {
-        // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
-        const rows = await parseWithPapa(csvURL, false);
-        state.originalData = rows.map(rec => {
-  const norm = {};
-  Object.entries(rec).forEach(([h, v]) => {
-    norm[normalizeHeader(h)] = (v ?? '').toString().trim();
-  });
-  const r = {};
-  FIELDS.forEach(k => { r[k] = norm[k] ?? ''; });
-  return r;
-});
+
+    } catch (e2) {
+      console.error('[CSV] Papa failed without worker too', e2);
+      showLoading(false);
+    }
+  }
+})();
+
         state.filteredData = state.originalData.slice(0);
         populateFilters();
         applyAll();
