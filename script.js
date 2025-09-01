@@ -211,11 +211,45 @@ function loadData() {
   const csvDiv = d('dataCSV');
   const url = csvDiv?.dataset?.url;
 
-  if (url) {
-    Papa.parse(url, {
-      download: true, header: true, worker: true,
-      complete: (res) => {
-        const rows = res.data || [];
+if (url) {
+  // --- CSV loader (עמיד לנתיבים יחסיים ולסביבות שונות) ---
+
+  // הפוך את הנתיב לאבסולוטי כדי למנוע "Invalid URL" ב-XHR/Worker
+  const csvPath = url || 'data.csv';
+  const csvURL = new URL(csvPath, document.baseURI).href;
+
+  // פונקציית עזר ל-Papa.parse
+  function parseWithPapa(u, useWorker) {
+    return new Promise((resolve, reject) => {
+      Papa.parse(u, {
+        download: true,
+        header: true,
+        worker: useWorker,
+        error: reject,
+        complete: (res) => resolve(res?.data || [])
+      });
+    });
+  }
+
+  (async () => {
+    try {
+      // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
+      const rows = await parseWithPapa(csvURL, true);
+      state.originalData = rows.map(rec => {
+        // שמירה על המיפוי הקיים שלך → FIELDS + normalizeHeader
+        const r = {};
+        FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
+        return r;
+      });
+      state.filteredData = state.originalData.slice(0);
+      populateFilters();
+      applyAll();
+      showLoading(false);
+    } catch (e1) {
+      console.warn('[CSV] Papa worker failed, retrying without worker', e1);
+      try {
+        // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
+        const rows = await parseWithPapa(csvURL, false);
         state.originalData = rows.map(rec => {
           const r = {};
           FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
@@ -225,13 +259,34 @@ function loadData() {
         populateFilters();
         applyAll();
         showLoading(false);
-      },
-      error: () => {
-        showToast('שגיאה בטעינת CSV', 'error');
-        showLoading(false);
+      } catch (e2) {
+        console.warn('[CSV] Fallback to fetch+parse', e2);
+        try {
+          // נסיון שלישי: fetch ואז פרס דרך Papa מקומית (ללא XHR של Papa)
+          const text = await fetch(csvURL).then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+          });
+          const parsed = Papa.parse(text, { header: true });
+          const rows = parsed?.data || [];
+          state.originalData = rows.map(rec => {
+            const r = {};
+            FIELDS.forEach(k => { r[k] = (rec[normalizeHeader(k)] ?? rec[k] ?? '').toString().trim(); });
+            return r;
+          });
+          state.filteredData = state.originalData.slice(0);
+          populateFilters();
+          applyAll();
+          showLoading(false);
+        } catch (e3) {
+          showToast('שגיאה בטעינת CSV', 'error');
+          showLoading(false);
+        }
       }
-    });
-  } else {
+    }
+  })();
+}
+else {
     // Fallback: EMBEDDED_DATA וכו'
     const embedded = window.EMBEDDED_DATA || window.embeddedData || window.EMBEDDED || window.embedded || [];
     state.originalData = (embedded || []).map(rec => {
