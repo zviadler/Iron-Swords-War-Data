@@ -39,6 +39,11 @@
   <!-- Main Styles -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- Minimal safety style to ensure .hidden works even without CSS file loaded yet -->
+  <style>
+    .hidden{display:none !important;}
+  </style>
+
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
@@ -219,8 +224,8 @@
     </div>
   </section>
 
-  <!-- Empty State -->
-  <div id="emptyState" class="empty-state" hidden>
+  <!-- Empty State (now using .hidden class to match JS) -->
+  <div id="emptyState" class="empty-state hidden">
     <p>אין תוצאות התואמות את החיפוש שלך.</p>
   </div>
 
@@ -232,17 +237,17 @@
        aria-label="התראות מערכת">
   </div>
 
-  <!-- Back to Top Button -->
+  <!-- Back to Top Button (starts hidden; JS יראה אותו לאחר גלילה) -->
   <button id="backToTop"
-          class="back-to-top"
+          class="back-to-top hidden"
           type="button"
           aria-label="חזור לראש העמוד"
           title="חזור לראש העמוד">
     <i class="fas fa-chevron-up" aria-hidden="true"></i>
   </button>
 
-  <!-- Explicit CSV source (optional but recommended for script (3).js) -->
-  <div id="dataCSV" data-url="data.csv" hidden></div>
+  <!-- Explicit CSV source (optional but recommended for script.js) -->
+  <div id="dataCSV" data-url="data.csv" class="hidden" aria-hidden="true"></div>
 
   <!-- Footer Legal Info -->
   <footer class="footer-info container mx-auto mb-8" role="contentinfo">
@@ -257,31 +262,24 @@
     </div>
   </footer>
 
-<!-- Scripts -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="" crossorigin="anonymous"></script>
-<script defer src="script.js"></script>
+  <!-- Scripts -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" crossorigin="anonymous"></script>
+  <script defer src="script.js"></script>
 
-<script>
-  // Service Worker Registration (Optional)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('./sw.js', { scope: './' })
-        .catch(err => console.warn('[SW] registration failed:', err));
-    });
-  }
+  <script>
+    // Service Worker Registration (Optional)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('./sw.js', { scope: './' })
+          .catch(err => console.warn('[SW] registration failed:', err));
+      });
+    }
 
-  // Update current year
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
+    // Update current year (tiny convenience)
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-  // Example: toggle aria-pressed for language button (אם יש לוגיקה)
-  const langBtn = document.getElementById('langBtn');
-  if (langBtn) {
-    langBtn.addEventListener('click', () => {
-      const pressed = langBtn.getAttribute('aria-pressed') === 'true';
-      langBtn.setAttribute('aria-pressed', String(!pressed));
-    });
-  }
-</script>
+    // NOTE: אין כאן לוגיקה של כפתור השפה – הכול מנוהל ב-script.js כדי למנוע כפילויות.
+  </script>
 </body>
 </html>
