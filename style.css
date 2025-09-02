@@ -480,3 +480,20 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   .btn { background: #333 !important; color: #fff !important; }
   .table-container { box-shadow: none; border: 1px solid #999; }
 }
+/* פעולות (איפוס/החלפת תצוגה) – שיהיו גמישות ולא ידבקו לשאר */
+.filters-row .filter-actions {
+  grid-column: span 3;          /* תופס 3 מתוך 12 בדסקטופ – כמו filter-item רגיל */
+  display: flex;
+  gap: var(--space-sm);
+  align-items: end;
+  justify-content: flex-start;
+}
+
+/* במסכים צרים – שייכנסו לשורה נפרדת, רוחב מלא */
+@media (max-width: 900px) {
+  .filters-row .filter-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .filters-row .filter-actions { grid-column: 1 / -1; }
+}
+#clearDatesBtn { display: none !important; }
