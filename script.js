@@ -1,12 +1,9 @@
 /* ==========================================================
-   מאגר זיהוי לוחמים – לוגיקה ראשית
-   שינויים עיקריים:
-   - showLoading(): שליטה דרך class 'hidden'
-   - מונה תוצאות: מסיר 'hidden'
-   - כפתור שפה: שומר על ה-<span>/אייקון + aria-pressed
-   - מובייל פילטרים: עדכון <span> פנימי + aria-expanded
-   - מתג תצוגה: updateViewToggleUI() לעדכון טקסט + aria-pressed
-   - כפתור Back to Top: מאזין גלילה למעלה
+   מאגר זיהוי לוחמים – לוגיקה ראשית (נקי מכפילויות)
+   עדכונים:
+   1) parseDateRange() תומך קודם בתאריך בודד ואז בטווחים אמיתיים
+   2) bindEvents(): מאזין לכפתור איפוס פילטרים + הצגה/הסתרה ל-Back-to-Top
+   3) רינדור מצב "אין תוצאות" משתמש ב-#emptyState אם קיים
 ========================================================== */
 
 /* =============================
@@ -147,17 +144,29 @@ function parseInputDate(v, endOfDay=false) {
   return d;
 }
 
+/* --- תאריך: תיקון באג פרסור (בודד לפני טווח) --- */
 function parseDateRange(s) {
   if (!s) return null;
-  // תומך ב"טווח תאריכים" בפורמטים בסיסיים (YYYY-MM-DD או YYYY/MM/DD)
-  const parts = String(s).split(/[-–—~to]+/i).map(x=>x.trim());
-  const from = new Date(parts[0]); const to = new Date(parts[1] || parts[0]);
-  if (Number.isNaN(from) || Number.isNaN(to)) return null;
+  const t = String(s).trim();
+
+  // קודם ננסה תאריך בודד (כמו 2024-08-09)
+  const single = new Date(t);
+  if (!Number.isNaN(single.getTime())) {
+    const from = new Date(single); from.setHours(0,0,0,0);
+    const to   = new Date(single); to.setHours(23,59,59,999);
+    return { from, to };
+  }
+
+  // אחרת – טווח מפורש עם מפרידים " – ", " — ", " ~ ", " to ", " - " (עם רווחים)
+  const parts = t.split(/\s*(?:–|—|~| to | - )\s*/i);
+  const from = new Date(parts[0]);
+  const to   = new Date(parts[1] || parts[0]);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null;
   to.setHours(23,59,59,999);
-  return {from, to};
+  return { from, to };
 }
 
-/* עזרי UI שהוספנו */
+/* עזרי UI */
 function setLangButtonUI() {
   if (!dom.langBtn) return;
   const span = dom.langBtn.querySelector('span') || dom.langBtn;
@@ -181,7 +190,6 @@ function normalizeHeader(h) {
   if (!h) return '';
   const key = String(h).trim().toLowerCase();
 
-  // מיפוי כותרות "יפות" (עברית/אנגלית) לשמות המפתחות האחידים
   const map = {
     "מס' פוסט": 'post_id', "post id": 'post_id', "post no.": 'post_id',
     "מס' לוחם": 'combatant_id', "combatant id": 'combatant_id', "fighter no.": 'combatant_id',
@@ -212,13 +220,8 @@ function loadData() {
   const url = csvDiv?.dataset?.url;
 
   if (url) {
-    // --- CSV loader (עמיד לנתיבים יחסיים ולסביבות שונות) ---
-
-    // הפוך את הנתיב לאבסולוטי כדי למנוע "Invalid URL" ב-XHR/Worker
     const csvURL = new URL(url || 'data.csv', document.baseURI).href;
 
-    // פונקציית עזר ל-Papa.parse
-    // חשוב: לא מעבירים transformHeader כדי לא לשלוח פונקציה ל-worker
     const parseWithPapa = (u, useWorker) =>
       new Promise((resolve, reject) => {
         Papa.parse(u, {
@@ -230,7 +233,6 @@ function loadData() {
         });
       });
 
-    // נרמול רשומות לסט שדות אחיד (הנרמול מתרחש כאן, אחרי Papa)
     const mapRows = (rows) =>
       (rows || []).map((rec) => {
         const norm = {};
@@ -244,39 +246,32 @@ function loadData() {
 
     (async () => {
       try {
-        // נסיון ראשון: עם Worker
         const rows = await parseWithPapa(csvURL, true);
         state.originalData = mapRows(rows);
       } catch (e1) {
         console.warn('[CSV] Papa worker failed, retrying without worker', e1);
         try {
-          // נסיון שני: ללא Worker
           const rows = await parseWithPapa(csvURL, false);
           state.originalData = mapRows(rows);
         } catch (e2) {
           console.warn('[CSV] Fallback to fetch+parse', e2);
           try {
-            // נסיון שלישי: fetch ואז פרס דרך Papa מקומית (ללא XHR של Papa)
             const text = await fetch(csvURL).then((r) => {
               if (!r.ok) throw new Error('HTTP ' + r.status);
               return r.text();
             });
-            const parsed = Papa.parse(text, {
-              header: true
-              // שים לב: אין transformHeader. הנרמול קורה ב-mapRows().
-            });
+            const parsed = Papa.parse(text, { header: true });
             const rows = parsed?.data || [];
             state.originalData = mapRows(rows);
           } catch (e3) {
             console.error('[CSV] All strategies failed', e3);
             showToast('שגיאה בטעינת CSV', 'error');
             showLoading(false);
-            return; // חשוב: לא להמשיך לאתחול אם כשל
+            return;
           }
         }
       }
 
-      // אתחול לאחר טעינה מוצלחת
       state.filteredData = state.originalData.slice(0);
       populateFilters();
       applyAll();
@@ -284,7 +279,6 @@ function loadData() {
     })();
 
   } else {
-    // Fallback: EMBEDDED_DATA וכו'
     const embedded =
       window.EMBEDDED_DATA ||
       window.embeddedData ||
@@ -300,7 +294,6 @@ function loadData() {
       return r;
     });
 
-    // אתחול
     state.filteredData = state.originalData.slice(0);
     populateFilters();
     applyAll();
@@ -309,7 +302,6 @@ function loadData() {
 }
 
 function prettyToSnake(k) {
-  // מאפשר מפה הפוכה בסיסית במקרה של EMBEDDED בפורמט "יפה"
   const reverseMap = {
     "Post No.": "post_id",
     "Fighter No.": "combatant_id",
@@ -328,7 +320,6 @@ function prettyToSnake(k) {
     "Additional Fighters": "additional_combatants",
     "Notes": "notes"
   };
-  // קלט: snake-case (k) => פלט: התווית ה"יפה" אם קיימת
   for (const [pretty, snake] of Object.entries(reverseMap)) {
     if (snake === k) return pretty;
   }
@@ -340,14 +331,13 @@ function prettyToSnake(k) {
    פילטרים + חיפוש + תאריכים
 ==============================*/
 function recordMatchesFilters(r) {
-  // שדות טקסט לפילטרים מדויקים (equals case-insensitive)
   const eq = (a,b) => (String(a||'').trim().toLowerCase() === String(b||'').trim().toLowerCase());
 
   const okLocation = !state.filters.location || eq(r.location, state.filters.location);
   const okOrg      = !state.filters.org      || eq(r.organization, state.filters.org);
   const okRank     = !state.filters.rank     || eq(r.rank_role, state.filters.rank);
 
-  // חיפוש חופשי בכמה עמודות
+  // חיפוש חופשי
   const hay = [
     r.name_english, r.name_arabic, r.nickname, r.description_online,
     r.location, r.organization, r.rank_role, r.notes
@@ -360,8 +350,8 @@ function recordMatchesFilters(r) {
     const rng = parseDateRange(r.date);
     if (!rng) okDate = false;
     else {
-      const from = state.filters.dateFrom || new Date(-8640000000000000); // מינוס אינסוף
-      const to   = state.filters.dateTo   || new Date( 8640000000000000); // פלוס אינסוף
+      const from = state.filters.dateFrom || new Date(-8640000000000000);
+      const to   = state.filters.dateTo   || new Date( 8640000000000000);
       okDate = !(rng.to < from || rng.from > to);
     }
   }
@@ -413,16 +403,26 @@ function sortData() {
   state.filteredData.sort((a,b)=> state.sort.direction==='asc' ? compareValues(a,b,state.sort.key) : -compareValues(a,b,state.sort.key));
 }
 
-/* רינדור */
 function clearContent(){ if (dom.contentArea) dom.contentArea.innerHTML=''; }
 
 function render() {
   clearContent();
   if (!dom.contentArea) return;
 
-  updateStats();      // סטטיסטיקות (שתי הגרסאות)
-  updateResultsBar(); // מונה תוצאות/עמוד
+  updateStats();
+  updateResultsBar();
   updatePagerButtons();
+
+  const total = state.filteredData.length;
+
+  // מצב "אין תוצאות" מרוכז – משתמשים ב-#emptyState אם קיים
+  if (total === 0) {
+    if (dom.emptyState) dom.emptyState.classList.remove('hidden');
+    else if (dom.contentArea) dom.contentArea.innerHTML = `<div class="empty">${labels.no_data[state.lang]}</div>`;
+    return;
+  } else {
+    if (dom.emptyState) dom.emptyState.classList.add('hidden');
+  }
 
   const page = state.pagination.currentPage;
   const size = state.pagination.pageSize;
@@ -433,10 +433,6 @@ function render() {
 }
 
 function renderCards(rows) {
-  if (!rows.length) {
-    dom.contentArea.innerHTML = `<div class="empty">${labels.no_data[state.lang]}</div>`;
-    return;
-  }
   const container = document.createElement('div');
   container.className = 'cards';
   rows.forEach(r => {
@@ -467,14 +463,9 @@ function highlight(val, q) {
 }
 
 function renderTable(rows) {
-  if (!rows.length) {
-    dom.contentArea.innerHTML = `<div class="empty">${labels.no_data[state.lang]}</div>`;
-    return;
-  }
   const table = document.createElement('table');
   table.className = 'data-table';
 
-  // thead
   const thead = document.createElement('thead');
   const trh = document.createElement('tr');
   FIELDS.forEach(key => {
@@ -490,7 +481,6 @@ function renderTable(rows) {
   thead.appendChild(trh);
   table.appendChild(thead);
 
-  // tbody
   const tbody = document.createElement('tbody');
   rows.forEach(r => {
     const tr = document.createElement('tr');
@@ -545,17 +535,15 @@ function updatePagerButtons() {
 }
 
 function scrollTopIfNeeded() {
-  // אופציונלי: גלילה לראש התוכן לאחר שינוי עמוד/תצוגה
   if (dom.contentArea && dom.contentArea.scrollIntoView) {
     dom.contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
 /* =============================
-   סטטיסטיקות (שני הסטים)
+   סטטיסטיקות
 ==============================*/
 function updateStats() {
-  // סטטיסטיקות גרסת script.js
   if (dom.totalCombatants || dom.totalCasualties || dom.familyCasualties || dom.highRanking) {
     const total = state.filteredData.length;
     const casualties = state.filteredData.reduce((sum,r)=> sum + (parseInt(r.casualties_count||0,10) || 0), 0);
@@ -568,7 +556,6 @@ function updateStats() {
     if (dom.highRanking) dom.highRanking.textContent = high.toLocaleString('he-IL');
   }
 
-  // סטטיסטיקות placeholders באנגלית (אם קיימים)
   if (dom.statsTotal || dom.statsByLocation || dom.statsByOrg || dom.statsByRank) {
     if (dom.statsTotal) dom.statsTotal.textContent = state.filteredData.length.toLocaleString();
     if (dom.statsByLocation) dom.statsByLocation.textContent = '—';
@@ -617,7 +604,18 @@ function init() {
 }
 
 function bindEvents() {
-  const b2t = d('backToTop'); if (b2t) b2t.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  // Back to Top: לחיצה
+  const b2t = d('backToTop');
+  if (b2t) b2t.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+  // Back to Top: הצגה/הסתרה לפי גלילה
+  window.addEventListener('scroll', () => {
+    const btn = d('backToTop');
+    if (!btn) return;
+    const show = window.scrollY > 400;
+    btn.classList.toggle('hidden', !show);
+  });
+
   // חיפוש
   if (dom.searchInput) {
     dom.searchInput.placeholder = labels.search_placeholder[state.lang];
@@ -635,7 +633,7 @@ function bindEvents() {
     state.filters.dateFrom = parseInputDate(dom.dateFromInput.value, false); upd();
   });
   if (dom.dateToInput) dom.dateToInput.addEventListener('change', ()=>{
-    state.filters.dateTo = parseInputDate(dom.dateToInput.value, true); upd();
+    state.filters.dateTo = parseInputDate(dom.dateToInput.value, true);  upd();
   });
   if (dom.clearDatesBtn) dom.clearDatesBtn.addEventListener('click', ()=>{
     if (dom.dateFromInput) dom.dateFromInput.value = '';
@@ -667,7 +665,7 @@ function bindEvents() {
   if (dom.langBtn) dom.langBtn.addEventListener('click', ()=>{
     state.lang = (state.lang==='he') ? 'en' : 'he';
     if (dom.searchInput) dom.searchInput.placeholder = labels.search_placeholder[state.lang];
-    render(); // לצורך כותרות/טקסטים/CSV
+    render();
     setLangButtonUI();
     updateViewToggleUI();
   });
@@ -679,6 +677,33 @@ function bindEvents() {
       const open = dom.filtersBar.classList.toggle('open');
       dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
       labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
+    });
+  }
+
+  // --- איפוס פילטרים (חדש) ---
+  if (dom.resetBtn) {
+    dom.resetBtn.addEventListener('click', () => {
+      // נקה UI
+      if (dom.searchInput) dom.searchInput.value = '';
+      ['locationFilter','orgFilter','rankFilter'].forEach(id => {
+        const el = d(id);
+        if (el) el.value = '';
+      });
+      if (dom.dateFromInput) dom.dateFromInput.value = '';
+      if (dom.dateToInput)   dom.dateToInput.value   = '';
+
+      // אפס state
+      state.filters = {
+        location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null
+      };
+      state.sort = { key: null, direction: 'asc' };
+      state.pagination.currentPage = 0;
+
+      // רענן אפשרויות בפילטרים + רנדר
+      populateFilters();
+      applyAll();
+
+      showToast(labels.reset_filters[state.lang], 'info');
     });
   }
 }
