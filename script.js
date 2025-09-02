@@ -1,14 +1,10 @@
 /* ==========================================================
-   מאגר זיהוי לוחמים – לוגיקה ראשית (גרסת שדרוגים)
-   כלול:
-   1) highlight בטוח ל-HTML
-   2) debounce לחיפוש
-   3) מיון חכם (תאריכים/מספרים) + מיון יציב
-   5) נגישות: aria-live, aria-sort, ניווט מקלדת לפאג'ינציה
-   6) שמירת מצב ל-URL (Deep-linking) ושחזור
-   7) Page-Size דינמי + זכירת בחירה
-   10) i18n למספרים לפי השפה
-   11) ניקוי: הסרת פונקציות לא בשימוש, יישור שמות
+   מאגר זיהוי לוחמים – לוגיקה ראשית (גרסת מובייל משודרגת)
+   חדש במובייל:
+   • דפדפת פילטרים (Bottom Sheet) במובייל: פתיחה/סגירה, Apply/Reset, ESC/רקע
+   • צ’יפים של פילטרים פעילים עם ניקוי מהיר
+   • Badge למספר פילטרים פעילים על כפתור הפילטרים
+   • התאמה אוטומטית למסכים ≤ 768px + שינוי דינמי בעת שינוי גודל
 ========================================================== */
 
 /* =============================
@@ -52,7 +48,18 @@ const labels = {
   lang_switch: {he:"English",en:"עברית"},
   open_filters: {he:"פתח פילטרים",en:"Open Filters"},
   close_filters: {he:"סגור פילטרים",en:"Close Filters"},
+  filters_title: {he:"סינון", en:"Filters"},
+  apply: {he:"החל", en:"Apply"},
+  clear_all: {he:"נקה הכל", en:"Clear All"},
+  active_filters: {he:"({n}) מסננים", en:"Filters ({n})"},
 };
+
+/* =============================
+   Responsive helpers
+==============================*/
+const MOBILE_BP = 768;
+const mq = window.matchMedia(`(max-width: ${MOBILE_BP}px)`);
+function isMobile() { return mq.matches; }
 
 /* =============================
    State
@@ -61,7 +68,8 @@ const state = {
   originalData: [],
   filteredData: [],
   lang: (navigator.language || '').startsWith('he') ? 'he' : 'en',
-  isCardView: window.innerWidth <= 768,  // ברירת מחדל: כרטיסים במסכים צרים
+  isMobile: isMobile(),
+  isCardView: isMobile() || window.innerWidth <= 768,  // מובייל ברירת מחדל כרטיסים
   sort: { key: null, direction: 'asc' },
   pagination: { pageSize: 50, currentPage: 0 },
   filters: {
@@ -108,18 +116,19 @@ const dom = {
   // פס פילטרים / מובייל
   mobileFiltersToggle: d('mobileFiltersToggle'),
   filtersBar: d('filtersBar'),
-
-  // סטטיסטיקות – יתעדכנו אם קיימים בדף
-  totalCombatants: d('totalCombatants'),
-  totalCasualties: d('totalCasualties'),
-  familyCasualties: d('familyCasualties'),
-  highRanking: d('highRanking'),
-
-  statsTotal: d('statsTotal'),
-  statsByLocation: d('statsByLocation'),
-  statsByOrg: d('statsByOrg'),
-  statsByRank: d('statsByRank'),
 };
+
+/* =============================
+   Mobile sheet & chips (נוצרים דינמית)
+==============================*/
+let filtersBarAnchor = null;     // נקודת עגינה להשבת filtersBar לדסקטופ
+let sheet = null;                // אלמנט ה"Bottom Sheet"
+let sheetBackdrop = null;        // רקע
+let sheetContent = null;         // תוכן (לשם נעביר את filtersBar)
+let sheetApplyBtn = null;
+let sheetClearBtn = null;
+let sheetCloseBtn = null;
+let chipsWrap = null;            // מיכל צ’יפים מתחת לסרגל העליון
 
 /* =============================
    Utilities
@@ -153,12 +162,12 @@ function parseInputDate(v, endOfDay=false) {
   return d;
 }
 
-/* --- תאריך: תומך תאריך בודד + טווחים עם מפרידים ברורים (כפי שסוכם) --- */
+/* --- תאריך: תומך תאריך בודד + טווחים מוגדרים --- */
 function parseDateRange(s) {
   if (!s) return null;
   const t = String(s).trim();
 
-  // קודם ננסה תאריך בודד (כמו 2024-08-09)
+  // תאריך בודד (כמו 2024-08-09)
   const single = new Date(t);
   if (!Number.isNaN(single.getTime())) {
     const from = new Date(single); from.setHours(0,0,0,0);
@@ -166,7 +175,7 @@ function parseDateRange(s) {
     return { from, to };
   }
 
-  // אחרת – טווח מפורש עם מפרידים " – ", " — ", " ~ ", " to ", " - " (עם רווחים)
+  // טווח מפורש עם מפרידים " – ", " — ", " ~ ", " to ", " - " (עם רווחים)
   const parts = t.split(/\s*(?:–|—|~| to | - )\s*/i);
   const from = new Date(parts[0]);
   const to   = new Date(parts[1] || parts[0]);
@@ -175,7 +184,7 @@ function parseDateRange(s) {
   return { from, to };
 }
 
-/* highlight בטוח: מפצל לפי ה-query, בורח כל חלק, ומדגיש רק את ההתאמות */
+/* highlight בטוח */
 function escapeRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function highlight(val, q) {
   const s = String(val ?? '');
@@ -214,7 +223,6 @@ function updateViewToggleUI(){
 function normalizeHeader(h) {
   if (!h) return '';
   const key = String(h).trim().toLowerCase();
-
   const map = {
     "מס' פוסט": 'post_id', "post id": 'post_id', "post no.": 'post_id',
     "מס' לוחם": 'combatant_id', "combatant id": 'combatant_id', "fighter no.": 'combatant_id',
@@ -338,10 +346,12 @@ function syncFiltersUIFromState(){
   if (dom.dateFromInput) dom.dateFromInput.value = state.filters.dateFrom ? state.filters.dateFrom.toISOString().slice(0,10) : '';
   if (dom.dateToInput)   dom.dateToInput.value   = state.filters.dateTo   ? state.filters.dateTo.toISOString().slice(0,10)   : '';
   if (dom.pageSizeSelect) dom.pageSizeSelect.value = String(state.pagination.pageSize);
+  updateFiltersBadge();
+  renderFilterChips();
 }
 
 /* =============================
-   שמירת מצב ל-URL ושחזור (6)
+   URL persist/restore
 ==============================*/
 function persistStateToURL(){
   const p = new URLSearchParams();
@@ -381,7 +391,6 @@ function recordMatchesFilters(r) {
   const okOrg      = !state.filters.org      || eq(r.organization, state.filters.org);
   const okRank     = !state.filters.rank     || eq(r.rank_role, state.filters.rank);
 
-  // חיפוש חופשי
   const hay = [
     r.name_english, r.name_arabic, r.nickname, r.description_online,
     r.location, r.organization, r.rank_role, r.notes
@@ -408,6 +417,8 @@ function applyAll() {
   sortData();
   render();
   persistStateToURL();
+  updateFiltersBadge();
+  renderFilterChips();
 }
 
 function onSearch(e) {
@@ -426,7 +437,6 @@ function populateFilters() {
     const prev = select.value || '';
     select.innerHTML = `<option value="">${state.lang==='he'?'הכול':'All'}</option>` +
       list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    // אם ה-URL ביקש ערך – נעדיף אותו
     const want = (select === dom.locationFilter && state.filters.location) ? state.filters.location
                : (select === dom.orgFilter      && state.filters.org)      ? state.filters.org
                : (select === dom.rankFilter     && state.filters.rank)     ? state.filters.rank
@@ -445,7 +455,7 @@ function populateFilters() {
 function getComparable(a, key){
   if (key === 'date') {
     const rng = parseDateRange(a[key]);
-    return rng ? rng.from.getTime() : -Infinity;   // מיון לפי תחילת הטווח
+    return rng ? rng.from.getTime() : -Infinity;
   }
   if (key === 'post_id' || key === 'combatant_id' || key === 'casualties_count') {
     const n = Number((a[key]??'').toString().replace(/[^\d.-]/g,''));
@@ -459,7 +469,6 @@ function sortData() {
   const { key, direction } = state.sort;
   const dir = direction === 'asc' ? 1 : -1;
 
-  // מיון יציב: שומרים אינדקס מקורי
   state.filteredData = state.filteredData
     .map((v, i) => ({ v, i }))
     .sort((A, B) => {
@@ -467,7 +476,7 @@ function sortData() {
       const y = getComparable(B.v, key);
       if (x < y) return -1 * dir;
       if (x > y) return  1 * dir;
-      return A.i - B.i; // יציבות
+      return A.i - B.i;
     })
     .map(o => o.v);
 }
@@ -484,7 +493,6 @@ function render() {
 
   const total = state.filteredData.length;
 
-  // מצב "אין תוצאות" – משתמשים ב-#emptyState אם קיים
   if (total === 0) {
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     else if (dom.contentArea) dom.contentArea.innerHTML = `<div class="empty">${labels.no_data[state.lang]}</div>`;
@@ -604,7 +612,6 @@ function updatePagerButtons() {
   const total = state.filteredData.length;
   const pages = Math.max(1, Math.ceil(total / state.pagination.pageSize));
   const current = state.pagination.currentPage;
-
   if (dom.prevPageBtn) dom.prevPageBtn.disabled = current <= 0;
   if (dom.nextPageBtn) dom.nextPageBtn.disabled = current >= pages - 1;
 }
@@ -616,7 +623,7 @@ function scrollTopIfNeeded() {
 }
 
 /* =============================
-   סטטיסטיקות (10 – i18n)
+   סטטיסטיקות
 ==============================*/
 function updateStats() {
   const fmt = nf();
@@ -632,11 +639,8 @@ function updateStats() {
     if (dom.highRanking) dom.highRanking.textContent = fmt.format(high);
   }
 
-  if (dom.statsTotal || dom.statsByLocation || dom.statsByOrg || dom.statsByRank) {
-    if (dom.statsTotal) dom.statsTotal.textContent = nf().format(state.filteredData.length);
-    if (dom.statsByLocation) dom.statsByLocation.textContent = '—';
-    if (dom.statsByOrg) dom.statsByOrg.textContent = '—';
-    if (dom.statsByRank) dom.statsByRank.textContent = '—';
+  if (d('statsTotal') || d('statsByLocation') || d('statsByOrg') || d('statsByRank')) {
+    const sT = d('statsTotal'); if (sT) sT.textContent = nf().format(state.filteredData.length);
   }
 }
 
@@ -669,7 +673,7 @@ function exportToCSV() {
 function showLoading(on){ if (!dom.loadingOverlay) return; dom.loadingOverlay.classList.toggle('hidden', !on); }
 
 /* =============================
-   Page Size (7)
+   Page Size
 ==============================*/
 const PAGE_SIZES = [25,50,100];
 function setPageSize(n){
@@ -683,13 +687,253 @@ function setPageSize(n){
 }
 
 /* =============================
+   MOBILE: Filter Chips + Badge
+==============================*/
+function countActiveFilters(){
+  let n = 0;
+  const f = state.filters;
+  if (f.location) n++;
+  if (f.org) n++;
+  if (f.rank) n++;
+  if (f.search) n++;
+  if (f.dateFrom || f.dateTo) n++;
+  return n;
+}
+
+function updateFiltersBadge(){
+  if (!dom.mobileFiltersToggle) return;
+  const base = state.lang==='he' ? labels.open_filters.he : labels.open_filters.en;
+  const n = countActiveFilters();
+  const badgeText = n ? (state.lang==='he'
+                         ? labels.active_filters.he.replace('{n}', n)
+                         : labels.active_filters.en.replace('{n}', n))
+                      : '';
+  const span = dom.mobileFiltersToggle.querySelector('span');
+  if (span) {
+    span.textContent = n ? `${base} ${badgeText}` : base;
+  } else {
+    dom.mobileFiltersToggle.textContent = n ? `${base} ${badgeText}` : base;
+  }
+  dom.mobileFiltersToggle.setAttribute('aria-label', (span?span.textContent:dom.mobileFiltersToggle.textContent));
+}
+
+/* יוצר/מעדכן מיכל צ’יפים מתחת לאיזור העליון */
+function ensureChipsWrap(){
+  if (chipsWrap) return chipsWrap;
+  chipsWrap = document.createElement('div');
+  chipsWrap.id = 'filterChips';
+  chipsWrap.style.display = 'flex';
+  chipsWrap.style.flexWrap = 'wrap';
+  chipsWrap.style.gap = '6px';
+  chipsWrap.style.margin = '8px 0';
+  chipsWrap.style.alignItems = 'center';
+  // נציב לפני אזור התוכן אם אפשר
+  if (dom.contentArea && dom.contentArea.parentNode) {
+    dom.contentArea.parentNode.insertBefore(chipsWrap, dom.contentArea);
+  } else {
+    document.body.insertBefore(chipsWrap, document.body.firstChild);
+  }
+  return chipsWrap;
+}
+
+function renderFilterChips(){
+  const n = countActiveFilters();
+  if (!n) { if (chipsWrap) chipsWrap.innerHTML=''; return; }
+
+  const wrap = ensureChipsWrap();
+  const makeChip = (label, onClear) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.setAttribute('aria-label', (state.lang==='he' ? 'הסר מסנן ' : 'Clear filter ') + label);
+    chip.style.border = '1px solid #ccc';
+    chip.style.padding = '4px 8px';
+    chip.style.borderRadius = '999px';
+    chip.style.fontSize = '12px';
+    chip.style.cursor = 'pointer';
+    chip.innerHTML = `${escapeHtml(label)} &times;`;
+    chip.addEventListener('click', onClear);
+    return chip;
+  };
+
+  const items = [];
+  const f = state.filters;
+  if (f.location) items.push(makeChip(`${fieldLabels.location[state.lang]}: ${f.location}`, ()=>{ f.location=''; syncFiltersUIFromState(); applyAll(); }));
+  if (f.org)      items.push(makeChip(`${fieldLabels.organization[state.lang]}: ${f.org}`, ()=>{ f.org=''; syncFiltersUIFromState(); applyAll(); }));
+  if (f.rank)     items.push(makeChip(`${fieldLabels.rank_role[state.lang]}: ${f.rank}`, ()=>{ f.rank=''; syncFiltersUIFromState(); applyAll(); }));
+  if (f.search)   items.push(makeChip((state.lang==='he'?'חיפוש: ':'Search: ')+f.search, ()=>{ f.search=''; syncFiltersUIFromState(); applyAll(); }));
+  if (f.dateFrom || f.dateTo) {
+    const df = f.dateFrom ? f.dateFrom.toISOString().slice(0,10) : '';
+    const dt = f.dateTo   ? f.dateTo.toISOString().slice(0,10)   : '';
+    const lbl = state.lang==='he' ? `תאריכים: ${df}–${dt}` : `Dates: ${df}–${dt}`;
+    items.push(makeChip(lbl, ()=>{ f.dateFrom=null; f.dateTo=null; syncFiltersUIFromState(); applyAll(); }));
+  }
+
+  wrap.innerHTML = '';
+  items.forEach(x=>wrap.appendChild(x));
+}
+
+/* =============================
+   MOBILE: Bottom Sheet for Filters
+==============================*/
+function ensureFilterSheet(){
+  if (sheet && sheetBackdrop && sheetContent) return;
+
+  // רקע
+  sheetBackdrop = document.createElement('div');
+  sheetBackdrop.id = 'filterBackdrop';
+  Object.assign(sheetBackdrop.style, {
+    position: 'fixed', inset: '0', background: 'rgba(0,0,0,0.35)',
+    opacity: '0', visibility: 'hidden', transition: 'opacity 150ms',
+    zIndex: '1000'
+  });
+  sheetBackdrop.addEventListener('click', closeFiltersSheet);
+
+  // Sheet
+  sheet = document.createElement('div');
+  sheet.id = 'filterSheet';
+  sheet.setAttribute('role','dialog');
+  sheet.setAttribute('aria-modal','true');
+  sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
+  Object.assign(sheet.style, {
+    position: 'fixed', left: '0', right: '0', bottom: '0',
+    maxHeight: '88vh', height: 'auto', background: '#fff',
+    borderTopLeftRadius: '12px', borderTopRightRadius: '12px',
+    boxShadow: '0 -10px 30px rgba(0,0,0,0.2)',
+    transform: 'translateY(100%)', transition: 'transform 220ms',
+    zIndex: '1001', display: 'flex', flexDirection: 'column'
+  });
+
+  // Header
+  const header = document.createElement('div');
+  Object.assign(header.style, { padding: '12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid #eee' });
+  const title = document.createElement('strong');
+  title.textContent = labels.filters_title[state.lang];
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.textContent = '✕';
+  Object.assign(closeBtn.style, { fontSize:'16px', lineHeight:'1', padding:'6px 10px', cursor:'pointer', background:'transparent', border:'none' });
+  closeBtn.addEventListener('click', closeFiltersSheet);
+  header.appendChild(title); header.appendChild(closeBtn);
+  sheetCloseBtn = closeBtn;
+
+  // Content (לכאן נזיז את filtersBar)
+  sheetContent = document.createElement('div');
+  Object.assign(sheetContent.style, { overflow:'auto', padding:'8px 16px', flex:'1 1 auto' });
+
+  // Footer
+  const footer = document.createElement('div');
+  Object.assign(footer.style, { padding:'12px 16px', display:'flex', gap:'8px', borderTop:'1px solid #eee' });
+  const applyBtn = document.createElement('button');
+  applyBtn.type = 'button';
+  applyBtn.textContent = labels.apply[state.lang];
+  Object.assign(applyBtn.style, { flex:'1', padding:'10px', fontWeight:'600', cursor:'pointer' });
+  applyBtn.addEventListener('click', ()=>{ applyAll(); closeFiltersSheet(); });
+  sheetApplyBtn = applyBtn;
+
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.textContent = labels.clear_all[state.lang];
+  Object.assign(clearBtn.style, { flex:'1', padding:'10px', cursor:'pointer' });
+  clearBtn.addEventListener('click', ()=>{ dom.resetBtn?.click(); });
+  sheetClearBtn = clearBtn;
+
+  footer.appendChild(applyBtn); footer.appendChild(clearBtn);
+
+  sheet.appendChild(header);
+  sheet.appendChild(sheetContent);
+  sheet.appendChild(footer);
+
+  document.body.appendChild(sheetBackdrop);
+  document.body.appendChild(sheet);
+
+  // ESC לסגירה
+  document.addEventListener('keydown', onEscCloseFilters);
+}
+
+function openFiltersSheet(){
+  ensureFilterSheet();
+
+  // נשמור עוגן להחזרת ה-filtersBar למקום המקורי בדסקטופ
+  if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
+    filtersBarAnchor = document.createComment('filtersBar-anchor');
+    dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
+  }
+
+  // הזזת filtersBar לתוך ה-sheet
+  if (dom.filtersBar && sheetContent && dom.filtersBar !== sheetContent.firstChild) {
+    sheetContent.appendChild(dom.filtersBar);
+    Object.assign(dom.filtersBar.style, { display:'block', maxHeight:'inherit' });
+  }
+
+  syncFiltersUIFromState();
+  sheetBackdrop.style.visibility = 'visible';
+  sheetBackdrop.style.opacity = '1';
+  sheet.style.transform = 'translateY(0)';
+  document.body.style.overflow = 'hidden';
+
+  // Trap focus בסיסי
+  setTimeout(()=>{ try { (sheet.querySelector('select, input, button, textarea, [tabindex]:not([tabindex="-1"])')||sheetCloseBtn).focus(); } catch{} }, 30);
+}
+
+function closeFiltersSheet(){
+  if (!sheet || !sheetBackdrop) return;
+
+  sheet.style.transform = 'translateY(100%)';
+  sheetBackdrop.style.opacity = '0';
+  sheetBackdrop.style.visibility = 'hidden';
+  document.body.style.overflow = '';
+
+  // החזרת filtersBar למקומו בדסקטופ אם כבר לא מובייל
+  if (!state.isMobile && filtersBarAnchor && dom.filtersBar) {
+    filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
+    dom.filtersBar.style.maxHeight = '';
+  }
+}
+
+function onEscCloseFilters(e){
+  if (e.key === 'Escape' && sheet && sheetBackdrop && sheetBackdrop.style.visibility === 'visible') {
+    closeFiltersSheet();
+  }
+}
+
+/* =============================
+   Responsive setup
+==============================*/
+function setupResponsive(){
+  state.isMobile = isMobile();
+
+  // עדכון טקסטים
+  if (sheetCloseBtn) sheetCloseBtn.setAttribute('aria-label', state.lang==='he'?'סגור':'Close');
+  if (sheetApplyBtn) sheetApplyBtn.textContent = labels.apply[state.lang];
+  if (sheetClearBtn) sheetClearBtn.textContent = labels.clear_all[state.lang];
+
+  if (state.isMobile) {
+    // במובייל – filtersBar בדפדפת, כפתור טוגל פותח את ה-sheet
+    if (dom.filtersBar) dom.filtersBar.style.display = 'block'; // יוצג בתוך ה-sheet
+  } else {
+    // בדסקטופ – ודא שה-filtersBar חוזר לעוגן
+    if (filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode !== filtersBarAnchor.parentNode) {
+      filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
+      dom.filtersBar.style.display = '';
+      dom.filtersBar.style.maxHeight = '';
+    }
+    // אם הדפדפת פתוחה – סגור
+    closeFiltersSheet();
+  }
+  // בכותרת התצוגה – ברירת מחדל לכרטיסים במובייל
+  state.isCardView = state.isMobile ? true : state.isCardView;
+  updateViewToggleUI();
+
+  updateFiltersBadge();
+  renderFilterChips();
+}
+
+/* =============================
    הפעלה
 ==============================*/
 function init() {
-  // שחזור מצב קודם מה-URL
   restoreStateFromURL();
 
-  // Page size מ-localStorage אם אין ב-URL
   if (!new URLSearchParams(location.search).get('ps')) {
     const saved = Number(localStorage.getItem('pageSize'));
     if (PAGE_SIZES.includes(saved)) state.pagination.pageSize = saved;
@@ -699,14 +943,17 @@ function init() {
   if (dom.searchInput) dom.searchInput.placeholder = labels.search_placeholder[state.lang];
   updateViewToggleUI();
 
-  // aria-live לאזורים מדברים
   dom.resultsCounter?.setAttribute('aria-live','polite');
   dom.pageInfo?.setAttribute('aria-live','polite');
 
   bindEvents();
+  setupResponsive();              // <<< חדש
   loadData();
 }
 
+/* =============================
+   Events
+==============================*/
 function bindEvents() {
   // Back to Top: לחיצה
   const b2t = d('backToTop');
@@ -720,7 +967,11 @@ function bindEvents() {
     btn.classList.toggle('hidden', !show);
   });
 
-  // חיפוש (עם debounce) + קיצור Escape לאיפוס
+  // תגובה לשינוי רוחב מסך
+  if (mq.addEventListener) mq.addEventListener('change', setupResponsive);
+  else mq.addListener && mq.addListener(setupResponsive);
+
+  // חיפוש (debounce) + Escape
   if (dom.searchInput) {
     dom.searchInput.placeholder = labels.search_placeholder[state.lang];
     dom.searchInput.addEventListener('input', debounce(onSearch, 200));
@@ -772,7 +1023,6 @@ function bindEvents() {
 
   // Page Size
   if (dom.pageSizeSelect) {
-    // ודא שיש אופציות סבירות
     if (!dom.pageSizeSelect.options.length) {
       PAGE_SIZES.forEach(n => {
         const opt = document.createElement('option');
@@ -801,16 +1051,28 @@ function bindEvents() {
     render();
     setLangButtonUI();
     updateViewToggleUI();
+    // עדכון טקסטים בדפדפת אם קיימת
+    if (sheet) {
+      sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
+      if (sheetApplyBtn) sheetApplyBtn.textContent = labels.apply[state.lang];
+      if (sheetClearBtn) sheetClearBtn.textContent = labels.clear_all[state.lang];
+      const title = sheet.querySelector('strong'); if (title) title.textContent = labels.filters_title[state.lang];
+    }
+    updateFiltersBadge();
+    renderFilterChips();
   });
 
-  // מובייל: פתיחה/סגירה של פס פילטרים
-  if (dom.mobileFiltersToggle && dom.filtersBar) {
+  // מובייל: פתיחה/סגירה של פילטרים
+  if (dom.mobileFiltersToggle) {
     const labelSpan = dom.mobileFiltersToggle.querySelector('span') || dom.mobileFiltersToggle;
-    dom.mobileFiltersToggle.setAttribute('aria-controls', dom.filtersBar.id || 'filtersBar');
     dom.mobileFiltersToggle.addEventListener('click', ()=>{
-      const open = dom.filtersBar.classList.toggle('open');
-      dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
-      labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
+      if (state.isMobile) {
+        openFiltersSheet();
+      } else if (dom.filtersBar) {
+        const open = dom.filtersBar.classList.toggle('open');
+        dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
+        labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
+      }
     });
   }
 
@@ -832,7 +1094,7 @@ function bindEvents() {
       state.sort = { key: null, direction: 'asc' };
       state.pagination.currentPage = 0;
 
-      // רענן אפשרויות בפילטרים + רנדר
+      // רענון + צ'יפים/Badge
       populateFilters();
       applyAll();
 
