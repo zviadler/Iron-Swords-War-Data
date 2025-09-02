@@ -61,7 +61,9 @@
 </head>
 <body>
   <!-- Skip to main content for screen readers -->
-  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-500 text-white px-4 py-2 rounded-md z-50">
+  <a href="#main-content"
+     class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-500 text-white px-4 py-2 rounded-md z-50"
+     data-i18n="skip_link">
     דילוג לתוכן הראשי
   </a>
 
@@ -78,8 +80,8 @@
   <main id="main-content" class="container relative mx-auto my-4">
     <!-- Site Header -->
     <header class="site-header" role="banner">
-      <h1 id="siteTitle">מאגר זיהוי לוחמים</h1>
-      <p id="siteSub">נתונים מתעדכנים באופן רציף</p>
+      <h1 id="siteTitle" data-i18n="site_title">מאגר זיהוי לוחמים</h1>
+      <p id="siteSub" data-i18n="site_sub">נתונים מתעדכנים באופן רציף</p>
     </header>
 
     <!-- Mobile Filters Toggle -->
@@ -93,35 +95,42 @@
     </button>
 
     <!-- Filters Bar -->
-    <section id="filtersBar" class="filters-bar" role="region" aria-label="סרגל פילטרים">
+    <section id="filtersBar"
+             class="filters-bar"
+             role="region"
+             aria-label="סרגל פילטרים"
+             data-i18n-aria-label="filters_bar_aria">
       <div class="filters-row">
         <div class="filter-item">
-          <label for="searchBox">חיפוש חופשי</label>
-          <input id="searchBox" type="text" placeholder="🔍 חפש שם, מיקום או תיאור…">
+          <label for="searchBox" data-i18n="search_label">חיפוש חופשי</label>
+          <input id="searchBox"
+                 type="text"
+                 placeholder="🔍 חפש שם, מיקום או תיאור…"
+                 data-i18n-placeholder="search_placeholder">
         </div>
 
         <div class="filter-item">
-          <label for="locationFilter">מיקום</label>
+          <label for="locationFilter" data-i18n="location_label">מיקום</label>
           <select id="locationFilter"><option value="">הכול</option></select>
         </div>
 
         <div class="filter-item">
-          <label for="orgFilter">ארגון</label>
+          <label for="orgFilter" data-i18n="org_label">ארגון</label>
           <select id="orgFilter"><option value="">הכול</option></select>
         </div>
 
         <div class="filter-item">
-          <label for="rankFilter">תפקיד/דרגה</label>
+          <label for="rankFilter" data-i18n="rank_label">תפקיד/דרגה</label>
           <select id="rankFilter"><option value="">הכול</option></select>
         </div>
 
         <div id="dateRangeGroup" class="filter-item">
-          <label>טווח תאריכים</label>
+          <label data-i18n="date_range_label">טווח תאריכים</label>
           <div class="date-range">
-            <input id="dateFrom" type="date" aria-label="תאריך התחלה">
+            <input id="dateFrom" type="date" aria-label="תאריך התחלה" data-i18n-aria-label="date_from_aria">
             <span class="date-sep">—</span>
-            <input id="dateTo" type="date" aria-label="תאריך סיום">
-            <button id="clearDatesBtn" type="button" class="btn btn-link">נקה תאריכים</button>
+            <input id="dateTo" type="date" aria-label="תאריך סיום" data-i18n-aria-label="date_to_aria">
+            <button id="clearDatesBtn" type="button" class="btn btn-link" data-i18n="clear_dates_btn">נקה תאריכים</button>
           </div>
         </div>
 
@@ -129,9 +138,10 @@
           <button id="resetBtn"
                   class="btn btn-outline"
                   type="button"
-                  aria-label="איפוס כל הפילטרים">
+                  aria-label="איפוס כל הפילטרים"
+                  data-i18n-aria-label="reset_btn_label">
             <i class="fas fa-refresh" aria-hidden="true"></i>
-            <span>איפוס פילטרים</span>
+            <span data-i18n="reset_btn_label">איפוס פילטרים</span>
           </button>
 
           <button id="viewToggleBtn"
@@ -150,17 +160,18 @@
     <section id="contentArea"
              class="table-container mt-4"
              role="region"
-             aria-label="תוצאות החיפוש">
+             aria-label="תוצאות החיפוש"
+             data-i18n-aria-label="content_area_aria">
       <!-- JS will render table/cards here -->
     </section>
 
     <!-- Pagination -->
-    <nav class="pagination" aria-label="דפדוף בין עמודים">
-      <button id="prevPageBtn" class="btn btn-light" type="button" aria-label="עמוד קודם">
+    <nav class="pagination" aria-label="דפדוף בין עמודים" data-i18n-aria-label="pagination_aria">
+      <button id="prevPageBtn" class="btn btn-light" type="button" aria-label="עמוד קודם" data-i18n-aria-label="prev_page_aria">
         <i class="fas fa-chevron-right" aria-hidden="true"></i>
       </button>
       <span id="pageInfo" class="page-info" aria-live="polite" aria-atomic="true">עמוד 1 מתוך 1</span>
-      <button id="nextPageBtn" class="btn btn-light" type="button" aria-label="עמוד הבא">
+      <button id="nextPageBtn" class="btn btn-light" type="button" aria-label="עמוד הבא" data-i18n-aria-label="next_page_aria">
         <i class="fas fa-chevron-left" aria-hidden="true"></i>
       </button>
     </nav>
@@ -176,29 +187,30 @@
     <div id="loadingOverlay"
          class="loading-overlay hidden"
          role="status"
-         aria-label="טוען נתונים">
+         aria-label="טוען נתונים"
+         data-i18n-aria-label="loading_aria">
       <div class="spinner" aria-hidden="true"></div>
-      <p class="loading-text">טוען נתונים...</p>
+      <p class="loading-text" data-i18n="loading_text">טוען נתונים...</p>
     </div>
   </main>
 
   <!-- Statistics Section -->
-  <section class="container mx-auto my-8" role="region" aria-label="סטטיסטיקות">
+  <section class="container mx-auto my-8" role="region" aria-label="סטטיסטיקות" data-i18n-aria-label="stats_region_aria">
     <div class="stats-grid">
       <div class="stat-card">
-        <h3>סה״כ לוחמים</h3>
+        <h3 data-i18n="stat_total_combat">סה״כ לוחמים</h3>
         <p id="totalCombatants">—</p>
       </div>
       <div class="stat-card">
-        <h3>סה״כ נפגעים</h3>
+        <h3 data-i18n="stat_total_cas">סה״כ נפגעים</h3>
         <p id="totalCasualties">—</p>
       </div>
       <div class="stat-card">
-        <h3>בני משפחה שנפגעו</h3>
+        <h3 data-i18n="stat_family">בני משפחה שנפגעו</h3>
         <p id="familyCasualties">—</p>
       </div>
       <div class="stat-card">
-        <h3>בכירים</h3>
+        <h3 data-i18n="stat_high_ranking">בכירים</h3>
         <p id="highRanking">—</p>
       </div>
     </div>
@@ -226,7 +238,7 @@
 
   <!-- Empty State (now using .hidden class to match JS) -->
   <div id="emptyState" class="empty-state hidden">
-    <p>אין תוצאות התואמות את החיפוש שלך.</p>
+    <p data-i18n="empty_state_msg">אין תוצאות התואמות את החיפוש שלך.</p>
   </div>
 
   <!-- Toast Container -->
@@ -234,7 +246,8 @@
        class="toast-container"
        aria-live="polite"
        aria-atomic="true"
-       aria-label="התראות מערכת">
+       aria-label="התראות מערכת"
+       data-i18n-aria-label="toast_aria">
   </div>
 
   <!-- Back to Top Button (starts hidden; JS יראה אותו לאחר גלילה) -->
@@ -242,7 +255,9 @@
           class="back-to-top hidden"
           type="button"
           aria-label="חזור לראש העמוד"
-          title="חזור לראש העמוד">
+          title="חזור לראש העמוד"
+          data-i18n-aria-label="back_to_top"
+          data-i18n-title="back_to_top">
     <i class="fas fa-chevron-up" aria-hidden="true"></i>
   </button>
 
@@ -251,13 +266,13 @@
 
   <!-- Footer Legal Info -->
   <footer class="footer-info container mx-auto mb-8" role="contentinfo">
-    <p>© <span id="currentYear">2025</span> מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.</p>
+    <p>© <span id="currentYear">2025</span> <span data-i18n="footer_legal">מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.</span></p>
     <p id="dataCollectionHebrew">המידע נאסף ממקורות פתוחים ומתעדכן באופן שוטף.</p>
     <p id="dataCollectionEnglish">Data is collected from open sources and updated continuously.</p>
     <div class="footer-actions">
       <button id="exportBtn" class="btn btn-outline" type="button">
         <i class="fas fa-file-export" aria-hidden="true"></i>
-        <span>ייצא CSV</span>
+        <span data-i18n="export_btn">ייצא CSV</span>
       </button>
     </div>
   </footer>
