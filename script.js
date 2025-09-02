@@ -1,10 +1,11 @@
 /* ==========================================================
    מאגר זיהוי לוחמים – לוגיקה ראשית (גרסת מובייל משודרגת)
-   חדש במובייל:
-   • דפדפת פילטרים (Bottom Sheet) במובייל: פתיחה/סגירה, Apply/Reset, ESC/רקע
-   • צ’יפים של פילטרים פעילים עם ניקוי מהיר
-   • Badge למספר פילטרים פעילים על כפתור הפילטרים
-   • התאמה אוטומטית למסכים ≤ 768px + שינוי דינמי בעת שינוי גודל
+   שדרוגים:
+   • מובייל: הפילטרים בתוך Bottom Sheet כהה (לא מוצגים מעל הכרטיסים)
+   • “Apply” הוסר – סינון מיידי; נשאר רק “איפוס פילטרים” ב-sheet
+   • אין כפילות כפתורי איפוס במובייל (כפתור האיפוס הראשי מוסתר)
+   • תרגומים חסרים הושלמו
+   • גלילה אוטומטית לצמרת מתבצעת פחות (לא במובייל, מדוכאת בשינוי שפה/פילטרים)
 ========================================================== */
 
 /* =============================
@@ -49,9 +50,13 @@ const labels = {
   open_filters: {he:"פתח פילטרים",en:"Open Filters"},
   close_filters: {he:"סגור פילטרים",en:"Close Filters"},
   filters_title: {he:"סינון", en:"Filters"},
-  apply: {he:"החל", en:"Apply"},
-  clear_all: {he:"נקה הכל", en:"Clear All"},
+  clear_all: {he:"נקה הכל", en:"Clear All"}, // נשמר לשימוש עתידי, לא מוצג ב-sheet
   active_filters: {he:"({n}) מסננים", en:"Filters ({n})"},
+  all_option: {he:"הכול", en:"All"},
+  close: {he:"סגור", en:"Close"},
+  view_to_cards: {he:"עבור לתצוגת כרטיסים", en:"Switch to Cards"},
+  view_to_table: {he:"עבור לתצוגת טבלה",   en:"Switch to Table"},
+  csv_error: {he:"שגיאה בטעינת CSV", en:"Error loading CSV"}
 };
 
 /* =============================
@@ -69,17 +74,11 @@ const state = {
   filteredData: [],
   lang: (navigator.language || '').startsWith('he') ? 'he' : 'en',
   isMobile: isMobile(),
-  isCardView: isMobile() || window.innerWidth <= 768,  // מובייל ברירת מחדל כרטיסים
+  isCardView: isMobile() || window.innerWidth <= 768,
   sort: { key: null, direction: 'asc' },
   pagination: { pageSize: 50, currentPage: 0 },
-  filters: {
-    location: '',
-    org: '',
-    rank: '',
-    search: '',
-    dateFrom: null,
-    dateTo: null
-  }
+  filters: { location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null },
+  suppressNextScroll: true // אל תקפיץ למעלה ברינדור הראשון/שינויים קלים
 };
 
 /* =============================
@@ -119,16 +118,15 @@ const dom = {
 };
 
 /* =============================
-   Mobile sheet & chips (נוצרים דינמית)
+   Mobile sheet & chips
 ==============================*/
-let filtersBarAnchor = null;     // נקודת עגינה להשבת filtersBar לדסקטופ
-let sheet = null;                // אלמנט ה"Bottom Sheet"
-let sheetBackdrop = null;        // רקע
-let sheetContent = null;         // תוכן (לשם נעביר את filtersBar)
-let sheetApplyBtn = null;
-let sheetClearBtn = null;
+let filtersBarAnchor = null;
+let sheet = null;
+let sheetBackdrop = null;
+let sheetContent = null;
+let sheetResetBtn = null;
 let sheetCloseBtn = null;
-let chipsWrap = null;            // מיכל צ’יפים מתחת לסרגל העליון
+let chipsWrap = null;
 
 /* =============================
    Utilities
@@ -167,7 +165,6 @@ function parseDateRange(s) {
   if (!s) return null;
   const t = String(s).trim();
 
-  // תאריך בודד (כמו 2024-08-09)
   const single = new Date(t);
   if (!Number.isNaN(single.getTime())) {
     const from = new Date(single); from.setHours(0,0,0,0);
@@ -175,7 +172,6 @@ function parseDateRange(s) {
     return { from, to };
   }
 
-  // טווח מפורש עם מפרידים " – ", " — ", " ~ ", " to ", " - " (עם רווחים)
   const parts = t.split(/\s*(?:–|—|~| to | - )\s*/i);
   const from = new Date(parts[0]);
   const to   = new Date(parts[1] || parts[0]);
@@ -184,7 +180,6 @@ function parseDateRange(s) {
   return { from, to };
 }
 
-/* highlight בטוח */
 function escapeRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function highlight(val, q) {
   const s = String(val ?? '');
@@ -195,7 +190,6 @@ function highlight(val, q) {
   ).join('');
 }
 
-/* debounce לחיפוש */
 function debounce(fn, ms=200){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
 
 /* עזרי UI */
@@ -203,18 +197,17 @@ function setLangButtonUI() {
   if (!dom.langBtn) return;
   const span = dom.langBtn.querySelector('span') || dom.langBtn;
   span.textContent = labels.lang_switch[state.lang];
-  dom.langBtn.setAttribute('aria-pressed', state.lang === 'en' ? 'true' : 'false');
-  dom.langBtn.setAttribute('aria-controls', dom.contentArea?.id || 'contentArea');
+  dom.langBtn.setAttribute('aria-label', labels.lang_switch[state.lang]);
 }
 
 function updateViewToggleUI(){
   if (!dom.viewToggleBtn) return;
   const span = dom.viewToggleBtn.querySelector('span') || dom.viewToggleBtn;
-  const toCards = state.lang==='he' ? 'עבור לתצוגת כרטיסים' : 'Switch to Cards';
-  const toTable = state.lang==='he' ? 'עבור לתצוגת טבלה'   : 'Switch to Table';
+  const toCards = labels.view_to_cards[state.lang];
+  const toTable = labels.view_to_table[state.lang];
   span.textContent = state.isCardView ? toTable : toCards;
   dom.viewToggleBtn.setAttribute('aria-pressed', state.isCardView ? 'true' : 'false');
-  dom.viewToggleBtn.setAttribute('aria-controls', dom.contentArea?.id || 'contentArea');
+  dom.viewToggleBtn.setAttribute('aria-label', span.textContent);
 }
 
 /* =============================
@@ -299,7 +292,7 @@ function loadData() {
             state.originalData = mapRows(rows);
           } catch (e3) {
             console.error('[CSV] All strategies failed', e3);
-            showToast('שגיאה בטעינת CSV', 'error');
+            showToast(labels.csv_error[state.lang], 'error');
             showLoading(false);
             return;
           }
@@ -397,7 +390,6 @@ function recordMatchesFilters(r) {
   ].join(' ').toLowerCase();
   const okSearch = !state.filters.search || hay.includes(state.filters.search.toLowerCase());
 
-  // טווח תאריכים
   let okDate = true;
   if (state.filters.dateFrom || state.filters.dateTo) {
     const rng = parseDateRange(r.date);
@@ -422,6 +414,7 @@ function applyAll() {
 }
 
 function onSearch(e) {
+  state.suppressNextScroll = true;
   state.filters.search = e.target.value || '';
   applyAll();
 }
@@ -435,7 +428,7 @@ function populateFilters() {
   const fill = (select, list) => {
     if (!select) return;
     const prev = select.value || '';
-    select.innerHTML = `<option value="">${state.lang==='he'?'הכול':'All'}</option>` +
+    select.innerHTML = `<option value="">${labels.all_option[state.lang]}</option>` +
       list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
     const want = (select === dom.locationFilter && state.filters.location) ? state.filters.location
                : (select === dom.orgFilter      && state.filters.org)      ? state.filters.org
@@ -579,6 +572,7 @@ function renderTable(rows) {
 }
 
 function setSort(key){
+  state.suppressNextScroll = true;
   if (state.sort.key === key) {
     state.sort.direction = (state.sort.direction === 'asc') ? 'desc' : 'asc';
   } else {
@@ -616,10 +610,13 @@ function updatePagerButtons() {
   if (dom.nextPageBtn) dom.nextPageBtn.disabled = current >= pages - 1;
 }
 
+/* פחות גלילה אוטומטית: לא במובייל, ורק אם רחוקים מראש העמוד, ולא אחרי שפה/פילטרים */
 function scrollTopIfNeeded() {
-  if (dom.contentArea && dom.contentArea.scrollIntoView) {
-    dom.contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  if (state.isMobile) { state.suppressNextScroll = false; return; }
+  if (state.suppressNextScroll) { state.suppressNextScroll = false; return; }
+  if (!dom.contentArea || !dom.contentArea.scrollIntoView) return;
+  if (window.scrollY < 300) return;
+  dom.contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* =============================
@@ -682,6 +679,7 @@ function setPageSize(n){
   state.pagination.pageSize = n;
   state.pagination.currentPage = 0;
   localStorage.setItem('pageSize', String(n));
+  state.suppressNextScroll = true;
   render();
   persistStateToURL();
 }
@@ -727,7 +725,6 @@ function ensureChipsWrap(){
   chipsWrap.style.gap = '6px';
   chipsWrap.style.margin = '8px 0';
   chipsWrap.style.alignItems = 'center';
-  // נציב לפני אזור התוכן אם אפשר
   if (dom.contentArea && dom.contentArea.parentNode) {
     dom.contentArea.parentNode.insertBefore(chipsWrap, dom.contentArea);
   } else {
@@ -745,11 +742,13 @@ function renderFilterChips(){
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.setAttribute('aria-label', (state.lang==='he' ? 'הסר מסנן ' : 'Clear filter ') + label);
-    chip.style.border = '1px solid #ccc';
+    chip.style.border = '1px solid #444';
     chip.style.padding = '4px 8px';
     chip.style.borderRadius = '999px';
     chip.style.fontSize = '12px';
     chip.style.cursor = 'pointer';
+    chip.style.background = '#222';
+    chip.style.color = '#eee';
     chip.innerHTML = `${escapeHtml(label)} &times;`;
     chip.addEventListener('click', onClear);
     return chip;
@@ -757,15 +756,15 @@ function renderFilterChips(){
 
   const items = [];
   const f = state.filters;
-  if (f.location) items.push(makeChip(`${fieldLabels.location[state.lang]}: ${f.location}`, ()=>{ f.location=''; syncFiltersUIFromState(); applyAll(); }));
-  if (f.org)      items.push(makeChip(`${fieldLabels.organization[state.lang]}: ${f.org}`, ()=>{ f.org=''; syncFiltersUIFromState(); applyAll(); }));
-  if (f.rank)     items.push(makeChip(`${fieldLabels.rank_role[state.lang]}: ${f.rank}`, ()=>{ f.rank=''; syncFiltersUIFromState(); applyAll(); }));
-  if (f.search)   items.push(makeChip((state.lang==='he'?'חיפוש: ':'Search: ')+f.search, ()=>{ f.search=''; syncFiltersUIFromState(); applyAll(); }));
+  if (f.location) items.push(makeChip(`${fieldLabels.location[state.lang]}: ${f.location}`, ()=>{ f.location=''; syncFiltersUIFromState(); state.suppressNextScroll=true; applyAll(); }));
+  if (f.org)      items.push(makeChip(`${fieldLabels.organization[state.lang]}: ${f.org}`, ()=>{ f.org=''; syncFiltersUIFromState(); state.suppressNextScroll=true; applyAll(); }));
+  if (f.rank)     items.push(makeChip(`${fieldLabels.rank_role[state.lang]}: ${f.rank}`, ()=>{ f.rank=''; syncFiltersUIFromState(); state.suppressNextScroll=true; applyAll(); }));
+  if (f.search)   items.push(makeChip((state.lang==='he'?'חיפוש: ':'Search: ')+f.search, ()=>{ f.search=''; syncFiltersUIFromState(); state.suppressNextScroll=true; applyAll(); }));
   if (f.dateFrom || f.dateTo) {
     const df = f.dateFrom ? f.dateFrom.toISOString().slice(0,10) : '';
     const dt = f.dateTo   ? f.dateTo.toISOString().slice(0,10)   : '';
     const lbl = state.lang==='he' ? `תאריכים: ${df}–${dt}` : `Dates: ${df}–${dt}`;
-    items.push(makeChip(lbl, ()=>{ f.dateFrom=null; f.dateTo=null; syncFiltersUIFromState(); applyAll(); }));
+    items.push(makeChip(lbl, ()=>{ f.dateFrom=null; f.dateTo=null; syncFiltersUIFromState(); state.suppressNextScroll=true; applyAll(); }));
   }
 
   wrap.innerHTML = '';
@@ -773,22 +772,22 @@ function renderFilterChips(){
 }
 
 /* =============================
-   MOBILE: Bottom Sheet for Filters
+   MOBILE: Bottom Sheet for Filters (כהה)
 ==============================*/
 function ensureFilterSheet(){
   if (sheet && sheetBackdrop && sheetContent) return;
 
-  // רקע
+  // רקע כהה יותר
   sheetBackdrop = document.createElement('div');
   sheetBackdrop.id = 'filterBackdrop';
   Object.assign(sheetBackdrop.style, {
-    position: 'fixed', inset: '0', background: 'rgba(0,0,0,0.35)',
+    position: 'fixed', inset: '0', background: 'rgba(0,0,0,0.55)',
     opacity: '0', visibility: 'hidden', transition: 'opacity 150ms',
     zIndex: '1000'
   });
   sheetBackdrop.addEventListener('click', closeFiltersSheet);
 
-  // Sheet
+  // Sheet כהה
   sheet = document.createElement('div');
   sheet.id = 'filterSheet';
   sheet.setAttribute('role','dialog');
@@ -796,48 +795,42 @@ function ensureFilterSheet(){
   sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
   Object.assign(sheet.style, {
     position: 'fixed', left: '0', right: '0', bottom: '0',
-    maxHeight: '88vh', height: 'auto', background: '#fff',
+    maxHeight: '88vh', height: 'auto', background: '#14171c', color: '#e8e8e8',
     borderTopLeftRadius: '12px', borderTopRightRadius: '12px',
-    boxShadow: '0 -10px 30px rgba(0,0,0,0.2)',
+    boxShadow: '0 -10px 30px rgba(0,0,0,0.4)',
     transform: 'translateY(100%)', transition: 'transform 220ms',
     zIndex: '1001', display: 'flex', flexDirection: 'column'
   });
 
   // Header
   const header = document.createElement('div');
-  Object.assign(header.style, { padding: '12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid #eee' });
+  Object.assign(header.style, { padding: '12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid #2a2f36' });
   const title = document.createElement('strong');
   title.textContent = labels.filters_title[state.lang];
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.textContent = '✕';
-  Object.assign(closeBtn.style, { fontSize:'16px', lineHeight:'1', padding:'6px 10px', cursor:'pointer', background:'transparent', border:'none' });
+  Object.assign(closeBtn.style, { color:'#e8e8e8', fontSize:'16px', lineHeight:'1', padding:'6px 10px', cursor:'pointer', background:'transparent', border:'none' });
+  closeBtn.setAttribute('aria-label', labels.close[state.lang]);
   closeBtn.addEventListener('click', closeFiltersSheet);
   header.appendChild(title); header.appendChild(closeBtn);
   sheetCloseBtn = closeBtn;
 
-  // Content (לכאן נזיז את filtersBar)
+  // Content
   sheetContent = document.createElement('div');
   Object.assign(sheetContent.style, { overflow:'auto', padding:'8px 16px', flex:'1 1 auto' });
 
-  // Footer
+  // Footer – כפתור איפוס יחיד
   const footer = document.createElement('div');
-  Object.assign(footer.style, { padding:'12px 16px', display:'flex', gap:'8px', borderTop:'1px solid #eee' });
-  const applyBtn = document.createElement('button');
-  applyBtn.type = 'button';
-  applyBtn.textContent = labels.apply[state.lang];
-  Object.assign(applyBtn.style, { flex:'1', padding:'10px', fontWeight:'600', cursor:'pointer' });
-  applyBtn.addEventListener('click', ()=>{ applyAll(); closeFiltersSheet(); });
-  sheetApplyBtn = applyBtn;
+  Object.assign(footer.style, { padding:'12px 16px', display:'flex', gap:'8px', borderTop:'1px solid #2a2f36' });
+  const resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.textContent = labels.reset_filters[state.lang];
+  Object.assign(resetBtn.style, { flex:'1', padding:'10px', fontWeight:'600', cursor:'pointer', background:'#1f232a', color:'#e8e8e8', border:'1px solid #30343b', borderRadius:'8px' });
+  resetBtn.addEventListener('click', ()=>{ dom.resetBtn?.click(); });
+  sheetResetBtn = resetBtn;
 
-  const clearBtn = document.createElement('button');
-  clearBtn.type = 'button';
-  clearBtn.textContent = labels.clear_all[state.lang];
-  Object.assign(clearBtn.style, { flex:'1', padding:'10px', cursor:'pointer' });
-  clearBtn.addEventListener('click', ()=>{ dom.resetBtn?.click(); });
-  sheetClearBtn = clearBtn;
-
-  footer.appendChild(applyBtn); footer.appendChild(clearBtn);
+  footer.appendChild(resetBtn);
 
   sheet.appendChild(header);
   sheet.appendChild(sheetContent);
@@ -846,23 +839,34 @@ function ensureFilterSheet(){
   document.body.appendChild(sheetBackdrop);
   document.body.appendChild(sheet);
 
-  // ESC לסגירה
   document.addEventListener('keydown', onEscCloseFilters);
+}
+
+/* החלת סטייל כהה על אלמנטים בתוך ה-sheet */
+function styleFiltersBarDark(){
+  if (!dom.filtersBar) return;
+  dom.filtersBar.style.color = '#e8e8e8';
+  dom.filtersBar.querySelectorAll('select, input, button').forEach(el=>{
+    el.style.background = '#1a1f24';
+    el.style.color = '#e8e8e8';
+    el.style.borderColor = '#2c3238';
+  });
 }
 
 function openFiltersSheet(){
   ensureFilterSheet();
 
-  // נשמור עוגן להחזרת ה-filtersBar למקום המקורי בדסקטופ
+  // צור עוגן להחזרת ה-filtersBar בדסקטופ
   if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
     filtersBarAnchor = document.createComment('filtersBar-anchor');
     dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
   }
 
-  // הזזת filtersBar לתוך ה-sheet
+  // הזז את סרגל הפילטרים לתוך ה-sheet
   if (dom.filtersBar && sheetContent && dom.filtersBar !== sheetContent.firstChild) {
     sheetContent.appendChild(dom.filtersBar);
     Object.assign(dom.filtersBar.style, { display:'block', maxHeight:'inherit' });
+    styleFiltersBarDark();
   }
 
   syncFiltersUIFromState();
@@ -871,22 +875,21 @@ function openFiltersSheet(){
   sheet.style.transform = 'translateY(0)';
   document.body.style.overflow = 'hidden';
 
-  // Trap focus בסיסי
   setTimeout(()=>{ try { (sheet.querySelector('select, input, button, textarea, [tabindex]:not([tabindex="-1"])')||sheetCloseBtn).focus(); } catch{} }, 30);
 }
 
 function closeFiltersSheet(){
   if (!sheet || !sheetBackdrop) return;
-
   sheet.style.transform = 'translateY(100%)';
   sheetBackdrop.style.opacity = '0';
   sheetBackdrop.style.visibility = 'hidden';
   document.body.style.overflow = '';
 
-  // החזרת filtersBar למקומו בדסקטופ אם כבר לא מובייל
+  // החזרת filtersBar לדסקטופ
   if (!state.isMobile && filtersBarAnchor && dom.filtersBar) {
     filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
     dom.filtersBar.style.maxHeight = '';
+    dom.filtersBar.style.display = '';
   }
 }
 
@@ -903,27 +906,34 @@ function setupResponsive(){
   state.isMobile = isMobile();
 
   // עדכון טקסטים
-  if (sheetCloseBtn) sheetCloseBtn.setAttribute('aria-label', state.lang==='he'?'סגור':'Close');
-  if (sheetApplyBtn) sheetApplyBtn.textContent = labels.apply[state.lang];
-  if (sheetClearBtn) sheetClearBtn.textContent = labels.clear_all[state.lang];
+  if (sheetCloseBtn) sheetCloseBtn.setAttribute('aria-label', labels.close[state.lang]);
+  if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
 
   if (state.isMobile) {
-    // במובייל – filtersBar בדפדפת, כפתור טוגל פותח את ה-sheet
-    if (dom.filtersBar) dom.filtersBar.style.display = 'block'; // יוצג בתוך ה-sheet
+    // ודא שה-filtersBar לא יוצג מעל הכרטיסים
+    if (dom.filtersBar) dom.filtersBar.style.display = 'none';
+    // העבר לתוך sheet כבר עכשיו כדי למנוע "פלאש"
+    ensureFilterSheet();
+    if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
+      sheetContent.appendChild(dom.filtersBar);
+      styleFiltersBarDark();
+    }
+    // הסתר כפתור איפוס חיצוני – אין כפילות
+    if (dom.resetBtn) dom.resetBtn.style.display = 'none';
   } else {
-    // בדסקטופ – ודא שה-filtersBar חוזר לעוגן
+    // בדסקטופ – החזר את סרגל הפילטרים למקומו
     if (filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode !== filtersBarAnchor.parentNode) {
       filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
       dom.filtersBar.style.display = '';
       dom.filtersBar.style.maxHeight = '';
     }
-    // אם הדפדפת פתוחה – סגור
+    // החזר את כפתור האיפוס הראשי
+    if (dom.resetBtn) dom.resetBtn.style.display = '';
     closeFiltersSheet();
   }
-  // בכותרת התצוגה – ברירת מחדל לכרטיסים במובייל
+
   state.isCardView = state.isMobile ? true : state.isCardView;
   updateViewToggleUI();
-
   updateFiltersBadge();
   renderFilterChips();
 }
@@ -947,7 +957,7 @@ function init() {
   dom.pageInfo?.setAttribute('aria-live','polite');
 
   bindEvents();
-  setupResponsive();              // <<< חדש
+  setupResponsive();
   loadData();
 }
 
@@ -955,11 +965,9 @@ function init() {
    Events
 ==============================*/
 function bindEvents() {
-  // Back to Top: לחיצה
+  // Back to Top
   const b2t = d('backToTop');
   if (b2t) b2t.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
-
-  // Back to Top: הצגה/הסתרה לפי גלילה
   window.addEventListener('scroll', () => {
     const btn = d('backToTop');
     if (!btn) return;
@@ -979,7 +987,7 @@ function bindEvents() {
   }
 
   // פילטרים select
-  const upd = () => { state.pagination.currentPage = 0; applyAll(); };
+  const upd = () => { state.pagination.currentPage = 0; state.suppressNextScroll = true; applyAll(); };
   if (dom.locationFilter) dom.locationFilter.addEventListener('change', () => { state.filters.location = dom.locationFilter.value; upd(); });
   if (dom.orgFilter)      dom.orgFilter.addEventListener('change', () => { state.filters.org      = dom.orgFilter.value; upd(); });
   if (dom.rankFilter)     dom.rankFilter.addEventListener('change', () => { state.filters.rank     = dom.rankFilter.value; upd(); });
@@ -997,10 +1005,11 @@ function bindEvents() {
     state.filters.dateFrom = null; state.filters.dateTo = null; upd();
   });
 
-  // פגינציה: עכבר + מקלדת
+  // פגינציה
   const gotoPrev = ()=>{
     if (state.pagination.currentPage > 0) {
       state.pagination.currentPage--;
+      state.suppressNextScroll = true;
       render(); persistStateToURL();
     }
   };
@@ -1009,6 +1018,7 @@ function bindEvents() {
     const pages = Math.max(1, Math.ceil(total / state.pagination.pageSize));
     if (state.pagination.currentPage < pages-1) {
       state.pagination.currentPage++;
+      state.suppressNextScroll = true;
       render(); persistStateToURL();
     }
   };
@@ -1034,12 +1044,13 @@ function bindEvents() {
     dom.pageSizeSelect.addEventListener('change', (e)=> setPageSize(e.target.value));
   }
 
-  // כפתור CSV
+  // CSV
   if (dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
 
   // תצוגה: כרטיסים/טבלה
   if (dom.viewToggleBtn) dom.viewToggleBtn.addEventListener('click', ()=>{
     state.isCardView = !state.isCardView;
+    state.suppressNextScroll = true;
     updateViewToggleUI();
     render();
   });
@@ -1048,21 +1059,20 @@ function bindEvents() {
   if (dom.langBtn) dom.langBtn.addEventListener('click', ()=>{
     state.lang = (state.lang==='he') ? 'en' : 'he';
     if (dom.searchInput) dom.searchInput.placeholder = labels.search_placeholder[state.lang];
+    state.suppressNextScroll = true; // אל תגלול למעלה כשהחלפנו שפה
     render();
     setLangButtonUI();
     updateViewToggleUI();
-    // עדכון טקסטים בדפדפת אם קיימת
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
-      if (sheetApplyBtn) sheetApplyBtn.textContent = labels.apply[state.lang];
-      if (sheetClearBtn) sheetClearBtn.textContent = labels.clear_all[state.lang];
+      if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
       const title = sheet.querySelector('strong'); if (title) title.textContent = labels.filters_title[state.lang];
     }
     updateFiltersBadge();
     renderFilterChips();
   });
 
-  // מובייל: פתיחה/סגירה של פילטרים
+  // מובייל: פתיחת פילטרים
   if (dom.mobileFiltersToggle) {
     const labelSpan = dom.mobileFiltersToggle.querySelector('span') || dom.mobileFiltersToggle;
     dom.mobileFiltersToggle.addEventListener('click', ()=>{
@@ -1079,7 +1089,6 @@ function bindEvents() {
   // --- איפוס פילטרים ---
   if (dom.resetBtn) {
     dom.resetBtn.addEventListener('click', () => {
-      // נקה UI
       if (dom.searchInput) dom.searchInput.value = '';
       ['locationFilter','orgFilter','rankFilter'].forEach(id => {
         const el = d(id);
@@ -1089,13 +1098,12 @@ function bindEvents() {
       if (dom.dateToInput)   dom.dateToInput.value   = '';
       if (dom.pageSizeSelect) dom.pageSizeSelect.value = String(state.pagination.pageSize);
 
-      // אפס state
       state.filters = { location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null };
       state.sort = { key: null, direction: 'asc' };
       state.pagination.currentPage = 0;
 
-      // רענון + צ'יפים/Badge
       populateFilters();
+      state.suppressNextScroll = true;
       applyAll();
 
       showToast(labels.reset_filters[state.lang], 'info');
