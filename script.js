@@ -218,19 +218,19 @@ function loadData() {
     const csvURL = new URL(url || 'data.csv', document.baseURI).href;
 
     // פונקציית עזר ל-Papa.parse
+    // חשוב: לא מעבירים transformHeader כדי לא לשלוח פונקציה ל-worker
     const parseWithPapa = (u, useWorker) =>
       new Promise((resolve, reject) => {
         Papa.parse(u, {
           download: true,
           header: true,
           worker: !!useWorker,
-          transformHeader: (h) => normalizeHeader(h),
           error: reject,
           complete: (res) => resolve(res?.data || [])
         });
       });
 
-    // נרמול רשומות לסט שדות אחיד
+    // נרמול רשומות לסט שדות אחיד (הנרמול מתרחש כאן, אחרי Papa)
     const mapRows = (rows) =>
       (rows || []).map((rec) => {
         const norm = {};
@@ -244,13 +244,13 @@ function loadData() {
 
     (async () => {
       try {
-        // נסיון ראשון: עם Worker (מהיר, עובד מצוין ב-Vercel)
+        // נסיון ראשון: עם Worker
         const rows = await parseWithPapa(csvURL, true);
         state.originalData = mapRows(rows);
       } catch (e1) {
         console.warn('[CSV] Papa worker failed, retrying without worker', e1);
         try {
-          // נסיון שני: ללא Worker (עוזר גם במקרה של file:// או CSP נוקשה)
+          // נסיון שני: ללא Worker
           const rows = await parseWithPapa(csvURL, false);
           state.originalData = mapRows(rows);
         } catch (e2) {
@@ -262,8 +262,8 @@ function loadData() {
               return r.text();
             });
             const parsed = Papa.parse(text, {
-              header: true,
-              transformHeader: (h) => normalizeHeader(h)
+              header: true
+              // שים לב: אין transformHeader. הנרמול קורה ב-mapRows().
             });
             const rows = parsed?.data || [];
             state.originalData = mapRows(rows);
