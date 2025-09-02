@@ -130,31 +130,54 @@ p{ margin:0 0 var(--space-md) 0; color: var(--text-secondary); }
 .brand i{ color: var(--primary-300); }
 
 /* ===== פילטרים ===== */
+/* העטיפה החיצונית – עיצוב בלבד */
 .filters-bar{
-  display:grid; gap: var(--space-md);
-  grid-template-columns: repeat(12, 1fr);
-  align-items:end;
   padding: var(--space-xl);
-  border-bottom:1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
 }
-.filter-group{ display:grid; gap: var(--space-xs); }
-.filter-actions{ display:flex; gap: var(--space-sm); justify-content:flex-end; align-items:center; grid-column: span 6; }
 
-.filters-bar .filter-group:nth-child(1){ grid-column: span 4; }
-.filters-bar .filter-group:nth-child(2){ grid-column: span 2; }
-.filters-bar .filter-group:nth-child(3){ grid-column: span 2; }
-.filters-bar .filter-group:nth-child(4){ grid-column: span 2; }
+/* הגריד יושב על העטיפה הפנימית */
+.filters-row{
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(12, 1fr);
+  align-items: end;
+}
+
+/* פריט פילטר יחיד */
+.filter-item{ display: grid; gap: var(--space-xs); }
+
+/* פריסת עמודות בדסקטופ */
+.filters-row .filter-item:nth-child(1){ grid-column: span 4; } /* חיפוש */
+.filters-row .filter-item:nth-child(2){ grid-column: span 2; } /* מיקום */
+.filters-row .filter-item:nth-child(3){ grid-column: span 2; } /* ארגון */
+.filters-row .filter-item:nth-child(4){ grid-column: span 2; } /* דרגה */
+
 #dateRangeGroup{ grid-column: span 6; }
 
+.filter-actions{
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  align-items: center;
+  grid-column: span 6;
+}
+
+/* רספונסיביות */
 @media (max-width: 900px){
-  .filters-bar{ grid-template-columns: repeat(6,1fr); gap: var(--space-md); }
-  .filters-bar .filter-group:nth-child(1){ grid-column: span 6; }
-  .filters-bar .filter-group:nth-child(2),
-  .filters-bar .filter-group:nth-child(3),
-  .filters-bar .filter-group:nth-child(4){ grid-column: span 3; }
+  .filters-row{ grid-template-columns: repeat(6,1fr); }
+  .filters-row .filter-item:nth-child(1){ grid-column: span 6; }
+  .filters-row .filter-item:nth-child(2),
+  .filters-row .filter-item:nth-child(3),
+  .filters-row .filter-item:nth-child(4){ grid-column: span 3; }
   #dateRangeGroup{ grid-column: span 6; }
   .filter-actions{ grid-column: span 6; justify-content: stretch; }
+}
+
+@media (max-width: 600px){
+  .filters-row{ grid-template-columns: repeat(4,1fr); }
+  .filter-item, #dateRangeGroup, .filter-actions{ grid-column: span 4; }
 }
 
 /* שדות/פקדים */
@@ -496,38 +519,11 @@ input::placeholder{ color:#6b7280; }
 .mobile-filters-toggle i,
 #mobileFiltersToggle i{ font-size: .95em; }
 
-/* Filters grid: index.html structure = .filters-bar > .filters-row > .filter-item */
-.filters-row{
-  display:grid; gap: var(--space-md);
-  grid-template-columns: repeat(12, 1fr);
-  align-items:end;
-}
-.filter-item{ display:grid; gap: var(--space-xs); }
 /* Make #filtersBar collapsible on mobile; opened when .open is present (toggled by JS) */
 @media (max-width: 900px){
   .mobile-filters-toggle,#mobileFiltersToggle{ display:inline-flex; }
   #filtersBar{ display:none; }
   #filtersBar.open{ display:block; }
-}
-/* Column layout */
-.filters-row .filter-item:nth-child(1){ grid-column: span 4; } /* search */
-.filters-row .filter-item:nth-child(2){ grid-column: span 2; } /* location */
-.filters-row .filter-item:nth-child(3){ grid-column: span 2; } /* org */
-.filters-row .filter-item:nth-child(4){ grid-column: span 2; } /* rank */
-#dateRangeGroup{ grid-column: span 6; }
-.filter-actions{ display:flex; gap: var(--space-sm); justify-content:flex-end; align-items:center; grid-column: span 6; }
-@media (max-width: 900px){
-  .filters-row{ grid-template-columns: repeat(6,1fr); }
-  .filters-row .filter-item:nth-child(1){ grid-column: span 6; }
-  .filters-row .filter-item:nth-child(2),
-  .filters-row .filter-item:nth-child(3),
-  .filters-row .filter-item:nth-child(4){ grid-column: span 3; }
-  #dateRangeGroup{ grid-column: span 6; }
-  .filter-actions{ grid-column: span 6; }
-}
-@media (max-width: 600px){
-  .filters-row{ grid-template-columns: repeat(4,1fr); }
-  .filter-item, #dateRangeGroup, .filter-actions{ grid-column: span 4; }
 }
 
 /* Button variants used by the HTML */
@@ -631,8 +627,6 @@ input::placeholder{ color:#6b7280; }
 
 /* Aliases to support legacy class names in existing CSS */
 .filter-group{ display:grid; gap: var(--space-xs); } /* ensure older CSS keeps working */
-.pagination-controls{ display:flex; align-items:center; gap: var(--space-sm); } /* legacy */
-.pagination-info{ color: var(--text-secondary); min-width: 8ch; text-align:center; } /* legacy */
 
 /* === BiDi (RTL/LTR) – בידוד טקסטים מעורבים === */
 .data-table th,
@@ -649,4 +643,3 @@ input::placeholder{ color:#6b7280; }
 /* אופציונלי: עוזר במסכים צרים */
 .table-container { overflow-x: auto; }
 .data-table { min-width: 960px; } /* הורידו אם לא צריך גלילה אופקית */
-
