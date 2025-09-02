@@ -58,6 +58,152 @@ const labels = {
   view_to_table: {he:"עבור לתצוגת טבלה",   en:"Switch to Table"},
   csv_error: {he:"שגיאה בטעינת CSV", en:"Error loading CSV"}
 };
+// === I18N: מילון תרגום + מיישם כללי ===
+const I18N = {
+  he: {
+    // ראש הדף + קישור דילוג
+    skip_link: "דילוג לתוכן הראשי",
+    site_title: "מאגר זיהוי לוחמים",
+    site_sub: "נתונים מתעדכנים באופן רציף",
+
+    // פס פילטרים
+    filters_bar_aria: "סרגל פילטרים",
+    search_label: "חיפוש חופשי",
+    location_label: "מיקום",
+    org_label: "ארגון",
+    rank_label: "תפקיד/דרגה",
+    date_range_label: "טווח תאריכים",
+    date_from_aria: "תאריך התחלה",
+    date_to_aria: "תאריך סיום",
+    clear_dates_btn: "נקה תאריכים",
+    search_placeholder: "🔍 חפש שם, מיקום או תיאור…",
+    reset_btn_label: "איפוס פילטרים",
+
+    // אזור תוצאות/פייג'ינג
+    content_area_aria: "תוצאות החיפוש",
+    pagination_aria: "דפדוף בין עמודים",
+    prev_page_aria: "עמוד קודם",
+    next_page_aria: "עמוד הבא",
+
+    // טעינה
+    loading_aria: "טוען נתונים",
+    loading_text: "טוען נתונים...",
+
+    // סטטיסטיקות – הגריד הראשון
+    stats_region_aria: "סטטיסטיקות",
+    stat_total_combat: "סה״כ לוחמים",
+    stat_total_cas: "סה״כ נפגעים",
+    stat_family: "בני משפחה שנפגעו",
+    stat_high_ranking: "בכירים",
+
+    // סטטיסטיקות – הגריד השני (אופציונלי אם סימנתם ב-HTML)
+    stat_total_records: "סה\"כ רשומות",
+    stat_by_location: "לפי מיקום",
+    stat_by_org: "לפי ארגון",
+    stat_by_rank: "לפי דרגה",
+
+    // מצבים/כפתורים נוספים
+    empty_state_msg: "אין תוצאות התואמות את החיפוש שלך.",
+    toast_aria: "התראות מערכת",
+    back_to_top: "חזור לראש העמוד",
+    export_btn: "ייצא CSV",
+
+    // פוטר
+    footer_legal: "מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד."
+  },
+
+  en: {
+    // Header + skip link
+    skip_link: "Skip to main content",
+    site_title: "Combatant Identification Database",
+    site_sub: "Continuously updated data",
+
+    // Filters bar
+    filters_bar_aria: "Filters bar",
+    search_label: "Search",
+    location_label: "Location",
+    org_label: "Organization",
+    rank_label: "Rank/Role",
+    date_range_label: "Date Range",
+    date_from_aria: "Start date",
+    date_to_aria: "End date",
+    clear_dates_btn: "Clear dates",
+    search_placeholder: "🔍 Search name, location or description…",
+    reset_btn_label: "Reset Filters",
+
+    // Results / pagination
+    content_area_aria: "Search results",
+    pagination_aria: "Pagination",
+    prev_page_aria: "Previous page",
+    next_page_aria: "Next page",
+
+    // Loading
+    loading_aria: "Loading data",
+    loading_text: "Loading…",
+
+    // Statistics – first grid
+    stats_region_aria: "Statistics",
+    stat_total_combat: "Total Combatants",
+    stat_total_cas: "Total Casualties",
+    stat_family: "Family Members Affected",
+    stat_high_ranking: "Senior Ranks",
+
+    // Statistics – second grid (optional)
+    stat_total_records: "Total Records",
+    stat_by_location: "By Location",
+    stat_by_org: "By Organization",
+    stat_by_rank: "By Rank",
+
+    // Misc
+    empty_state_msg: "No results match your search.",
+    toast_aria: "System notifications",
+    back_to_top: "Back to top",
+    export_btn: "Export CSV",
+
+    // Footer
+    footer_legal: "Combatant Identification Database — Data is provided for informational purposes only."
+  }
+};
+
+/**
+ * applyI18n – מחליף טקסטים/מאפיינים בכל האלמנטים שסומנו ב־data-i18n*
+ * דורש סימון ב-HTML, למשל:
+ *   <h1 data-i18n="site_title">מאגר זיהוי לוחמים</h1>
+ *   <input data-i18n-placeholder="search_placeholder" ...>
+ *   <section data-i18n-aria-label="content_area_aria" ...>
+ */
+function applyI18n() {
+  const lang = (typeof state !== 'undefined' && state?.lang) ? state.lang : (document.documentElement.lang || 'he');
+  document.documentElement.lang = lang;
+
+  // טקסטים רגילים
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = I18N[lang]?.[key];
+    if (val != null) el.textContent = val;
+  });
+
+  // מאפיינים נפוצים (placeholder / aria-label / title)
+  const ATTR_MAP = [
+    { sel: '[data-i18n-placeholder]', ds: 'i18nPlaceholder', attr: 'placeholder' },
+    { sel: '[data-i18n-aria-label]', ds: 'i18nAriaLabel',  attr: 'aria-label' },
+    { sel: '[data-i18n-title]',      ds: 'i18nTitle',      attr: 'title' }
+  ];
+  ATTR_MAP.forEach(({sel, ds, attr}) => {
+    document.querySelectorAll(sel).forEach(el => {
+      const key = el.dataset[ds];
+      const val = I18N[lang]?.[key];
+      if (val != null) el.setAttribute(attr, val);
+    });
+  });
+
+  // שורת זכויות עם השנה
+  const footerFirst = document.querySelector('.footer-info p');
+  if (footerFirst) {
+    const year = new Date().getFullYear();
+    footerFirst.innerHTML = `© <span id="currentYear">${year}</span> ${I18N[lang].footer_legal}`;
+  }
+}
 
 /* =============================
    Responsive helpers
@@ -950,8 +1096,8 @@ function init() {
   }
 
   setLangButtonUI();
-  if (dom.searchInput) dom.searchInput.placeholder = labels.search_placeholder[state.lang];
   updateViewToggleUI();
+  applyI18n();
 
   dom.resultsCounter?.setAttribute('aria-live','polite');
   dom.pageInfo?.setAttribute('aria-live','polite');
@@ -981,7 +1127,6 @@ function bindEvents() {
 
   // חיפוש (debounce) + Escape
   if (dom.searchInput) {
-    dom.searchInput.placeholder = labels.search_placeholder[state.lang];
     dom.searchInput.addEventListener('input', debounce(onSearch, 200));
     dom.searchInput.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') dom.resetBtn?.click(); });
   }
@@ -1063,6 +1208,7 @@ function bindEvents() {
     render();
     setLangButtonUI();
     updateViewToggleUI();
+    applyI18n();
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
       if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
