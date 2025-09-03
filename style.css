@@ -497,3 +497,48 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   .filters-row .filter-actions { grid-column: 1 / -1; }
 }
 #clearDatesBtn { display: none !important; }
+/* ====== Filters grid (ללא חפיפות) ====== */
+.filters-grid{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:var(--space-sm);
+  align-items:end;         /* יישור לתחתית הבקרים */
+}
+.fi{ min-inline-size:0; }  /* מאפשר הצטמצמות בלי גלישה */
+
+/* פריסת דסקטופ:
+   שורה 1: חיפוש(4) + מיקום(2) + ארגון(2) + דרגה(2)  => 10 טורים (ישארו 2 ריקים)
+   שורה 2: תאריכים(8) + פעולות(4) => 12 טורים, אותה שורה */
+.fi--search{   grid-column: span 4; }
+.fi--location{ grid-column: span 2; }
+.fi--org{      grid-column: span 2; }
+.fi--rank{     grid-column: span 2; }
+
+.fi--dates{    grid-column: span 8; }
+.fi--actions{
+  grid-column: span 4;
+  display:flex; gap:var(--space-sm); align-items:end; flex-wrap:wrap;
+}
+
+/* קבוצת התאריכים – רוחב נוח לשדות */
+.date-range{ display:flex; align-items:center; gap:var(--space-sm); }
+.date-range input[type="date"]{ inline-size:14ch; } /* בערך mm/dd/yyyy */
+.date-sep{ color:var(--text-secondary); }
+
+/* התאמות למסכים בינוניים: מחזיקים את היחסים 8+4 כדי שיישארו באותה שורה */
+@media (max-width:1100px){
+  .fi--search{ grid-column: span 12; }
+  .fi--location, .fi--org, .fi--rank{ grid-column: span 6; }
+  .fi--dates{  grid-column: span 8; }
+  .fi--actions{grid-column: span 4; }
+}
+
+/* מובייל – הכול שורה-שורה */
+@media (max-width:800px){
+  .fi--location, .fi--org, .fi--rank{ grid-column: span 12; }
+  .fi--dates{  grid-column: span 12; }
+  .fi--actions{grid-column: span 12; }
+}
+
+/* נטרול טריקים ישנים שגרמו לחפיפות */
+#resetBtn,#dateFrom,#dateTo{ position:relative; z-index:auto; margin-top:0; }
