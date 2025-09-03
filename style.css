@@ -542,3 +542,15 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 
 /* נטרול טריקים ישנים שגרמו לחפיפות */
 #resetBtn,#dateFrom,#dateTo{ position:relative; z-index:auto; margin-top:0; }
+
+/* Initially hide the button on desktop */
+#mobileFiltersToggle {
+  display: none;
+}
+
+/* Show it only on mobile screens (max-width 768px) */
+@media (max-width: 768px) {
+  #mobileFiltersToggle {
+    display: block;
+  }
+}
