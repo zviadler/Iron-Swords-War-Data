@@ -168,13 +168,14 @@ const I18N = {
 /**
  * applyI18n – מחליף טקסטים/מאפיינים בכל האלמנטים שסומנו ב־data-i18n*
  * דורש סימון ב-HTML, למשל:
- *   <h1 data-i18n="site_title">מאגר זיהוי לוחמים</h1>
- *   <input data-i18n-placeholder="search_placeholder" ...>
- *   <section data-i18n-aria-label="content_area_aria" ...>
+ * <h1 data-i18n="site_title">מאגר זיהוי לוחמים</h1>
+ * <input data-i18n-placeholder="search_placeholder" ...>
+ * <section data-i18n-aria-label="content_area_aria" ...>
  */
 function applyI18n() {
   const lang = (typeof state !== 'undefined' && state?.lang) ? state.lang : (document.documentElement.lang || 'he');
   document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'he' ? 'rtl' : 'ltr'); // NEW
 
   // טקסטים רגילים
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -203,6 +204,7 @@ function applyI18n() {
     const year = new Date().getFullYear();
     footerFirst.innerHTML = `© <span id="currentYear">${year}</span> ${I18N[lang].footer_legal}`;
   }
+  fixPagerArrows(); // NEW
 }
 // === Results Toolbar (Top Bar) ===
 function buildResultsToolbar() {
@@ -241,6 +243,18 @@ function buildResultsToolbar() {
 
   // העבר את כפתור יצוא ה-CSV מהפוטר
   if (dom.exportBtn) right.appendChild(dom.exportBtn);
+  
+  // NEW: Add share button
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'btn btn-outline btn--sm';
+  shareBtn.innerHTML = `<i class="fas fa-link" aria-hidden="true"></i><span>${state.lang==='he'?'העתק קישור':'Copy link'}</span>`;
+  shareBtn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(location.href).then(()=>{
+      showToast(state.lang==='he'?'קישור הועתק':'Link copied');
+    });
+  });
+  right.appendChild(shareBtn);
+
 
   toolbar.appendChild(left);
   toolbar.appendChild(right);
@@ -385,6 +399,16 @@ function highlight(val, q) {
 
 function debounce(fn, ms=200){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
 
+// NEW: Search normalization util
+function normalizeText(s){
+  return String(s||'')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu,'')
+    .replace(/[^\p{L}\p{N}\s]/gu,' ')
+    .toLowerCase();
+}
+
+
 /* עזרי UI */
 function setLangButtonUI() {
   if (!dom.langBtn) return;
@@ -401,6 +425,16 @@ function updateViewToggleUI(){
   span.textContent = state.isCardView ? toTable : toCards;
   dom.viewToggleBtn.setAttribute('aria-pressed', state.isCardView ? 'true' : 'false');
   dom.viewToggleBtn.setAttribute('aria-label', span.textContent);
+}
+
+// NEW: Pager arrows direction fix
+function fixPagerArrows(){
+  const prevI = document.querySelector('#prevPageBtn i');
+  const nextI = document.querySelector('#nextPageBtn i');
+  if (!prevI || !nextI) return;
+  const rtl = document.documentElement.dir === 'rtl';
+  prevI.className = `fas fa-chevron-${rtl ? 'right' : 'left'}`;
+  nextI.className = `fas fa-chevron-${rtl ? 'left' : 'right'}`;
 }
 
 /* =============================
@@ -577,11 +611,17 @@ function recordMatchesFilters(r) {
   const okOrg      = !state.filters.org      || eq(r.organization, state.filters.org);
   const okRank     = !state.filters.rank     || eq(r.rank_role, state.filters.rank);
 
-  const hay = [
+  // NEW: Smarter, normalized search
+  const hayRaw = [
     r.name_english, r.name_arabic, r.nickname, r.description_online,
     r.location, r.organization, r.rank_role, r.notes
-  ].join(' ').toLowerCase();
-  const okSearch = !state.filters.search || hay.includes(state.filters.search.toLowerCase());
+  ].join(' ');
+  let okSearch = true;
+  if (state.filters.search) {
+    const hayNorm = normalizeText(hayRaw);
+    const qTokens = normalizeText(state.filters.search).split(/\s+/).filter(Boolean);
+    okSearch = qTokens.every(t => hayNorm.includes(t));
+  }
 
   let okDate = true;
   if (state.filters.dateFrom || state.filters.dateTo) {
@@ -695,6 +735,7 @@ function render() {
   scrollTopIfNeeded();
 }
 
+// NEW: Updated card rendering function
 function renderCards(rows) {
   const frag = document.createDocumentFragment();
   const container = document.createElement('div');
@@ -703,22 +744,23 @@ function renderCards(rows) {
     const card = document.createElement('article');
     card.className = 'card';
     card.innerHTML = `
-      <header class="card__title">
+      <header class="card__title" dir="auto">
         <strong>${escapeHtml(r.name_english || r.nickname || r.name_arabic || '-')}</strong>
-        <small>${escapeHtml(r.rank_role || '')}</small>
+        ${r.rank_role ? `<small class="badge">${escapeHtml(r.rank_role)}</small>` : ''}
       </header>
-      <ul class="card__list">
-        <li><b>${fieldLabels.location[state.lang]}:</b> ${highlight(r.location, state.filters.search)}</li>
-        <li><b>${fieldLabels.date[state.lang]}:</b> ${escapeHtml(r.date || '-')}</li>
-        <li><b>${fieldLabels.organization[state.lang]}:</b> ${highlight(r.organization, state.filters.search)}</li>
-        <li><b>${fieldLabels.description_online[state.lang]}:</b> ${highlight(r.description_online, state.filters.search)}</li>
-      </ul>
+      <div class="card__meta">
+        ${r.organization ? `<span class="badge">${escapeHtml(r.organization)}</span>` : ''}
+        ${r.location ? `<span class="badge">${escapeHtml(r.location)}</span>` : ''}
+        ${r.date ? `<span class="badge num">${escapeHtml(r.date)}</span>` : ''}
+      </div>
+      ${r.description_online ? `<p class="mt-sm" dir="auto">${highlight(r.description_online, state.filters.search)}</p>` : ''}
     `;
     container.appendChild(card);
   });
   frag.appendChild(container);
   dom.contentArea.appendChild(frag);
 }
+
 
 function renderTable(rows) {
   const table = document.createElement('table');
@@ -746,23 +788,92 @@ function renderTable(rows) {
 
   const tbody = document.createElement('tbody');
   const frag = document.createDocumentFragment();
+  
+  // NEW: Updated table cell rendering
+  const numericKeys = new Set(['post_id','combatant_id','casualties_count']);
+
   rows.forEach(r => {
     const tr = document.createElement('tr');
     FIELDS.forEach(key => {
       const td = document.createElement('td');
       const val = r[key] || '';
-      td.innerHTML = (key === 'location' || key === 'organization' || key === 'name_english' || key === 'name_arabic' || key === 'nickname' || key === 'description_online')
-        ? highlight(val, state.filters.search)
-        : escapeHtml(val);
+
+      // Automatic directionality for multilingual text fields
+      if (['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes'].includes(key)) {
+        td.setAttribute('dir','auto');
+        td.innerHTML = highlight(val, state.filters.search);
+      } else {
+        td.textContent = val;
+      }
+
+      // LTR display for numbers/dates
+      if (numericKeys.has(key) || key === 'date') td.classList.add('num');
       tr.appendChild(td);
     });
     frag.appendChild(tr);
   });
+
   tbody.appendChild(frag);
   table.appendChild(tbody);
 
   dom.contentArea.appendChild(table);
 }
+
+// NEW (Optional): Chunked rendering for large tables
+function renderTableChunked(rows, chunk=150) {
+  const table = document.createElement('table');
+  table.className = 'data-table';
+  
+  // Build thead like in renderTable()
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  FIELDS.forEach(key => {
+    const th = document.createElement('th');
+    th.textContent = fieldLabels[key][state.lang];
+    th.dataset.key = key;
+    th.tabIndex = 0;
+    th.addEventListener('click', () => setSort(key));
+    th.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' ') { e.preventDefault(); setSort(key); }});
+    if (state.sort.key === key) {
+      th.classList.add(state.sort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+      th.setAttribute('aria-sort', state.sort.direction === 'asc' ? 'ascending' : 'descending');
+    } else {
+      th.removeAttribute('aria-sort');
+    }
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+  
+  const tbody = document.createElement('tbody');
+  table.appendChild(tbody);
+  dom.contentArea.appendChild(table);
+
+  let i = 0;
+  (function pump(){
+    const frag = document.createDocumentFragment();
+    for (let c=0; c<chunk && i<rows.length; c++, i++){
+      const r = rows[i];
+      const tr = document.createElement('tr');
+      FIELDS.forEach(key=>{
+        const td = document.createElement('td');
+        const val = r[key] || '';
+        if (['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes'].includes(key)) {
+          td.setAttribute('dir','auto');
+          td.innerHTML = highlight(val, state.filters.search);
+        } else {
+          td.textContent = val;
+        }
+        if (['post_id','combatant_id','casualties_count','date'].includes(key)) td.classList.add('num');
+        tr.appendChild(td);
+      });
+      frag.appendChild(tr);
+    }
+    tbody.appendChild(frag);
+    if (i < rows.length) requestAnimationFrame(pump);
+  })();
+}
+
 
 function setSort(key){
   state.suppressNextScroll = true;
@@ -815,6 +926,14 @@ function scrollTopIfNeeded() {
 /* =============================
    סטטיסטיקות
 ==============================*/
+// NEW: Stats helper function
+function topCounts(arr, key, n=3) {
+  const m = new Map();
+  arr.forEach(r => { const v=(r[key]||'').trim(); if (v) m.set(v,(m.get(v)||0)+1); });
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,n)
+    .map(([k,c]) => `${k}: ${nf().format(c)}`).join(' • ');
+}
+
 function updateStats() {
   const fmt = nf();
   if (dom.totalCombatants || dom.totalCasualties || dom.familyCasualties || dom.highRanking) {
@@ -832,6 +951,12 @@ function updateStats() {
   if (d('statsTotal') || d('statsByLocation') || d('statsByOrg') || d('statsByRank')) {
     const sT = d('statsTotal'); if (sT) sT.textContent = nf().format(state.filteredData.length);
   }
+
+  // NEW: Top-3 stats
+  const sLoc = d('statsByLocation'), sOrg = d('statsByOrg'), sRank = d('statsByRank');
+  if (sLoc) sLoc.textContent = topCounts(state.filteredData,'location');
+  if (sOrg) sOrg.textContent = topCounts(state.filteredData,'organization');
+  if (sRank) sRank.textContent = topCounts(state.filteredData,'rank_role');
 }
 
 /* =============================
@@ -1136,6 +1261,10 @@ function setupResponsive(){
 ==============================*/
 function init() {
   restoreStateFromURL();
+  
+  // NEW: Restore language preference
+  const savedLang = localStorage.getItem('lang');
+  if (savedLang) state.lang = savedLang;
 
   if (!new URLSearchParams(location.search).get('ps')) {
     const saved = Number(localStorage.getItem('pageSize'));
@@ -1262,12 +1391,14 @@ document.addEventListener('keydown', (e) => {
   // שפה
   if (dom.langBtn) dom.langBtn.addEventListener('click', ()=>{
     state.lang = (state.lang==='he') ? 'en' : 'he';
+    localStorage.setItem('lang', state.lang); // NEW
     if (dom.searchInput) dom.searchInput.placeholder = labels.search_placeholder[state.lang];
     state.suppressNextScroll = true; // אל תגלול למעלה כשהחלפנו שפה
     render();
     setLangButtonUI();
     updateViewToggleUI();
     applyI18n();
+    fixPagerArrows(); // NEW
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
       if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
