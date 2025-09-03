@@ -554,3 +554,38 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
     display: block;
   }
 }
+/* ==== Results Toolbar (top, near the table) ==== */
+.results-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--space-sm);
+  margin-block: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+.results-toolbar .rt-left,
+.results-toolbar .rt-right{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+.results-toolbar .results-counter{ font-weight:600; }
+.results-toolbar select#pageSize{ min-inline-size:7ch; padding:.4rem .6rem; }
+
+/* מובייל: להפוך לערימה אנכית */
+@media (max-width: 700px){
+  .results-toolbar{ flex-direction:column; align-items:stretch; }
+  .results-toolbar .rt-right{ justify-content:space-between; }
+}
+/* ==== Footer cleanup ==== */
+.footer-info{
+  margin-block-start: var(--space-2xl);
+  padding-block-start: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.footer-info p{ margin: .25rem 0; }
+.footer-info .footer-actions{ display: none; } /* הכפתור עבר לטופ-בר */
