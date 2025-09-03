@@ -514,7 +514,7 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .fi--org{      grid-column: span 2; }
 .fi--rank{     grid-column: span 2; }
 
-.fi--dates{    grid-column: span 8; }
+.fi--dates{    grid-column: span 4; }
 .fi--actions{
   grid-column: span 4;
   display:flex; gap:var(--space-sm); align-items:end; flex-wrap:wrap;
