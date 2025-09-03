@@ -204,6 +204,53 @@ function applyI18n() {
     footerFirst.innerHTML = `© <span id="currentYear">${year}</span> ${I18N[lang].footer_legal}`;
   }
 }
+// === Results Toolbar (Top Bar) ===
+function buildResultsToolbar() {
+  if (!dom.contentArea || d('resultsToolbar')) return;
+
+  // צור מעטפת
+  const toolbar = document.createElement('div');
+  toolbar.id = 'resultsToolbar';
+  toolbar.className = 'results-toolbar';
+  toolbar.setAttribute('role', 'region');
+  toolbar.setAttribute('aria-label', state.lang === 'he' ? 'סרגל תוצאות' : 'Results toolbar');
+
+  const left = document.createElement('div');
+  left.className = 'rt-left';
+
+  const right = document.createElement('div');
+  right.className = 'rt-right';
+
+  // העבר את מונה התוצאות (קיים כבר ב-DOM)
+  if (dom.resultsCounter) {
+    dom.resultsCounter.classList.remove('mt-2', 'text-center');
+    left.appendChild(dom.resultsCounter);
+  }
+
+  // דואגים שתהיה בחירת גודל עמוד (אם אין כבר אלמנט כזה ב-HTML)
+  if (!dom.pageSizeSelect) {
+    const sel = document.createElement('select');
+    sel.id = 'pageSize';
+    sel.title = state.lang === 'he' ? 'שורות בעמוד' : 'Rows per page';
+    dom.pageSizeSelect = sel; // חשוב כדי שה-bindEvents הקיים יתפוס אותו
+    right.appendChild(sel);
+  }
+
+  // העבר את כפתור החלפת התצוגה מהפילטרים
+  if (dom.viewToggleBtn) right.appendChild(dom.viewToggleBtn);
+
+  // העבר את כפתור יצוא ה-CSV מהפוטר
+  if (dom.exportBtn) right.appendChild(dom.exportBtn);
+
+  toolbar.appendChild(left);
+  toolbar.appendChild(right);
+
+  // מיקומים: לפני אזור התוכן (מעל הטבלה/כרטיסים)
+  dom.contentArea.parentNode.insertBefore(toolbar, dom.contentArea);
+}
+
+// הוסיפו את השורה הבאה בתוך init(), לפני bindEvents():
+// buildResultsToolbar();
 
 /* =============================
    Responsive helpers
@@ -1102,6 +1149,7 @@ function init() {
   dom.resultsCounter?.setAttribute('aria-live','polite');
   dom.pageInfo?.setAttribute('aria-live','polite');
 
+  buildResultsToolbar();
   bindEvents();
   setupResponsive();
   loadData();
@@ -1120,6 +1168,17 @@ function bindEvents() {
     const show = window.scrollY > 400;
     btn.classList.toggle('hidden', !show);
   });
+document.addEventListener('keydown', (e) => {
+  const isTyping = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+  if (!isTyping && e.key === '/') {
+    e.preventDefault();
+    dom.searchInput?.focus();
+  }
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    showToast(state.lang==='he' ? 'קיצורי דרך: “/” לחיפוש, Esc לאיפוס שדה' : 'Shortcuts: “/” to focus search, Esc to clear field');
+  }
+});
 
   // תגובה לשינוי רוחב מסך
   if (mq.addEventListener) mq.addEventListener('change', setupResponsive);
