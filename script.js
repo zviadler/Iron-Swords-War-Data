@@ -209,6 +209,60 @@ function applyI18n() {
 // === Results Toolbar (Top Bar) ===
 function buildResultsToolbar() {
   if (!dom.contentArea || d('resultsToolbar')) return;
+
+  // צור מעטפת
+  const toolbar = document.createElement('div');
+  toolbar.id = 'resultsToolbar';
+  toolbar.className = 'results-toolbar';
+  toolbar.setAttribute('role', 'region');
+  toolbar.setAttribute('aria-label', state.lang === 'he' ? 'סרגל תוצאות' : 'Results toolbar');
+
+  const left = document.createElement('div');
+  left.className = 'rt-left';
+
+  const right = document.createElement('div');
+  right.className = 'rt-right';
+
+  // העבר את מונה התוצאות (קיים כבר ב-DOM)
+  if (dom.resultsCounter) {
+    dom.resultsCounter.classList.remove('mt-2', 'text-center');
+    left.appendChild(dom.resultsCounter);
+  }
+
+  // דואגים שתהיה בחירת גודל עמוד (אם אין כבר אלמנט כזה ב-HTML)
+  if (!dom.pageSizeSelect) {
+    const sel = document.createElement('select');
+    sel.id = 'pageSize';
+    sel.title = state.lang === 'he' ? 'שורות בעמוד' : 'Rows per page';
+    dom.pageSizeSelect = sel; // חשוב כדי שה-bindEvents הקיים יתפוס אותו
+    right.appendChild(sel);
+  }
+
+  // העבר את כפתור החלפת התצוגה מהפילטרים
+  if (dom.viewToggleBtn) right.appendChild(dom.viewToggleBtn);
+
+  // העבר את כפתור יצוא ה-CSV מהפוטר
+  if (dom.exportBtn) right.appendChild(dom.exportBtn);
+  
+  // NEW: Add share button
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'btn btn-outline btn--sm';
+  shareBtn.innerHTML = `<i class="fas fa-link" aria-hidden="true"></i><span>${state.lang==='he'?'העתק קישור':'Copy link'}</span>`;
+  shareBtn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(location.href).then(()=>{
+      showToast(state.lang==='he'?'קישור הועתק':'Link copied');
+    });
+  });
+  right.appendChild(shareBtn);
+
+
+  toolbar.appendChild(left);
+  toolbar.appendChild(right);
+
+  // מיקומים: לפני אזור התוכן (מעל הטבלה/כרטיסים)
+  dom.contentArea.parentNode.insertBefore(toolbar, dom.contentArea);
+}
+
   
 function ensureColumnPicker() {
   // איפה לשים את הכפתור? מעדיפים את סרגל התוצאות אם קיים, אחרת באזור הפעולות של הפילטרים
@@ -307,60 +361,6 @@ function ensureColumnPicker() {
     if (e.key === 'Escape') pop.classList.remove('is-open');
   });
 }
-
-  // צור מעטפת
-  const toolbar = document.createElement('div');
-  toolbar.id = 'resultsToolbar';
-  toolbar.className = 'results-toolbar';
-  toolbar.setAttribute('role', 'region');
-  toolbar.setAttribute('aria-label', state.lang === 'he' ? 'סרגל תוצאות' : 'Results toolbar');
-
-  const left = document.createElement('div');
-  left.className = 'rt-left';
-
-  const right = document.createElement('div');
-  right.className = 'rt-right';
-
-  // העבר את מונה התוצאות (קיים כבר ב-DOM)
-  if (dom.resultsCounter) {
-    dom.resultsCounter.classList.remove('mt-2', 'text-center');
-    left.appendChild(dom.resultsCounter);
-  }
-
-  // דואגים שתהיה בחירת גודל עמוד (אם אין כבר אלמנט כזה ב-HTML)
-  if (!dom.pageSizeSelect) {
-    const sel = document.createElement('select');
-    sel.id = 'pageSize';
-    sel.title = state.lang === 'he' ? 'שורות בעמוד' : 'Rows per page';
-    dom.pageSizeSelect = sel; // חשוב כדי שה-bindEvents הקיים יתפוס אותו
-    right.appendChild(sel);
-  }
-
-  // העבר את כפתור החלפת התצוגה מהפילטרים
-  if (dom.viewToggleBtn) right.appendChild(dom.viewToggleBtn);
-
-  // העבר את כפתור יצוא ה-CSV מהפוטר
-  if (dom.exportBtn) right.appendChild(dom.exportBtn);
-  
-  // NEW: Add share button
-  const shareBtn = document.createElement('button');
-  shareBtn.className = 'btn btn-outline btn--sm';
-  shareBtn.innerHTML = `<i class="fas fa-link" aria-hidden="true"></i><span>${state.lang==='he'?'העתק קישור':'Copy link'}</span>`;
-  shareBtn.addEventListener('click', ()=>{
-    navigator.clipboard.writeText(location.href).then(()=>{
-      showToast(state.lang==='he'?'קישור הועתק':'Link copied');
-    });
-  });
-  right.appendChild(shareBtn);
-
-
-  toolbar.appendChild(left);
-  toolbar.appendChild(right);
-
-  // מיקומים: לפני אזור התוכן (מעל הטבלה/כרטיסים)
-  dom.contentArea.parentNode.insertBefore(toolbar, dom.contentArea);
-}
-
 /* =============================
    Responsive helpers
 ==============================*/
