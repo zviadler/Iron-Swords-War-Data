@@ -670,3 +670,20 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 
 /* ה-thead עדיין מעל שורות הטבלה, אבל מתחת לפופ-אובר */
 .data-table thead th { z-index: 5; }   /* אם יש לך כבר z-index גבוה – תוריד/תעדכן */
+
+/* Columns popover: always above table header and inside viewport */
+.columns-pop{ position:fixed; max-width:min(92vw,420px); z-index:10050; display:none; }
+.columns-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:10040; display:none; }
+.columns-backdrop.is-open{ display:block; }
+
+/* Mobile: bottom-sheet style */
+@media (max-width:768px){
+  .columns-pop.is-mobile{
+    left:12px !important; right:12px !important;
+    top:auto !important; bottom:max(12px, env(safe-area-inset-bottom));
+    width:auto !important; max-height:70vh; overflow:auto; border-radius:12px;
+  }
+}
+
+/* make sure the table header stays below the popover */
+.data-table thead th{ z-index:5; }

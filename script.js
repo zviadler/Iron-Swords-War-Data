@@ -264,7 +264,7 @@ function buildResultsToolbar() {
 }
 
   
-function ensureColumnPicker() {
+function ensureColumnPicker(){
   const toolbarRight = document.querySelector('#resultsToolbar .rt-right');
   const actions = document.querySelector('.fi--actions');
   const host = toolbarRight || actions;
@@ -272,7 +272,7 @@ function ensureColumnPicker() {
 
   // כפתור – צור פעם אחת
   let btn = document.getElementById('columnsBtn');
-  if (!btn) {
+  if (!btn){
     btn = document.createElement('button');
     btn.id = 'columnsBtn';
     btn.type = 'button';
@@ -282,137 +282,90 @@ function ensureColumnPicker() {
     host.appendChild(btn);
   }
 
-  // פופאובר + רקע – מוצמדים ל-body כדי לא להיחתך בגלילה אופקית
+  // Popover + backdrop – מוצמדים ל-body כדי לא להיחתך
   let pop = document.getElementById('columnsPop');
-  if (!pop) {
+  if (!pop){
     pop = document.createElement('div');
     pop.id = 'columnsPop';
     pop.className = 'columns-pop';
-    pop.style.display = 'none';
     pop.innerHTML = `
       <header>${state.lang==='he'?'הצגת עמודות':'Visible columns'}</header>
       <div class="cols-grid"></div>
       <div class="actions">
-        <button type="button" class="btn btn--sm btn--secondary" data-act="all">
-          ${state.lang==='he'?'בחר הכול':'Select all'}</button>
-        <button type="button" class="btn btn--sm btn--secondary" data-act="none">
-          ${state.lang==='he'?'נקה הכול':'Clear all'}</button>
-        <button type="button" class="btn btn--sm" data-act="close">
-          ${state.lang==='he'?'סגור':'Close'}</button>
+        <button type="button" class="btn btn--sm btn--secondary" data-act="all">${state.lang==='he'?'בחר הכול':'Select all'}</button>
+        <button type="button" class="btn btn--sm btn--secondary" data-act="none">${state.lang==='he'?'נקה הכול':'Clear all'}</button>
+        <button type="button" class="btn btn--sm" data-act="close">${state.lang==='he'?'סגור':'Close'}</button>
       </div>`;
     document.body.appendChild(pop);
   }
-
   let backdrop = document.querySelector('.columns-backdrop');
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.className = 'columns-backdrop';
-    document.body.appendChild(backdrop);
-  }
+  if (!backdrop){ backdrop = document.createElement('div'); backdrop.className='columns-backdrop'; document.body.appendChild(backdrop); }
 
   const grid = pop.querySelector('.cols-grid');
   const rebuildList = () => {
     grid.innerHTML = '';
-    FIELDS.forEach(k => {
-      const id = `col-${k}`;
-      const lbl = fieldLabels[k][state.lang];
-      const checked = state.visibleColumns.includes(k) ? 'checked' : '';
-      grid.insertAdjacentHTML('beforeend',
-        `<label for="${id}">
-          <input id="${id}" type="checkbox" data-col="${k}" ${checked}>
-          <span>${escapeHtml(lbl)}</span>
-        </label>`);
+    FIELDS.forEach(k=>{
+      const id=`col-${k}`, lbl=fieldLabels[k][state.lang], checked=state.visibleColumns.includes(k)?'checked':'';
+      grid.insertAdjacentHTML('beforeend', `<label for="${id}">
+        <input id="${id}" type="checkbox" data-col="${k}" ${checked}><span>${escapeHtml(lbl)}</span>
+      </label>`);
     });
   };
   rebuildList();
 
-  // מיקום הפופאובר ביחס לכפתור – תמיד בתוך המסך
-  function placePopover() {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      pop.classList.add('is-mobile');
-      pop.style.display = 'block';
-      pop.style.left = '';
-      pop.style.top = '';
-      pop.style.right = '';
-      pop.style.bottom = '';
-      return;
-    }
-    pop.classList.remove('is-mobile');
-    pop.style.visibility = 'hidden';
-    pop.style.display = 'block';
+  function placePopover(){
+    const mobile = window.innerWidth <= 768;
+    pop.classList.toggle('is-mobile', mobile);
+    pop.style.display='block';
+    if (mobile) return; // bottom-sheet מנהל CSS לבד
 
-    const r = btn.getBoundingClientRect();
-    const margin = 8;
-    const w = pop.offsetWidth || 320;
-    const h = pop.offsetHeight || 260;
-
-    let left = r.right - w;                 // מיושר לימין הכפתור
-    left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
-
-    let top = r.bottom + margin;
-    top = Math.max(margin, Math.min(top, window.innerHeight - h - margin));
-
-    pop.style.left = `${left}px`;
-    pop.style.top  = `${top}px`;
-    pop.style.right = 'auto';
-    pop.style.bottom = 'auto';
-    pop.style.visibility = '';
+    // הצמדת מיקום למסך ליד הכפתור – לא לצאת מה־viewport
+    const r = btn.getBoundingClientRect(), margin=8, w=pop.offsetWidth||320, h=pop.offsetHeight||260;
+    let left = r.right - w; left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+    let top  = r.bottom + margin; top  = Math.max(margin, Math.min(top, window.innerHeight - h - margin));
+    pop.style.left = `${left}px`; pop.style.top = `${top}px`; pop.style.right='auto'; pop.style.bottom='auto';
   }
+  function openPop(){ placePopover(); pop.classList.add('is-open'); backdrop.classList.add('is-open'); window.addEventListener('resize', placePopover, {passive:true}); window.addEventListener('scroll', placePopover, {passive:true}); }
+  function closePop(){ pop.classList.remove('is-open'); pop.style.display='none'; backdrop.classList.remove('is-open'); window.removeEventListener('resize', placePopover); window.removeEventListener('scroll', placePopover); }
 
-  function openPop() {
-    placePopover();
-    pop.style.display = 'block';
-    pop.classList.add('is-open');
-    if (window.innerWidth <= 768) backdrop.classList.add('is-open');
-    window.addEventListener('resize', placePopover, { passive: true });
-    window.addEventListener('scroll', placePopover, { passive: true });
-  }
-  function closePop() {
-    pop.classList.remove('is-open');
-    pop.style.display = 'none';
-    backdrop.classList.remove('is-open');
-    window.removeEventListener('resize', placePopover);
-    window.removeEventListener('scroll', placePopover);
-  }
-
-  btn.onclick = () => (pop.classList.contains('is-open') ? closePop() : openPop());
+  btn.onclick = ()=> pop.classList.contains('is-open') ? closePop() : openPop();
   backdrop.onclick = closePop;
-  document.addEventListener('click', (e) => {
-    if (!pop.classList.contains('is-open')) return;
-    if (!pop.contains(e.target) && e.target !== btn) closePop();
-  });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+  document.addEventListener('click', (e)=>{ if (pop.classList.contains('is-open') && !pop.contains(e.target) && e.target!==btn) closePop(); });
+  document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closePop(); });
 
-  // אינטראקציה של הצ'קבוקסים
-  pop.addEventListener('change', (e) => {
-    const el = e.target.closest('input[type="checkbox"][data-col]');
-    if (!el) return;
+  pop.addEventListener('change', (e)=>{
+    const el = e.target.closest('input[type="checkbox"][data-col]'); if (!el) return;
     const col = el.dataset.col;
-    if (el.checked) {
-      if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col);
-    } else {
-      if (state.visibleColumns.length <= 1) { el.checked = true; return; }
-      state.visibleColumns = state.visibleColumns.filter(c => c !== col);
-      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) state.sort.key = null;
+    if (el.checked){ if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col); }
+    else{
+      if (state.visibleColumns.length<=1){ el.checked=true; return; }
+      state.visibleColumns = state.visibleColumns.filter(c=>c!==col);
+      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) state.sort.key=null;
     }
-    rebuildList(); // שומר על סטטוס עדכני
     if (!state.isCardView) render();
   });
-
-  pop.addEventListener('click', (e) => {
-    const act = e.target?.dataset?.act;
-    if (!act) return;
-    if (act === 'all') state.visibleColumns = FIELDS.slice(0);
-    if (act === 'none') state.visibleColumns = [FIELDS[0]];
-    if (act === 'close') return closePop();
+  pop.addEventListener('click', (e)=>{
+    const act = e.target?.dataset?.act; if (!act) return;
+    if (act==='all') state.visibleColumns = FIELDS.slice(0);
+    if (act==='none') state.visibleColumns = [FIELDS[0]];
+    if (act==='close') return closePop();
     rebuildList();
     if (!state.isCardView) render();
   });
 
-  // הצג כפתור רק בתצוגת טבלה
-  updateColumnsUI();
+  updateColumnsUI(); // הצג/הסתר לפי מצב תצוגה
 }
+
+// הצג/הסתר את כפתור הבורר לפי מצב – ורוקן פופבר כשלא רלוונטי
+function updateColumnsUI(){
+  const btn = document.getElementById('columnsBtn');
+  const pop = document.getElementById('columnsPop');
+  const bd  = document.querySelector('.columns-backdrop');
+  if (!btn) return;
+  if (state.isCardView){ btn.style.display='none'; pop?.classList.remove('is-open','is-mobile'); if (pop) pop.style.display='none'; bd?.classList.remove('is-open'); }
+  else { btn.style.display=''; }
+}
+
 
 // מציג/מסתיר את הכפתור (ולא פותח אותו) לפי מצב התצוגה
 function updateColumnsUI() {
@@ -899,6 +852,7 @@ function clearContent(){ if (dom.contentArea) dom.contentArea.innerHTML=''; }
 function render() {
   // בתחילת render()
   if (typeof updateColumnsUI === 'function') updateColumnsUI();
+  
   clearContent();
   if (!dom.contentArea) return;
 
@@ -1455,29 +1409,26 @@ function onEscCloseFilters(e){
 function setupResponsive(){
   state.isMobile = isMobile();
 
-  // עדכון טקסטים
-  if (sheetCloseBtn) sheetCloseBtn.setAttribute('aria-label', labels.close[state.lang]);
-  if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
-
   if (state.isMobile) {
-    // ודא שה-filtersBar לא יוצג מעל הכרטיסים
+    // צור עוגן להחזרה אם טרם קיים
+    if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
+      filtersBarAnchor = document.createComment('filtersBar-anchor');
+      dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
+    }
     if (dom.filtersBar) dom.filtersBar.style.display = 'none';
-    // העבר לתוך sheet כבר עכשיו כדי למנוע "פלאש"
     ensureFilterSheet();
     if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
       sheetContent.appendChild(dom.filtersBar);
       styleFiltersBarDark();
     }
-    // הסתר כפתור איפוס חיצוני – אין כפילות
     if (dom.resetBtn) dom.resetBtn.style.display = 'none';
   } else {
-    // בדסקטופ – החזר את סרגל הפילטרים למקומו
+    // החזרה הבטוחה לדסקטופ
     if (filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode !== filtersBarAnchor.parentNode) {
       filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
       dom.filtersBar.style.display = '';
       dom.filtersBar.style.maxHeight = '';
     }
-    // החזר את כפתור האיפוס הראשי
     if (dom.resetBtn) dom.resetBtn.style.display = '';
     closeFiltersSheet();
   }
@@ -1487,6 +1438,7 @@ function setupResponsive(){
   updateFiltersBadge();
   renderFilterChips();
 }
+
 
 /* =============================
    הפעלה
