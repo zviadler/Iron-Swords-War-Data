@@ -209,6 +209,104 @@ function applyI18n() {
 // === Results Toolbar (Top Bar) ===
 function buildResultsToolbar() {
   if (!dom.contentArea || d('resultsToolbar')) return;
+  
+function ensureColumnPicker() {
+  // איפה לשים את הכפתור? מעדיפים את סרגל התוצאות אם קיים, אחרת באזור הפעולות של הפילטרים
+  const toolbarRight = document.querySelector('#resultsToolbar .rt-right');
+  const actions = document.querySelector('.fi--actions');
+  const host = toolbarRight || actions;
+  if (!host || d('columnsBtn')) return;
+
+  // כפתור
+  const btn = document.createElement('button');
+  btn.id = 'columnsBtn';
+  btn.type = 'button';
+  btn.className = 'btn btn-outline btn--sm columns-btn';
+  btn.innerHTML = `<i class="fas fa-columns" aria-hidden="true"></i><span>${state.lang==='he'?'בחר עמודות':'Columns'}</span>`;
+  host.appendChild(btn);
+
+  // מעטפת לעוגן (יחסי, כדי שהפופאובר יוצמד)
+  host.style.position = 'relative';
+
+  // פופאובר
+  const pop = document.createElement('div');
+  pop.id = 'columnsPop';
+  pop.className = 'columns-pop';
+  pop.innerHTML = `
+    <header>${state.lang==='he'?'הצגת עמודות':'Visible columns'}</header>
+    <div class="cols-grid"></div>
+    <div class="actions">
+      <button type="button" class="btn btn--sm btn--secondary" data-act="all">${state.lang==='he'?'בחר הכול':'Select all'}</button>
+      <button type="button" class="btn btn--sm btn--secondary" data-act="none">${state.lang==='he'?'נקה הכול':'Clear all'}</button>
+      <button type="button" class="btn btn--sm" data-act="close">${state.lang==='he'?'סגור':'Close'}</button>
+    </div>
+  `;
+  host.appendChild(pop);
+
+  const grid = pop.querySelector('.cols-grid');
+
+  function rebuildList() {
+    grid.innerHTML = '';
+    FIELDS.forEach(k => {
+      const lbl = fieldLabels[k][state.lang];
+      const id = `col-${k}`;
+      const checked = state.visibleColumns.includes(k) ? 'checked' : '';
+      grid.insertAdjacentHTML('beforeend', `
+        <label for="${id}">
+          <input id="${id}" type="checkbox" data-col="${k}" ${checked}>
+          <span>${escapeHtml(lbl)}</span>
+        </label>
+      `);
+    });
+  }
+  rebuildList();
+
+  btn.addEventListener('click', () => {
+    pop.classList.toggle('is-open');
+  });
+
+  // אינטראקציה
+  pop.addEventListener('change', (e) => {
+    const el = e.target.closest('input[type="checkbox"][data-col]');
+    if (!el) return;
+    const col = el.dataset.col;
+    if (el.checked) {
+      if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col);
+    } else {
+      // השאר לפחות עמודה אחת
+      if (state.visibleColumns.length <= 1) { el.checked = true; return; }
+      state.visibleColumns = state.visibleColumns.filter(c => c !== col);
+      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) {
+        state.sort.key = null; // ביטול מיון אם מוסתר
+      }
+    }
+    if (!state.isCardView) { render(); } // רענון מידי בטבלה
+  });
+
+  pop.addEventListener('click', (e) => {
+    const act = e.target?.dataset?.act;
+    if (!act) return;
+    if (act === 'all') {
+      state.visibleColumns = FIELDS.slice(0);
+      rebuildList();
+    } else if (act === 'none') {
+      state.visibleColumns = [FIELDS[0]];
+      rebuildList();
+    } else if (act === 'close') {
+      pop.classList.remove('is-open');
+    }
+    if (!state.isCardView) render();
+  });
+
+  // סגירה בלחיצה בחוץ / Escape
+  document.addEventListener('click', (e) => {
+    if (!pop.classList.contains('is-open')) return;
+    if (!pop.contains(e.target) && e.target !== btn) pop.classList.remove('is-open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') pop.classList.remove('is-open');
+  });
+}
 
   // צור מעטפת
   const toolbar = document.createElement('div');
@@ -263,9 +361,6 @@ function buildResultsToolbar() {
   dom.contentArea.parentNode.insertBefore(toolbar, dom.contentArea);
 }
 
-// הוסיפו את השורה הבאה בתוך init(), לפני bindEvents():
-// buildResultsToolbar();
-
 /* =============================
    Responsive helpers
 ==============================*/
@@ -287,6 +382,15 @@ const state = {
   filters: { location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null },
   suppressNextScroll: true // אל תקפיץ למעלה ברינדור הראשון/שינויים קלים
 };
+state.visibleColumns = [
+  'name_english','nickname','name_arabic',
+  'organization','rank_role',
+  'location','date',
+  'description_online',
+  'post_id','combatant_id',
+  'casualties_count','notes'
+].filter(c => FIELDS.includes(c));
+
 
 /* =============================
    DOM refs
@@ -365,6 +469,20 @@ function parseInputDate(v, endOfDay=false) {
   if (endOfDay) d.setHours(23,59,59,999);
   else d.setHours(0,0,0,0);
   return d;
+}
+// Blankish helper: treat "", "-", "—", "Unknown" (any case) as empty
+function isBlankish(v) {
+  const s = String(v ?? '').trim();
+  if (!s) return true;
+  if (/^[-–—]+$/.test(s)) return true;
+  if (/^(unknown|unk\.?)$/i.test(s)) return true;
+  return false;
+}
+const valOrEmpty = v => isBlankish(v) ? '' : String(v);
+
+// Prefer English name → nickname → Arabic
+function primaryName(r) {
+  return valOrEmpty(r.name_english) || valOrEmpty(r.nickname) || valOrEmpty(r.name_arabic);
 }
 
 /* --- תאריך: תומך תאריך בודד + טווחים מוגדרים --- */
@@ -735,40 +853,87 @@ function render() {
   scrollTopIfNeeded();
 }
 
-// NEW: Updated card rendering function
 function renderCards(rows) {
   const frag = document.createDocumentFragment();
   const container = document.createElement('div');
   container.className = 'cards';
+
   rows.forEach(r => {
+    const name = primaryName(r) || '—';
+    const org  = valOrEmpty(r.organization);
+    const rank = valOrEmpty(r.rank_role);
+    const loc  = valOrEmpty(r.location);
+    const date = valOrEmpty(r.date);
+    const desc = valOrEmpty(r.description_online);
+
     const card = document.createElement('article');
     card.className = 'card';
-    card.innerHTML = `
+
+    const parts = [];
+
+    // Title
+    parts.push(`
       <header class="card__title" dir="auto">
-        <strong>${escapeHtml(r.name_english || r.nickname || r.name_arabic || '-')}</strong>
-        ${r.rank_role ? `<small class="badge">${escapeHtml(r.rank_role)}</small>` : ''}
+        <strong>${escapeHtml(name)}</strong>
+        ${rank ? `<small class="badge">${escapeHtml(rank)}</small>` : ''}
       </header>
-      <div class="card__meta">
-        ${r.organization ? `<span class="badge">${escapeHtml(r.organization)}</span>` : ''}
-        ${r.location ? `<span class="badge">${escapeHtml(r.location)}</span>` : ''}
-        ${r.date ? `<span class="badge num">${escapeHtml(r.date)}</span>` : ''}
-      </div>
-      ${r.description_online ? `<p class="mt-sm" dir="auto">${highlight(r.description_online, state.filters.search)}</p>` : ''}
-    `;
+    `);
+
+    // Tags (org only if exists)
+    parts.push(`
+      ${org ? `<div class="card__tags"><span class="badge">${escapeHtml(org)}</span></div>` : ''}
+    `);
+
+    // Description
+    if (desc) {
+      parts.push(`<p class="mt-sm" dir="auto">${highlight(desc, state.filters.search)}</p>`);
+    }
+
+    // Fixed footer with icons (location + date)
+    const items = [];
+    if (loc) {
+      items.push(`
+        <div class="meta" title="${fieldLabels.location[state.lang]}">
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+          <span dir="auto">${escapeHtml(loc)}</span>
+        </div>
+      `);
+    }
+    if (date) {
+      items.push(`
+        <div class="meta" title="${fieldLabels.date[state.lang]}">
+          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          <span class="num">${escapeHtml(date)}</span>
+        </div>
+      `);
+    }
+    if (items.length) {
+      parts.push(`<footer class="card__footer">${items.join('')}</footer>`);
+    }
+
+    card.innerHTML = parts.join('');
     container.appendChild(card);
   });
+
   frag.appendChild(container);
   dom.contentArea.appendChild(frag);
 }
 
 
+
 function renderTable(rows) {
+  const cols = (state.visibleColumns && state.visibleColumns.length)
+    ? state.visibleColumns.filter(c => FIELDS.includes(c))
+    : FIELDS.slice(0);
+
   const table = document.createElement('table');
   table.className = 'data-table';
 
+  // THEAD
   const thead = document.createElement('thead');
   const trh = document.createElement('tr');
-  FIELDS.forEach(key => {
+
+  cols.forEach(key => {
     const th = document.createElement('th');
     th.textContent = fieldLabels[key][state.lang];
     th.dataset.key = key;
@@ -783,39 +948,35 @@ function renderTable(rows) {
     }
     trh.appendChild(th);
   });
+
   thead.appendChild(trh);
   table.appendChild(thead);
 
+  // TBODY
   const tbody = document.createElement('tbody');
-  const frag = document.createDocumentFragment();
-  
-  // NEW: Updated table cell rendering
   const numericKeys = new Set(['post_id','combatant_id','casualties_count']);
 
   rows.forEach(r => {
     const tr = document.createElement('tr');
-    FIELDS.forEach(key => {
+    cols.forEach(key => {
       const td = document.createElement('td');
-      const val = r[key] || '';
+      const raw = r[key];
+      const val = valOrEmpty(raw); // hide Unknown / "-" / empty
 
-      // Automatic directionality for multilingual text fields
       if (['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes'].includes(key)) {
         td.setAttribute('dir','auto');
         td.innerHTML = highlight(val, state.filters.search);
       } else {
         td.textContent = val;
       }
-
-      // LTR display for numbers/dates
       if (numericKeys.has(key) || key === 'date') td.classList.add('num');
+
       tr.appendChild(td);
     });
-    frag.appendChild(tr);
+    tbody.appendChild(tr);
   });
 
-  tbody.appendChild(frag);
   table.appendChild(tbody);
-
   dom.contentArea.appendChild(table);
 }
 
@@ -1279,6 +1440,7 @@ function init() {
   dom.pageInfo?.setAttribute('aria-live','polite');
 
   buildResultsToolbar();
+  ensureColumnPicker();
   bindEvents();
   setupResponsive();
   loadData();
