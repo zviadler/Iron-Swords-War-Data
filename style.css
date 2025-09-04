@@ -720,3 +720,39 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
     width: auto !important; max-height: 70vh; overflow: auto; border-radius: 12px;
   }
 }
+/* כשסרגל הפילטרים בתוך ה-bottom sheet: פריסה אנכית, שדות פרוסים מלא */
+#filterSheet .filters-bar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm, 12px);
+}
+
+#filterSheet .filters-bar select,
+#filterSheet .filters-bar input,
+#filterSheet .filters-bar button {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* אם יש קבוצות שדות זו לצד זו – שבירה ל-2 עמודות רק במסכים בינוניים ומעלה */
+@media (min-width: 480px){
+  #filterSheet .filters-bar .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm, 12px);
+  }
+}
+@media (max-width: 700px){
+  .results-toolbar .rt-right{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm, 12px);
+  }
+  .results-toolbar .rt-right > * {
+    width: 100%;
+  }
+  /* אם יש פריט שצריך רוחב מלא (למשל share), תן לו span: */
+  .results-toolbar .rt-right .span-2 {
+    grid-column: 1 / -1;
+  }
+}
