@@ -1354,17 +1354,19 @@ function styleFiltersBarDark(){
 function openFiltersSheet(){
   ensureFilterSheet();
 
-  // צור עוגן להחזרת ה-filtersBar בדסקטופ
+  // צור עוגן להחזרת הפילטרים לדסקטופ
   if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
     filtersBarAnchor = document.createComment('filtersBar-anchor');
     dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
   }
 
-  // הזז את סרגל הפילטרים לתוך ה-sheet
+  // הזז את סרגל הפילטרים לתוך ה-sheet והסר display:none
   if (dom.filtersBar && sheetContent && dom.filtersBar !== sheetContent.firstChild) {
     sheetContent.appendChild(dom.filtersBar);
-    Object.assign(dom.filtersBar.style, { display:'block', maxHeight:'inherit' });
-    styleFiltersBarDark();
+  }
+  if (dom.filtersBar) {
+    dom.filtersBar.style.display = 'block';   // <<< חשוב
+    dom.filtersBar.style.maxHeight = 'inherit';
   }
 
   syncFiltersUIFromState();
@@ -1375,6 +1377,7 @@ function openFiltersSheet(){
 
   setTimeout(()=>{ try { (sheet.querySelector('select, input, button, textarea, [tabindex]:not([tabindex="-1"])')||sheetCloseBtn).focus(); } catch{} }, 30);
 }
+
 
 function closeFiltersSheet(){
   if (!sheet || !sheetBackdrop) return;
@@ -1404,19 +1407,23 @@ function setupResponsive(){
   state.isMobile = isMobile();
 
   if (state.isMobile) {
-    // צור עוגן להחזרה אם טרם קיים
-    if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
-      filtersBarAnchor = document.createComment('filtersBar-anchor');
-      dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
-    }
-    if (dom.filtersBar) dom.filtersBar.style.display = 'none';
-    ensureFilterSheet();
-    if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
-      sheetContent.appendChild(dom.filtersBar);
-      styleFiltersBarDark();
-    }
+  if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
+    filtersBarAnchor = document.createComment('filtersBar-anchor');
+    dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
+  }
+  ensureFilterSheet();
+
+  // הזזה ל-sheet והסרת ההסתרה
+  if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
+    sheetContent.appendChild(dom.filtersBar);
+  }
+  if (dom.filtersBar) {
+    dom.filtersBar.style.display = 'block';   // <<< חשוב
+    dom.filtersBar.style.maxHeight = 'inherit';
+  }
+
     if (dom.resetBtn) dom.resetBtn.style.display = 'none';
-  } else {
+} else {
     // החזרה הבטוחה לדסקטופ
     if (filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode !== filtersBarAnchor.parentNode) {
       filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
@@ -1587,26 +1594,23 @@ document.addEventListener('keydown', (e) => {
     renderFilterChips();
   });
 
-    // מובייל: פתיחת פילטרים
-    if (dom.mobileFiltersToggle) {
-    const labelSpan = dom.mobileFiltersToggle.querySelector('span') || dom.mobileFiltersToggle;
-    dom.mobileFiltersToggle.addEventListener('click', (e) => {
-      // אם זה <a href="#"> — לא לבצע ניווט/קפיצה למעלה
-      e.preventDefault?.();
+  if (dom.mobileFiltersToggle) {
+  const labelSpan = dom.mobileFiltersToggle.querySelector('span') || dom.mobileFiltersToggle;
+  dom.mobileFiltersToggle.addEventListener('click', (e) => {
+    e.preventDefault?.();               // <<< לא לגלול/לנווט
+    state.isMobile = isMobile();        // <<< ודא סטטוס עדכני
 
-      // עדכון סטטוס מובייל חי (למקרה שה-state לא עודכן עדיין)
-      state.isMobile = isMobile();
+    if (state.isMobile) {
+      openFiltersSheet();
+      dom.mobileFiltersToggle.setAttribute('aria-expanded', 'true');
+    } else if (dom.filtersBar) {
+      const open = dom.filtersBar.classList.toggle('open');
+      dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
+      labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
+    }
+  });
+}
 
-      if (state.isMobile) {
-        openFiltersSheet();
-        dom.mobileFiltersToggle.setAttribute('aria-expanded', 'true');
-      } else if (dom.filtersBar) {
-        const open = dom.filtersBar.classList.toggle('open');
-        dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
-        labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
-      }
-    });
-  }
 
   // --- איפוס פילטרים ---
   if (dom.resetBtn) {
