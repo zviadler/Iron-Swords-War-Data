@@ -756,3 +756,25 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
     grid-column: 1 / -1;
   }
 }
+/* כשסרגל הפילטרים בתוך ה-bottom sheet – דרוס במפורש את flex */
+#filterSheet #filtersBar {
+  display: grid !important;            /* מכריח מעבר ל-grid בתוך ה-sheet */
+  grid-template-columns: 1fr;
+  gap: var(--space-sm, 12px);
+  justify-items: start;
+}
+
+/* פריסת הילדים בפועל */
+#filterSheet #filtersBar .filters-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm, 12px);
+}
+
+/* אלמנטים טופסיים – רוחב מלא במובייל/Sheet */
+#filterSheet #filtersBar select,
+#filterSheet #filtersBar input,
+#filterSheet #filtersBar button {
+  width: 100%;
+  max-width: 100%;
+}
