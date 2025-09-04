@@ -1587,12 +1587,19 @@ document.addEventListener('keydown', (e) => {
     renderFilterChips();
   });
 
-  // מובייל: פתיחת פילטרים
-  if (dom.mobileFiltersToggle) {
+    // מובייל: פתיחת פילטרים
+    if (dom.mobileFiltersToggle) {
     const labelSpan = dom.mobileFiltersToggle.querySelector('span') || dom.mobileFiltersToggle;
-    dom.mobileFiltersToggle.addEventListener('click', ()=>{
+    dom.mobileFiltersToggle.addEventListener('click', (e) => {
+      // אם זה <a href="#"> — לא לבצע ניווט/קפיצה למעלה
+      e.preventDefault?.();
+
+      // עדכון סטטוס מובייל חי (למקרה שה-state לא עודכן עדיין)
+      state.isMobile = isMobile();
+
       if (state.isMobile) {
         openFiltersSheet();
+        dom.mobileFiltersToggle.setAttribute('aria-expanded', 'true');
       } else if (dom.filtersBar) {
         const open = dom.filtersBar.classList.toggle('open');
         dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
