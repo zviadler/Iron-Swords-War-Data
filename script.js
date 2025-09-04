@@ -265,61 +265,126 @@ function buildResultsToolbar() {
 
   
 function ensureColumnPicker() {
-  // איפה לשים את הכפתור? מעדיפים את סרגל התוצאות אם קיים, אחרת באזור הפעולות של הפילטרים
   const toolbarRight = document.querySelector('#resultsToolbar .rt-right');
   const actions = document.querySelector('.fi--actions');
   const host = toolbarRight || actions;
-  if (!host || d('columnsBtn')) return;
+  if (!host) return;
 
-  // כפתור
-  const btn = document.createElement('button');
-  btn.id = 'columnsBtn';
-  btn.type = 'button';
-  btn.className = 'btn btn-outline btn--sm columns-btn';
-  btn.innerHTML = `<i class="fas fa-columns" aria-hidden="true"></i><span>${state.lang==='he'?'בחר עמודות':'Columns'}</span>`;
-  host.appendChild(btn);
+  // כפתור – צור פעם אחת
+  let btn = document.getElementById('columnsBtn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'columnsBtn';
+    btn.type = 'button';
+    btn.className = 'btn btn-outline btn--sm columns-btn';
+    btn.innerHTML = `<i class="fas fa-columns" aria-hidden="true"></i>
+                     <span>${state.lang==='he'?'בחר עמודות':'Columns'}</span>`;
+    host.appendChild(btn);
+  }
 
-  // מעטפת לעוגן (יחסי, כדי שהפופאובר יוצמד)
-  host.style.position = 'relative';
+  // פופאובר + רקע – מוצמדים ל-body כדי לא להיחתך בגלילה אופקית
+  let pop = document.getElementById('columnsPop');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'columnsPop';
+    pop.className = 'columns-pop';
+    pop.style.display = 'none';
+    pop.innerHTML = `
+      <header>${state.lang==='he'?'הצגת עמודות':'Visible columns'}</header>
+      <div class="cols-grid"></div>
+      <div class="actions">
+        <button type="button" class="btn btn--sm btn--secondary" data-act="all">
+          ${state.lang==='he'?'בחר הכול':'Select all'}</button>
+        <button type="button" class="btn btn--sm btn--secondary" data-act="none">
+          ${state.lang==='he'?'נקה הכול':'Clear all'}</button>
+        <button type="button" class="btn btn--sm" data-act="close">
+          ${state.lang==='he'?'סגור':'Close'}</button>
+      </div>`;
+    document.body.appendChild(pop);
+  }
 
-  // פופאובר
-  const pop = document.createElement('div');
-  pop.id = 'columnsPop';
-  pop.className = 'columns-pop';
-  pop.innerHTML = `
-    <header>${state.lang==='he'?'הצגת עמודות':'Visible columns'}</header>
-    <div class="cols-grid"></div>
-    <div class="actions">
-      <button type="button" class="btn btn--sm btn--secondary" data-act="all">${state.lang==='he'?'בחר הכול':'Select all'}</button>
-      <button type="button" class="btn btn--sm btn--secondary" data-act="none">${state.lang==='he'?'נקה הכול':'Clear all'}</button>
-      <button type="button" class="btn btn--sm" data-act="close">${state.lang==='he'?'סגור':'Close'}</button>
-    </div>
-  `;
-  host.appendChild(pop);
+  let backdrop = document.querySelector('.columns-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'columns-backdrop';
+    document.body.appendChild(backdrop);
+  }
 
   const grid = pop.querySelector('.cols-grid');
-
-  function rebuildList() {
+  const rebuildList = () => {
     grid.innerHTML = '';
     FIELDS.forEach(k => {
-      const lbl = fieldLabels[k][state.lang];
       const id = `col-${k}`;
+      const lbl = fieldLabels[k][state.lang];
       const checked = state.visibleColumns.includes(k) ? 'checked' : '';
-      grid.insertAdjacentHTML('beforeend', `
-        <label for="${id}">
+      grid.insertAdjacentHTML('beforeend',
+        `<label for="${id}">
           <input id="${id}" type="checkbox" data-col="${k}" ${checked}>
           <span>${escapeHtml(lbl)}</span>
-        </label>
-      `);
+        </label>`);
     });
-  }
+  };
   rebuildList();
 
-  btn.addEventListener('click', () => {
-    pop.classList.toggle('is-open');
-  });
+  // מיקום הפופאובר ביחס לכפתור – תמיד בתוך המסך
+  function placePopover() {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      pop.classList.add('is-mobile');
+      pop.style.display = 'block';
+      pop.style.left = '';
+      pop.style.top = '';
+      pop.style.right = '';
+      pop.style.bottom = '';
+      return;
+    }
+    pop.classList.remove('is-mobile');
+    pop.style.visibility = 'hidden';
+    pop.style.display = 'block';
 
-  // אינטראקציה
+    const r = btn.getBoundingClientRect();
+    const margin = 8;
+    const w = pop.offsetWidth || 320;
+    const h = pop.offsetHeight || 260;
+
+    let left = r.right - w;                 // מיושר לימין הכפתור
+    left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+
+    let top = r.bottom + margin;
+    top = Math.max(margin, Math.min(top, window.innerHeight - h - margin));
+
+    pop.style.left = `${left}px`;
+    pop.style.top  = `${top}px`;
+    pop.style.right = 'auto';
+    pop.style.bottom = 'auto';
+    pop.style.visibility = '';
+  }
+
+  function openPop() {
+    placePopover();
+    pop.style.display = 'block';
+    pop.classList.add('is-open');
+    if (window.innerWidth <= 768) backdrop.classList.add('is-open');
+    window.addEventListener('resize', placePopover, { passive: true });
+    window.addEventListener('scroll', placePopover, { passive: true });
+  }
+  function closePop() {
+    pop.classList.remove('is-open');
+    pop.style.display = 'none';
+    backdrop.classList.remove('is-open');
+    window.removeEventListener('resize', placePopover);
+    window.removeEventListener('scroll', placePopover);
+  }
+
+  btn.onclick = () => (pop.classList.contains('is-open') ? closePop() : openPop());
+  backdrop.onclick = closePop;
+  document.addEventListener('click', (e) => {
+    if (!pop.classList.contains('is-open')) return;
+    if (!pop.contains(e.target) && e.target !== btn) closePop();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+
+  // אינטראקציה של הצ'קבוקסים
   pop.addEventListener('change', (e) => {
     const el = e.target.closest('input[type="checkbox"][data-col]');
     if (!el) return;
@@ -327,40 +392,44 @@ function ensureColumnPicker() {
     if (el.checked) {
       if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col);
     } else {
-      // השאר לפחות עמודה אחת
       if (state.visibleColumns.length <= 1) { el.checked = true; return; }
       state.visibleColumns = state.visibleColumns.filter(c => c !== col);
-      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) {
-        state.sort.key = null; // ביטול מיון אם מוסתר
-      }
+      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) state.sort.key = null;
     }
-    if (!state.isCardView) { render(); } // רענון מידי בטבלה
+    rebuildList(); // שומר על סטטוס עדכני
+    if (!state.isCardView) render();
   });
 
   pop.addEventListener('click', (e) => {
     const act = e.target?.dataset?.act;
     if (!act) return;
-    if (act === 'all') {
-      state.visibleColumns = FIELDS.slice(0);
-      rebuildList();
-    } else if (act === 'none') {
-      state.visibleColumns = [FIELDS[0]];
-      rebuildList();
-    } else if (act === 'close') {
-      pop.classList.remove('is-open');
-    }
+    if (act === 'all') state.visibleColumns = FIELDS.slice(0);
+    if (act === 'none') state.visibleColumns = [FIELDS[0]];
+    if (act === 'close') return closePop();
+    rebuildList();
     if (!state.isCardView) render();
   });
 
-  // סגירה בלחיצה בחוץ / Escape
-  document.addEventListener('click', (e) => {
-    if (!pop.classList.contains('is-open')) return;
-    if (!pop.contains(e.target) && e.target !== btn) pop.classList.remove('is-open');
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') pop.classList.remove('is-open');
-  });
+  // הצג כפתור רק בתצוגת טבלה
+  updateColumnsUI();
 }
+
+// מציג/מסתיר את הכפתור (ולא פותח אותו) לפי מצב התצוגה
+function updateColumnsUI() {
+  const btn = document.getElementById('columnsBtn');
+  const pop = document.getElementById('columnsPop');
+  const backdrop = document.querySelector('.columns-backdrop');
+  if (!btn) return;
+  if (state.isCardView) {
+    btn.style.display = 'none';
+    pop?.classList.remove('is-open','is-mobile');
+    if (pop) pop.style.display = 'none';
+    backdrop?.classList.remove('is-open');
+  } else {
+    btn.style.display = '';
+  }
+}
+
 /* =============================
    Responsive helpers
 ==============================*/
@@ -828,6 +897,8 @@ function sortData() {
 function clearContent(){ if (dom.contentArea) dom.contentArea.innerHTML=''; }
 
 function render() {
+  // בתחילת render()
+  if (typeof updateColumnsUI === 'function') updateColumnsUI();
   clearContent();
   if (!dom.contentArea) return;
 

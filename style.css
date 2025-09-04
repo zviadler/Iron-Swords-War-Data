@@ -633,3 +633,40 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 }
 .columns-pop label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
 .columns-pop .actions { display: flex; gap: .4rem; margin-top: .5rem; justify-content: space-between; }
+
+/* Keep the columns popover inside the viewport */
+.columns-pop {
+  position: fixed;          /* לא תלוי במכלים שגוללים לרוחב */
+  z-index: 1000;
+  max-width: min(92vw, 420px);
+}
+
+/* Backdrop for mobile */
+.columns-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 999;
+  display: none;
+}
+.columns-backdrop.is-open { display: block; }
+
+/* Bottom-sheet style on small screens */
+@media (max-width: 768px) {
+  .columns-pop.is-mobile {
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: auto !important;
+    max-height: 70vh;
+    overflow: auto;
+    border-radius: var(--radius-lg);
+  }
+}
+/* הפופ-אובר והבקדרופ תמיד מעל ה-thead */
+.columns-pop       { z-index: 10050 !important; }
+.columns-backdrop  { z-index: 10040 !important; }
+
+/* ה-thead עדיין מעל שורות הטבלה, אבל מתחת לפופ-אובר */
+.data-table thead th { z-index: 5; }   /* אם יש לך כבר z-index גבוה – תוריד/תעדכן */
