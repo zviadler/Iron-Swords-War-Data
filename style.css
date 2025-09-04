@@ -687,3 +687,36 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 
 /* make sure the table header stays below the popover */
 .data-table thead th{ z-index:5; }
+
+/* שמור את ה-toolbar תמיד מעל הטבלה ולתת לו לעבור שורה במובייל */
+.results-toolbar{
+  position: relative;
+  z-index: 20;                 /* מעל ה-thead (z-index:1 אצלך) */
+  flex-wrap: nowrap;
+}
+.results-toolbar .rt-right{
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;             /* מאפשר ירידת כפתורים לשורה חדשה */
+  min-width: 0;                /* שובר מינימום מובנה של flex item */
+}
+.results-toolbar .rt-left{ min-width: 0; }
+
+/* במסכים צרים: לפצל לשתי שורות כדי שלא יצא מהמסך */
+@media (max-width: 768px){
+  .results-toolbar{ flex-wrap: wrap; gap: .5rem .6rem; }
+  .results-toolbar .rt-left,
+  .results-toolbar .rt-right{ flex: 1 1 100%; }
+  .results-toolbar .rt-right{ justify-content: flex-start; }
+}
+.columns-pop{ position: fixed; max-width: min(92vw, 420px); z-index: 10050; display: none; }
+.columns-backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 10040; display: none; }
+.columns-backdrop.is-open{ display:block; }
+@media (max-width: 768px){
+  .columns-pop.is-mobile{
+    left: 12px !important; right: 12px !important;
+    top: auto !important; bottom: max(12px, env(safe-area-inset-bottom));
+    width: auto !important; max-height: 70vh; overflow: auto; border-radius: 12px;
+  }
+}

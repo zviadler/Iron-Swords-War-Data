@@ -356,32 +356,26 @@ function ensureColumnPicker(){
   updateColumnsUI(); // הצג/הסתר לפי מצב תצוגה
 }
 
-// הצג/הסתר את כפתור הבורר לפי מצב – ורוקן פופבר כשלא רלוונטי
-function updateColumnsUI(){
-  const btn = document.getElementById('columnsBtn');
-  const pop = document.getElementById('columnsPop');
-  const bd  = document.querySelector('.columns-backdrop');
-  if (!btn) return;
-  if (state.isCardView){ btn.style.display='none'; pop?.classList.remove('is-open','is-mobile'); if (pop) pop.style.display='none'; bd?.classList.remove('is-open'); }
-  else { btn.style.display=''; }
-}
-
-
 // מציג/מסתיר את הכפתור (ולא פותח אותו) לפי מצב התצוגה
 function updateColumnsUI() {
   const btn = document.getElementById('columnsBtn');
   const pop = document.getElementById('columnsPop');
   const backdrop = document.querySelector('.columns-backdrop');
   if (!btn) return;
+
   if (state.isCardView) {
     btn.style.display = 'none';
-    pop?.classList.remove('is-open','is-mobile');
+    btn.setAttribute('aria-hidden', 'true');
+
+    pop?.classList.remove('is-open', 'is-mobile');
     if (pop) pop.style.display = 'none';
     backdrop?.classList.remove('is-open');
   } else {
     btn.style.display = '';
+    btn.removeAttribute('aria-hidden');
   }
 }
+
 
 /* =============================
    Responsive helpers
