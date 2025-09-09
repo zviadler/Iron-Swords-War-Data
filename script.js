@@ -893,7 +893,7 @@ function renderCards(rows) {
 
     // Title
     parts.push(`
-      <header class="card__title" dir="auto">
+      <header class="card__title">
         <strong>${escapeHtml(name)}</strong>
         ${rank ? `<small class="badge">${escapeHtml(rank)}</small>` : ''}
       </header>
@@ -906,8 +906,7 @@ function renderCards(rows) {
 
     // Description
     if (desc) {
-      parts.push(`<p class="mt-sm" dir="auto">${highlight(desc, state.filters.search)}</p>`);
-    }
+      parts.push(`<p class="mt-sm">${highlight(desc, state.filters.search)}</p>`);    }
 
     // Fixed footer with icons (location + date)
     const items = [];
@@ -915,7 +914,7 @@ function renderCards(rows) {
       items.push(`
         <div class="meta" title="${fieldLabels.location[state.lang]}">
           <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-          <span dir="auto">${escapeHtml(loc)}</span>
+          <span>${escapeHtml(loc)}</span>
         </div>
       `);
     }
