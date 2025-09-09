@@ -159,16 +159,17 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 @media (max-width: 600px) { .container { padding-inline: var(--space-sm); } }
 
 /* Cards grid container (for JS-rendered cards) */
-/* Cards grid */
+/* Cards grid (fluid) */
 .cards{
   display:grid;
   gap:var(--space-lg);
-  grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
-  align-items:stretch;           /* כל כרטיס מתוח לגובה התא */
+  grid-template-columns:repeat(auto-fit, minmax(300px,1fr));
+  align-items:stretch; /* כל כרטיס באותו גובה שורה */
 }
 @media (max-width:700px){
   .cards{ gap:var(--space-md); }
 }
+
 @media (max-width:500px){
   .card{ padding:var(--space-md); }
   .card p{ -webkit-line-clamp:2; }
@@ -304,22 +305,43 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 /* -----------------------------
    8) Cards / Panels
    ----------------------------- */
-.card {
-  background: var(--bg-elev);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-xs);
+/* כרטיס כעמודה גמישה */
+.card{
+  display:flex; flex-direction:column; height:100%;
+  background:var(--bg-elev); border:1px solid var(--border-color);
+  border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-xs);
+  transition:transform .2s, box-shadow .2s, border-color .2s;
 }
-.card__title { margin: 0 0 var(--space-sm) 0; font-size: 1.125rem; font-weight: 600; display: flex; align-items: baseline; gap: .5rem; }
-.card__meta { color: var(--text-secondary); font-size: var(--font-size-sm); }
-.card__footer {
-  display: flex; gap: var(--space-md); align-items: center; justify-content: flex-start;
-  margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px dashed var(--border-color);
+.card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-sm);
+  border-color:color-mix(in oklab,var(--primary-500) 22%, var(--border-color));
 }
-.card__footer .meta { display: inline-flex; align-items: center; gap: .4rem; font-size: var(--font-size-sm); color: var(--text-secondary); }
-.card__footer .meta .num { font-variant-numeric: tabular-nums; }
-.card__tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+/* כותרת: שם עם אליפסיס + badge */
+.card__title{ margin:0 0 .35rem 0; display:flex; align-items:baseline; gap:.5rem; }
+.card__title strong{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card__title .badge{ flex:none; }
+
+/* תגיות (ארגון) */
+.card__tags{ display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.25rem; }
+.card__tags .badge{ background:#0c1323; border-color:#142038; }
+
+/* תיאור – עד 3 שורות */
+.card p{
+  margin:.5rem 0 0; color:var(--text-secondary);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* פוטר – תמיד בתחתית הכרטיס (במקום dashed) */
+.card__footer{
+  margin-top:auto; padding-top:var(--space-md);
+  border-top:1px solid var(--border-color);
+  display:flex; gap:var(--space-md); flex-wrap:wrap; align-items:center;
+}
+.card__footer .meta{ display:inline-flex; align-items:center; gap:.4rem; font-size:var(--font-size-sm); color:var(--text-secondary); }
+.card__footer .meta .num{ font-variant-numeric:tabular-nums; }
+
+/* הדגשת חיפוש רכה */
+mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
 
 /* -----------------------------
    9) Tables / Data
@@ -618,69 +640,13 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   left:0; right:0; bottom:0; max-height:88vh; border-radius:12px 12px 0 0;
 }
 
-/* כרטיס כעמודה גמישה + הובר עדין */
-.card{ display:flex; flex-direction:column; transition:transform .2s, box-shadow .2s, border-color .2s; }
-.card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-sm); border-color:color-mix(in oklab,var(--primary-500) 25%, var(--border-color)); }
-
-/* כותרת – שם בשורה אחת עם אליפסיס, הבדגשת דרגה כ- badge */
-.card__title{ margin:0 0 .35rem 0; gap:.5rem; }
-.card__title strong{ inline-size:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card__title .badge{ flex:none; }
-
-/* תגיות (ארגון) */
-.card__tags{ margin-top:.25rem; gap:.35rem; }
-.card__tags .badge{ background:#0c1323; border-color:#142038; }
-
-/* תיאור – קיצור ל-3 שורות */
-.card p{ margin:.5rem 0 0; color:var(--text-secondary);
-  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
-}
-
-/* פוטר – דבוק לתחתית הכרטיס, קו עליון מלא ועדינות באייקונים */
-.card__footer{ margin-top:auto; padding-top:var(--space-md); border-top:1px solid var(--border-color); }
-.card__footer i{ font-size:.9em; opacity:.9; }
-
-.card{
-  display:flex;                 /* עמודה גמישה */
-  flex-direction:column;
-  height:100%;
-  background:var(--bg-elev);
-  border:1px solid var(--border-color);
-  border-radius:16px;
-  padding:var(--space-lg);
-  box-shadow:var(--shadow-xs);
-  transition:transform .2s, box-shadow .2s, border-color .2s;
-}
-.card:hover{
-  transform:translateY(-2px);
-  box-shadow:var(--shadow-sm);
-  border-color:color-mix(in oklab,var(--primary-500) 22%, var(--border-color));
-}
-
-/* כותרת: שם בשורה אחת עם אליפסיס + badge */
-.card__title{ margin:0 0 .35rem 0; display:flex; align-items:baseline; gap:.5rem; }
-.card__title strong{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card__title .badge{ flex:none; }
-
-/* תגיות (ארגון) */
-.card__tags{ margin-top:.25rem; display:flex; flex-wrap:wrap; gap:.35rem; }
-.card__tags .badge{ background:#0c1323; border-color:#142038; }
-
-/* תיאור – 3 שורות מקסימום */
-.card p{
-  margin:.5rem 0 0;
-  color:var(--text-secondary);
-  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
-}
-
-/* פוטר – דבוק לתחתית, קו עדין */
-.card__footer{
-  margin-top:auto;
-  padding-top:var(--space-md);
-  border-top:1px solid var(--border-color);      /* החלף את ה-dashed שהיה */
-  display:flex; gap:var(--space-md); flex-wrap:wrap; align-items:center;
-}
-.card__footer .meta{ font-size:var(--font-size-sm); opacity:.9; }
 
 /* הדגשת חיפוש (אם יש) */
 mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
+
+/* כשעמוד RTL – התוכן בכרטיסים יוצג LTR כדי להיראות כמו באנגלית */
+html[dir="rtl"] .card,
+html[dir="rtl"] .card *{
+  direction:ltr;
+  text-align:left;
+}
