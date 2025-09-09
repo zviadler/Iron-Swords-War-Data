@@ -1,10 +1,10 @@
 /* ==================================================================
-   Project: Iron Swords War Data — style.css (clean)
-   Date: 2025-09-02
+   Project: Iron Swords War Data — style.css (clean, consolidated)
+   Date: 2025-09-09
    Notes:
-   - Aligns class names with index.html (aliases for buttons, filters-bar).
-   - Adds minimal utilities for Tailwind-like classes used in HTML.
-   - RTL-friendly via logical properties; low specificity; accessible focus.
+   - Deduplicated overlapping blocks (results-toolbar / columns popover).
+   - Fixed minor rgba typos; kept existing visual design.
+   - Matches current HTML structure (filters-grid, fi--*), RTL-friendly.
    ================================================================== */
 
 /* -----------------------------
@@ -129,6 +129,7 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 .my-8 { margin-block: 2rem !important; }
 .mt-2 { margin-block-start: .5rem !important; }
 .mt-4 { margin-block-start: 1rem !important; }
+.mt-2 { margin-block-start: .5rem !important; }
 .mb-8 { margin-block-end: 2rem !important; }
 .text-center { text-align: center !important; }
 
@@ -186,29 +187,47 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
   padding: var(--space-sm);
 }
 
-.filters-row {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0,1fr));
-  gap: var(--space-sm);
+/* ====== Filters grid ====== */
+.filters-grid{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:var(--space-sm);
+  align-items:end;
 }
-.filters-row .filter-item { grid-column: span 3; min-inline-size: 0; }
-.filters-row .filter-item--wide { grid-column: span 6; }
+.fi{ min-inline-size:0; }
 
-@media (max-width: 900px) {
-  .filters-row .filter-item { grid-column: span 6; }
-}
-@media (max-width: 600px) {
-  .filters-row .filter-item,
-  .filters-row .filter-item--wide { grid-column: 1 / -1; }
+.fi--search{   grid-column: span 4; }
+.fi--location{ grid-column: span 2; }
+.fi--org{      grid-column: span 2; }
+.fi--rank{     grid-column: span 2; }
+
+.fi--dates{    grid-column: span 4; }
+.fi--actions{
+  grid-column: span 4;
+  display:flex; gap:var(--space-sm); align-items:end; flex-wrap:wrap;
 }
 
-/* Date range group (match HTML .date-range as well) */
+/* Date range group */
 #dateRangeGroup, .date-range, .date-range-group {
   display: flex; align-items: center; gap: var(--space-sm);
 }
+.date-range input[type="date"]{ inline-size:14ch; }
 .date-sep { color: var(--text-secondary); margin-inline: var(--space-xs); }
 .loading-text { margin-inline-start: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary); }
 
+/* Responsive for filters grid */
+@media (max-width:1100px){
+  .fi--search{ grid-column: span 12; }
+  .fi--location, .fi--org, .fi--rank{ grid-column: span 6; }
+  .fi--dates{  grid-column: span 8; }
+  .fi--actions{grid-column: span 4; }
+}
+@media (max-width:800px){
+  .fi--location, .fi--org, .fi--rank,
+  .fi--dates, .fi--actions{ grid-column: span 12; }
+}
+
+/* Footer actions row under filters (if present) */
 .footer-actions {
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--space-sm);
@@ -241,7 +260,7 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 
 /* -----------------------------
-   7) Buttons (+aliases to match HTML)
+   7) Buttons
    ----------------------------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
@@ -259,23 +278,14 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .btn:active { transform: translateY(1px); }
 .btn[disabled], .btn:disabled { opacity: .6; cursor: not-allowed; }
 
-/* Secondary */
 .btn--secondary,
 .btn-secondary { background: #374151; color: #fff; }
-
-/* Outline */
 .btn--ghost,
 .btn-outline { background: transparent; color: var(--text); border-color: var(--border-color); }
-
-/* Link-style */
 .btn-link { background: transparent; border: 0; color: var(--link); padding: 0; }
-
-/* Light (pagination arrows) */
 .btn-light { background: #1f2937; color: var(--text); border-color: var(--border-color); }
-
 .btn--danger { background: var(--danger); color: #fff; }
 .btn--success { background: var(--success); color: #fff; }
-
 .btn--sm { padding: .45rem .65rem; font-size: var(--font-size-sm); border-radius: var(--radius-sm); }
 .btn--lg { padding: .8rem 1.1rem; font-size: var(--font-size-lg); border-radius: var(--radius-lg); }
 
@@ -289,13 +299,15 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   padding: var(--space-lg);
   box-shadow: var(--shadow-xs);
 }
-.card__title {
-  margin: 0 0 var(--space-sm) 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  display: flex; align-items: baseline; gap: .5rem;
-}
+.card__title { margin: 0 0 var(--space-sm) 0; font-size: 1.125rem; font-weight: 600; display: flex; align-items: baseline; gap: .5rem; }
 .card__meta { color: var(--text-secondary); font-size: var(--font-size-sm); }
+.card__footer {
+  display: flex; gap: var(--space-md); align-items: center; justify-content: flex-start;
+  margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px dashed var(--border-color);
+}
+.card__footer .meta { display: inline-flex; align-items: center; gap: .4rem; font-size: var(--font-size-sm); color: var(--text-secondary); }
+.card__footer .meta .num { font-variant-numeric: tabular-nums; }
+.card__tags { display: flex; flex-wrap: wrap; gap: .35rem; }
 
 /* -----------------------------
    9) Tables / Data
@@ -320,7 +332,7 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   text-align: start;
   padding: .7rem .75rem;
   border-bottom: 1px solid var(--border-color);
-  z-index: 1;
+  z-index: 5; /* keep above rows but below popovers */
   cursor: pointer;
 }
 .data-table tbody td {
@@ -328,7 +340,7 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   border-bottom: 1px solid var(--border-color);
   vertical-align: top;
 }
-.data-table tbody tr:hover { background: rgba(255,255,255,.03); } /* fixed .03 */
+.data-table tbody tr:hover { background: rgba(255,255,255,.03); }
 
 .text-end { text-align: end; }
 .text-start { text-align: start; }
@@ -385,10 +397,8 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty { text-align: center; color: var(--text-secondary); padding: var(--space-xl) 0; }
-/* Match HTML class name, too */
 .empty-state { text-align: center; color: var(--text-secondary); padding: var(--space-xl) 0; }
 
-/* Toasts */
 .toast-container {
   position: fixed; inset-inline-end: 1rem; inset-block-end: 1rem;
   display: grid; gap: .5rem; z-index: 1100;
@@ -403,13 +413,9 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 /* -----------------------------
    12) Stats
    ----------------------------- */
-.stats-grid {
-  display: grid; gap: var(--space-lg);
-  grid-template-columns: repeat(4, minmax(0,1fr));
-}
+.stats-grid { display: grid; gap: var(--space-lg); grid-template-columns: repeat(4, minmax(0,1fr)); }
 @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
-
 .stat-card {
   background: var(--bg-elev);
   border: 1px solid var(--border-color);
@@ -427,7 +433,6 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .muted { color: var(--text-secondary) !important; }
 .nowrap { white-space: nowrap !important; }
 
-/* Spacing helpers */
 .mt-sm { margin-block-start: var(--space-sm) !important; }
 .mt-md { margin-block-start: var(--space-md) !important; }
 .mt-lg { margin-block-start: var(--space-lg) !important; }
@@ -451,232 +456,88 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .badge--danger  { background: color-mix(in oklab, var(--danger) 20%, #0f1a2c); color: #fde1e1; }
 
 /* -----------------------------
-   14) Misc (optional)
+   14) Misc
    ----------------------------- */
-/* Language toggle (optional visual) */
 .language-toggle {
   position: fixed; inset-inline-start: 1rem; inset-block-start: 1rem;
   background: #1f2937; color: var(--text); border: 1px solid var(--border-color);
   padding: .35rem .6rem; border-radius: var(--radius-md); cursor: pointer; z-index: 100;
 }
-
-/* Mobile filters toggle button */
 .mobile-filters-toggle {
   display: inline-flex; align-items: center; gap: .5rem;
   background: #1f2937; color: var(--text);
   border: 1px solid var(--border-color); border-radius: var(--radius-md);
   padding: .5rem .75rem; cursor: pointer;
 }
-
-/* Results counter & page info */
 .results-counter { color: var(--text-secondary); }
 .page-info { color: var(--text-secondary); }
 
 /* -----------------------------
-   15) Print
+   15) Results Toolbar (top bar)
    ----------------------------- */
-@media print {
-  .back-to-top, .loading-overlay { display: none !important; }
-  .btn { background: #333 !important; color: #fff !important; }
-  .table-container { box-shadow: none; border: 1px solid #999; }
-}
-/* פעולות (איפוס/החלפת תצוגה) – שיהיו גמישות ולא ידבקו לשאר */
-.filters-row .filter-actions {
-  grid-column: span 3;          /* תופס 3 מתוך 12 בדסקטופ – כמו filter-item רגיל */
-  display: flex;
-  gap: var(--space-sm);
-  align-items: end;
-  justify-content: flex-start;
-}
-
-/* במסכים צרים – שייכנסו לשורה נפרדת, רוחב מלא */
-@media (max-width: 900px) {
-  .filters-row .filter-actions { grid-column: 1 / -1; }
-}
-@media (max-width: 600px) {
-  .filters-row .filter-actions { grid-column: 1 / -1; }
-}
-#clearDatesBtn { display: none !important; }
-/* ====== Filters grid (ללא חפיפות) ====== */
-.filters-grid{
-  display:grid;
-  grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:var(--space-sm);
-  align-items:end;         /* יישור לתחתית הבקרים */
-}
-.fi{ min-inline-size:0; }  /* מאפשר הצטמצמות בלי גלישה */
-
-/* פריסת דסקטופ:
-   שורה 1: חיפוש(4) + מיקום(2) + ארגון(2) + דרגה(2)  => 10 טורים (ישארו 2 ריקים)
-   שורה 2: תאריכים(8) + פעולות(4) => 12 טורים, אותה שורה */
-.fi--search{   grid-column: span 4; }
-.fi--location{ grid-column: span 2; }
-.fi--org{      grid-column: span 2; }
-.fi--rank{     grid-column: span 2; }
-
-.fi--dates{    grid-column: span 4; }
-.fi--actions{
-  grid-column: span 4;
-  display:flex; gap:var(--space-sm); align-items:end; flex-wrap:wrap;
-}
-
-/* קבוצת התאריכים – רוחב נוח לשדות */
-.date-range{ display:flex; align-items:center; gap:var(--space-sm); }
-.date-range input[type="date"]{ inline-size:14ch; } /* בערך mm/dd/yyyy */
-.date-sep{ color:var(--text-secondary); }
-
-/* התאמות למסכים בינוניים: מחזיקים את היחסים 8+4 כדי שיישארו באותה שורה */
-@media (max-width:1100px){
-  .fi--search{ grid-column: span 12; }
-  .fi--location, .fi--org, .fi--rank{ grid-column: span 6; }
-  .fi--dates{  grid-column: span 8; }
-  .fi--actions{grid-column: span 4; }
-}
-
-/* מובייל – הכול שורה-שורה */
-@media (max-width:800px){
-  .fi--location, .fi--org, .fi--rank{ grid-column: span 12; }
-  .fi--dates{  grid-column: span 12; }
-  .fi--actions{grid-column: span 12; }
-}
-
-/* נטרול טריקים ישנים שגרמו לחפיפות */
-#resetBtn,#dateFrom,#dateTo{ position:relative; z-index:auto; margin-top:0; }
-
-/* Initially hide the button on desktop */
-#mobileFiltersToggle {
-  display: none;
-}
-
-/* Show it only on mobile screens (max-width 768px) */
-@media (max-width: 768px) {
-  #mobileFiltersToggle {
-    display: block;
-  }
-}
-/* ==== Results Toolbar (top, near the table) ==== */
 .results-toolbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  display:flex; align-items:center; justify-content:space-between;
   gap: var(--space-sm);
   margin-block: var(--space-md);
   padding: var(--space-sm) var(--space-md);
   background: var(--panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
+  position: relative;
+  z-index: 20; /* above table header */
 }
 .results-toolbar .rt-left,
 .results-toolbar .rt-right{
-  display:flex;
-  align-items:center;
-  gap:.6rem;
+  display:flex; align-items:center; gap:.6rem; min-width:0;
 }
+.results-toolbar .rt-right{ flex-wrap: wrap; }
 .results-toolbar .results-counter{ font-weight:600; }
 .results-toolbar select#pageSize{ min-inline-size:7ch; padding:.4rem .6rem; }
 
-/* מובייל: להפוך לערימה אנכית */
 @media (max-width: 700px){
   .results-toolbar{ flex-direction:column; align-items:stretch; }
   .results-toolbar .rt-right{ justify-content:space-between; }
 }
-/* ==== Footer cleanup ==== */
-.footer-info{
-  margin-block-start: var(--space-2xl);
-  padding-block-start: var(--space-lg);
-  border-top: 1px solid var(--border-color);
-  color: var(--text-secondary);
+@media (max-width: 768px){
+  .results-toolbar{ flex-wrap: wrap; gap: .5rem .6rem; }
+  .results-toolbar .rt-left,
+  .results-toolbar .rt-right{ flex: 1 1 100%; }
+  .results-toolbar .rt-right{ justify-content: flex-start; }
 }
-.footer-info p{ margin: .25rem 0; }
-.footer-info .footer-actions{ display: none; } /* הכפתור עבר לטופ-בר */
 
-/* === Cards: fixed footer with icons === */
-.card__footer {
-  display: flex;
-  gap: var(--space-md);
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: var(--space-md);
-  padding-top: var(--space-sm);
-  border-top: 1px dashed var(--border-color);
-}
-.card__footer .meta {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-.card__footer .meta .num { font-variant-numeric: tabular-nums; }
-
-/* === Optional: tags row under title === */
-.card__tags { display: flex; flex-wrap: wrap; gap: .35rem; }
-
-/* === Columns picker (table view) === */
+/* -----------------------------
+   16) Columns picker (table view)
+   ----------------------------- */
 .columns-btn { margin-inline-start: .4rem; }
-.columns-pop {
-  position: absolute;
-  inset-block-start: calc(100% + .5rem);
-  inset-inline-end: 0;
+
+.columns-pop{
+  position: fixed; /* viewport anchored for correct placement */
+  display: none;
   min-inline-size: 230px;
+  max-width: min(92vw, 420px);
   padding: .6rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: var(--shadow-sm);
-  display: none;
+  z-index: 10050; /* above table header */
 }
 .columns-pop.is-open { display: block; }
 .columns-pop header { font-size: .9rem; color: var(--text-secondary); margin-bottom: .4rem; }
-.columns-pop .cols-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem;
-}
+.columns-pop .cols-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
 .columns-pop label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
 .columns-pop .actions { display: flex; gap: .4rem; margin-top: .5rem; justify-content: space-between; }
 
-/* Keep the columns popover inside the viewport */
-.columns-pop {
-  position: fixed;          /* לא תלוי במכלים שגוללים לרוחב */
-  z-index: 1000;
-  max-width: min(92vw, 420px);
-}
-
-/* Backdrop for mobile */
-.columns-backdrop {
-  position: fixed;
-  inset: 0;
+/* Backdrop (mobile) */
+.columns-backdrop{
+  position: fixed; inset: 0;
   background: rgba(0,0,0,.35);
-  z-index: 999;
+  z-index: 10040;
   display: none;
 }
-.columns-backdrop.is-open { display: block; }
-
-/* Bottom-sheet style on small screens */
-@media (max-width: 768px) {
-  .columns-pop.is-mobile {
-    left: 12px !important;
-    right: 12px !important;
-    top: auto !important;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    width: auto !important;
-    max-height: 70vh;
-    overflow: auto;
-    border-radius: var(--radius-lg);
-  }
-}
-/* הפופ-אובר והבקדרופ תמיד מעל ה-thead */
-.columns-pop       { z-index: 10050 !important; }
-.columns-backdrop  { z-index: 10040 !important; }
-
-/* ה-thead עדיין מעל שורות הטבלה, אבל מתחת לפופ-אובר */
-.data-table thead th { z-index: 5; }   /* אם יש לך כבר z-index גבוה – תוריד/תעדכן */
-
-/* Columns popover: always above table header and inside viewport */
-.columns-pop{ position:fixed; max-width:min(92vw,420px); z-index:10050; display:none; }
-.columns-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:10040; display:none; }
 .columns-backdrop.is-open{ display:block; }
 
-/* Mobile: bottom-sheet style */
+/* Bottom-sheet style on mobile */
 @media (max-width:768px){
   .columns-pop.is-mobile{
     left:12px !important; right:12px !important;
@@ -685,96 +546,55 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   }
 }
 
-/* make sure the table header stays below the popover */
-.data-table thead th{ z-index:5; }
+/* -----------------------------
+   17) Footer tweaks / filter sheet overrides
+   ----------------------------- */
+.footer-info{
+  margin-block-start: var(--space-2xl);
+  padding-block-start: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.footer-info p{ margin: .25rem 0; }
+/* export button moved to results-toolbar */
+.footer-info .footer-actions{ display: none; }
 
-/* שמור את ה-toolbar תמיד מעל הטבלה ולתת לו לעבור שורה במובייל */
-.results-toolbar{
-  position: relative;
-  z-index: 20;                 /* מעל ה-thead (z-index:1 אצלך) */
-  flex-wrap: nowrap;
-}
-.results-toolbar .rt-right{
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  flex-wrap: wrap;             /* מאפשר ירידת כפתורים לשורה חדשה */
-  min-width: 0;                /* שובר מינימום מובנה של flex item */
-}
-.results-toolbar .rt-left{ min-width: 0; }
-
-/* במסכים צרים: לפצל לשתי שורות כדי שלא יצא מהמסך */
-@media (max-width: 768px){
-  .results-toolbar{ flex-wrap: wrap; gap: .5rem .6rem; }
-  .results-toolbar .rt-left,
-  .results-toolbar .rt-right{ flex: 1 1 100%; }
-  .results-toolbar .rt-right{ justify-content: flex-start; }
-}
-.columns-pop{ position: fixed; max-width: min(92vw, 420px); z-index: 10050; display: none; }
-.columns-backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 10040; display: none; }
-.columns-backdrop.is-open{ display:block; }
-@media (max-width: 768px){
-  .columns-pop.is-mobile{
-    left: 12px !important; right: 12px !important;
-    top: auto !important; bottom: max(12px, env(safe-area-inset-bottom));
-    width: auto !important; max-height: 70vh; overflow: auto; border-radius: 12px;
-  }
-}
-/* כשסרגל הפילטרים בתוך ה-bottom sheet: פריסה אנכית, שדות פרוסים מלא */
-#filterSheet .filters-bar {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-sm, 12px);
-}
-
-#filterSheet .filters-bar select,
-#filterSheet .filters-bar input,
-#filterSheet .filters-bar button {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* אם יש קבוצות שדות זו לצד זו – שבירה ל-2 עמודות רק במסכים בינוניים ומעלה */
-@media (min-width: 480px){
-  #filterSheet .filters-bar .row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-sm, 12px);
-  }
-}
-@media (max-width: 700px){
-  .results-toolbar .rt-right{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-sm, 12px);
-  }
-  .results-toolbar .rt-right > * {
-    width: 100%;
-  }
-  /* אם יש פריט שצריך רוחב מלא (למשל share), תן לו span: */
-  .results-toolbar .rt-right .span-2 {
-    grid-column: 1 / -1;
-  }
-}
-/* כשסרגל הפילטרים בתוך ה-bottom sheet – דרוס במפורש את flex */
+/* Optional bottom sheet container id created by JS */
 #filterSheet #filtersBar {
-  display: grid !important;            /* מכריח מעבר ל-grid בתוך ה-sheet */
+  display: grid !important;
   grid-template-columns: 1fr;
-  gap: var(--space-sm, 12px);
+  gap: var(--space-sm);
   justify-items: start;
 }
-
-/* פריסת הילדים בפועל */
 #filterSheet #filtersBar .filters-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-sm, 12px);
+  gap: var(--space-sm);
 }
-
-/* אלמנטים טופסיים – רוחב מלא במובייל/Sheet */
 #filterSheet #filtersBar select,
 #filterSheet #filtersBar input,
 #filterSheet #filtersBar button {
   width: 100%;
   max-width: 100%;
 }
+
+/* -----------------------------
+   18) Mobile filters toggle visibility
+   ----------------------------- */
+#mobileFiltersToggle { display: none; }
+@media (max-width: 768px) { #mobileFiltersToggle { display: block; } }
+
+/* -----------------------------
+   19) Print
+   ----------------------------- */
+@media print {
+  .back-to-top, .loading-overlay { display: none !important; }
+  .btn { background: #333 !important; color: #fff !important; }
+  .table-container { box-shadow: none; border: 1px solid #999; }
+}
+
+/* -----------------------------
+   20) Project-specific current UX decisions
+   ----------------------------- */
+/* Keep Clear Dates button hidden to match current UI */
+#clearDatesBtn { display: none !important; }
