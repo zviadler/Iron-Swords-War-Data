@@ -603,3 +603,10 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
    ----------------------------- */
 /* Keep Clear Dates button hidden to match current UI */
 #clearDatesBtn { display: none !important; }
+
+
+.columns-pop{ position:fixed; z-index:1102; }
+.columns-backdrop{ position:fixed; z-index:1101; }
+.columns-pop.is-mobile{
+  left:0; right:0; bottom:0; max-height:88vh; border-radius:12px 12px 0 0;
+}
