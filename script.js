@@ -849,6 +849,7 @@ function render() {
   
   clearContent();
   if (!dom.contentArea) return;
+  dom.contentArea.classList.toggle('table-container', !state.isCardView);
 
   updateStats();
   updateResultsBar();

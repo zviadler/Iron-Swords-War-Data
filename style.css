@@ -159,11 +159,13 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 @media (max-width: 600px) { .container { padding-inline: var(--space-sm); } }
 
 /* Cards grid container (for JS-rendered cards) */
-.cards {
-  display: grid;
-  gap: var(--space-lg);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.cards{
+  display:grid;
+  gap:var(--space-lg);
+  grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+  align-items:stretch;
 }
+
 @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 700px)  { .cards { grid-template-columns: 1fr; } }
 
@@ -610,3 +612,28 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .columns-pop.is-mobile{
   left:0; right:0; bottom:0; max-height:88vh; border-radius:12px 12px 0 0;
 }
+
+/* כרטיס כעמודה גמישה + הובר עדין */
+.card{ display:flex; flex-direction:column; transition:transform .2s, box-shadow .2s, border-color .2s; }
+.card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-sm); border-color:color-mix(in oklab,var(--primary-500) 25%, var(--border-color)); }
+
+/* כותרת – שם בשורה אחת עם אליפסיס, הבדגשת דרגה כ- badge */
+.card__title{ margin:0 0 .35rem 0; gap:.5rem; }
+.card__title strong{ inline-size:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card__title .badge{ flex:none; }
+
+/* תגיות (ארגון) */
+.card__tags{ margin-top:.25rem; gap:.35rem; }
+.card__tags .badge{ background:#0c1323; border-color:#142038; }
+
+/* תיאור – קיצור ל-3 שורות */
+.card p{ margin:.5rem 0 0; color:var(--text-secondary);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* פוטר – דבוק לתחתית הכרטיס, קו עליון מלא ועדינות באייקונים */
+.card__footer{ margin-top:auto; padding-top:var(--space-md); border-top:1px solid var(--border-color); }
+.card__footer i{ font-size:.9em; opacity:.9; }
+
+/* הדגשת חיפוש (מגיע מ-highlight ב-JS) */
+mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
