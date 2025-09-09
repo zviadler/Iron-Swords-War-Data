@@ -159,15 +159,20 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 @media (max-width: 600px) { .container { padding-inline: var(--space-sm); } }
 
 /* Cards grid container (for JS-rendered cards) */
+/* Cards grid */
 .cards{
   display:grid;
   gap:var(--space-lg);
   grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
-  align-items:stretch;
+  align-items:stretch;           /* כל כרטיס מתוח לגובה התא */
 }
-
-@media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (max-width: 700px)  { .cards { grid-template-columns: 1fr; } }
+@media (max-width:700px){
+  .cards{ gap:var(--space-md); }
+}
+@media (max-width:500px){
+  .card{ padding:var(--space-md); }
+  .card p{ -webkit-line-clamp:2; }
+}
 
 /* Simple header */
 .site-header h1 { margin: 0; }
@@ -635,5 +640,47 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .card__footer{ margin-top:auto; padding-top:var(--space-md); border-top:1px solid var(--border-color); }
 .card__footer i{ font-size:.9em; opacity:.9; }
 
-/* הדגשת חיפוש (מגיע מ-highlight ב-JS) */
+.card{
+  display:flex;                 /* עמודה גמישה */
+  flex-direction:column;
+  height:100%;
+  background:var(--bg-elev);
+  border:1px solid var(--border-color);
+  border-radius:16px;
+  padding:var(--space-lg);
+  box-shadow:var(--shadow-xs);
+  transition:transform .2s, box-shadow .2s, border-color .2s;
+}
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-sm);
+  border-color:color-mix(in oklab,var(--primary-500) 22%, var(--border-color));
+}
+
+/* כותרת: שם בשורה אחת עם אליפסיס + badge */
+.card__title{ margin:0 0 .35rem 0; display:flex; align-items:baseline; gap:.5rem; }
+.card__title strong{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card__title .badge{ flex:none; }
+
+/* תגיות (ארגון) */
+.card__tags{ margin-top:.25rem; display:flex; flex-wrap:wrap; gap:.35rem; }
+.card__tags .badge{ background:#0c1323; border-color:#142038; }
+
+/* תיאור – 3 שורות מקסימום */
+.card p{
+  margin:.5rem 0 0;
+  color:var(--text-secondary);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* פוטר – דבוק לתחתית, קו עדין */
+.card__footer{
+  margin-top:auto;
+  padding-top:var(--space-md);
+  border-top:1px solid var(--border-color);      /* החלף את ה-dashed שהיה */
+  display:flex; gap:var(--space-md); flex-wrap:wrap; align-items:center;
+}
+.card__footer .meta{ font-size:var(--font-size-sm); opacity:.9; }
+
+/* הדגשת חיפוש (אם יש) */
 mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
