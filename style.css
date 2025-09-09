@@ -112,6 +112,12 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 
 /* Focus */
 :where(a, button, [role="button"], input, select, textarea):focus-visible {
+  /* Fallbacks קודם */
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(37,99,235,.25);
+
+  /* ואז המתקדמים (בדפדפנים שתומכים) */
   outline: 2px solid color-mix(in oklab, var(--primary-500) 70%, white 0%);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary-500) 25%, transparent);
@@ -129,7 +135,6 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 .my-8 { margin-block: 2rem !important; }
 .mt-2 { margin-block-start: .5rem !important; }
 .mt-4 { margin-block-start: 1rem !important; }
-.mt-2 { margin-block-start: .5rem !important; }
 .mb-8 { margin-block-end: 2rem !important; }
 .text-center { text-align: center !important; }
 
