@@ -109,7 +109,8 @@ const I18N = {
     export_btn: "ייצא CSV",
 
     // פוטר
-    footer_legal: "מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד."
+    footer_legal: "מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.",
+    data_collection: "המידע נאסף ממקורות פתוחים ומתעדכן באופן שוטף."
   },
 
   en: {
@@ -161,9 +162,41 @@ const I18N = {
     export_btn: "Export CSV",
 
     // Footer
-    footer_legal: "Combatant Identification Database — Data is provided for informational purposes only."
+    footer_legal: "Combatant Identification Database — Data is provided for informational purposes only.",
+    data_collection: "Data is collected from open sources and updated continuously."
   }
 };
+
+// מספרים מעוצבים לפי שפה
+function nf() {
+  const lang = (typeof state !== 'undefined' && state?.lang) ? state.lang : (document.documentElement.lang || 'he');
+  try { return new Intl.NumberFormat(lang); }
+  catch { return new Intl.NumberFormat('en'); }
+}
+
+// מחזיר טקסט של 3 הערכים הנפוצים בשדה כלשהו, בסגנון: "A: 12 • B: 7 • C: 5"
+function topCounts(rows, field, max = 3) {
+  if (!Array.isArray(rows) || !rows.length) return '—';
+  const map = {};
+  for (const r of rows) {
+    const key = String(r?.[field] ?? '').trim();
+    if (!key) continue;
+    map[key] = (map[key] || 0) + 1;
+  }
+  const sorted = Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0, max);
+  if (!sorted.length) return '—';
+  const fmt = nf();
+  return sorted.map(([k,v]) => `${k}: ${fmt.format(v)}`).join(' • ');
+}
+
+// קיצור נוח לעדכון ערך + הסתרה אם אין נתון
+function setStatValue(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  const card = el.closest('.stat-card');
+  if (card) card.classList.toggle('hidden', text === '—' || text === '0');
+}
 
 /**
  * applyI18n – מחליף טקסטים/מאפיינים בכל האלמנטים שסומנו ב־data-i18n*
@@ -1116,28 +1149,32 @@ function topCounts(arr, key, n=3) {
 
 function updateStats() {
   const fmt = nf();
-  if (dom.totalCombatants || dom.totalCasualties || dom.familyCasualties || dom.highRanking) {
-    const total = state.filteredData.length;
-    const casualties = state.filteredData.reduce((sum,r)=> sum + (parseInt(r.casualties_count||0,10) || 0), 0);
-    const family = state.filteredData.filter(r=>/\bמשפחה\b|\bfamily\b/i.test(r.family_members||'')).length;
-    const high = state.filteredData.filter(r=>/\bמפקד\b|מג"ד|סגן|קצין|\bcommander\b|\bchief\b|\brank\b/i.test(r.rank_role||'')).length;
 
-    if (dom.totalCombatants) dom.totalCombatants.textContent = fmt.format(total);
-    if (dom.totalCasualties) dom.totalCasualties.textContent = fmt.format(casualties);
-    if (dom.familyCasualties) dom.familyCasualties.textContent = fmt.format(family);
-    if (dom.highRanking) dom.highRanking.textContent = fmt.format(high);
-  }
+  // גריד ראשון
+  const total = Array.isArray(state.filteredData) ? state.filteredData.length : 0;
+  const casualties = (state.filteredData || []).reduce((sum, r) =>
+    sum + (parseInt(r.casualties_count || 0, 10) || 0), 0);
 
-  if (d('statsTotal') || d('statsByLocation') || d('statsByOrg') || d('statsByRank')) {
-    const sT = d('statsTotal'); if (sT) sT.textContent = nf().format(state.filteredData.length);
-  }
+  const family = (state.filteredData || []).filter(r =>
+    /\b(משפחה|family)\b/i.test(String(r.family_members || ''))
+  ).length;
 
-  // NEW: Top-3 stats
-  const sLoc = d('statsByLocation'), sOrg = d('statsByOrg'), sRank = d('statsByRank');
-  if (sLoc) sLoc.textContent = topCounts(state.filteredData,'location');
-  if (sOrg) sOrg.textContent = topCounts(state.filteredData,'organization');
-  if (sRank) sRank.textContent = topCounts(state.filteredData,'rank_role');
+  const high = (state.filteredData || []).filter(r =>
+    /\b(מפקד|מג"ד|סגן|קצין|commander|chief|rank)\b/i.test(String(r.rank_role || ''))
+  ).length;
+
+  setStatValue('totalCombatants', fmt.format(total));
+  setStatValue('totalCasualties', fmt.format(casualties));
+  setStatValue('familyCasualties', family ? fmt.format(family) : '—');   // אם אין, יוסתר
+  setStatValue('highRanking',     high   ? fmt.format(high)   : '—');
+
+  // גריד שני
+  setStatValue('statsTotal',      fmt.format(total));
+  setStatValue('statsByLocation', topCounts(state.filteredData || [], 'location'));
+  setStatValue('statsByOrg',      topCounts(state.filteredData || [], 'organization'));
+  setStatValue('statsByRank',     topCounts(state.filteredData || [], 'rank_role'));
 }
+
 
 /* =============================
    CSV Export

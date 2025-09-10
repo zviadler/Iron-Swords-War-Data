@@ -204,24 +204,25 @@
     </div>
 
     <!-- Optional: English stats placeholders -->
-    <div class="stats-grid mt-4">
-      <div class="stat-card">
-        <h3>Total Records</h3>
-        <p id="statsTotal">—</p>
-      </div>
-      <div class="stat-card">
-        <h3>By Location</h3>
-        <p id="statsByLocation">—</p>
-      </div>
-      <div class="stat-card">
-        <h3>By Organization</h3>
-        <p id="statsByOrg">—</p>
-      </div>
-      <div class="stat-card">
-        <h3>By Rank</h3>
-        <p id="statsByRank">—</p>
-      </div>
-    </div>
+<div class="stats-grid mt-4">
+  <div class="stat-card">
+    <h3 data-i18n="stat_total_records">סה״כ רשומות</h3>
+    <p id="statsTotal">—</p>
+  </div>
+  <div class="stat-card">
+    <h3 data-i18n="stat_by_location">לפי מיקום</h3>
+    <p id="statsByLocation">—</p>
+  </div>
+  <div class="stat-card">
+    <h3 data-i18n="stat_by_org">לפי ארגון</h3>
+    <p id="statsByOrg">—</p>
+  </div>
+  <div class="stat-card">
+    <h3 data-i18n="stat_by_rank">לפי דרגה</h3>
+    <p id="statsByRank">—</p>
+  </div>
+</div>
+
   </section>
 
   <!-- Empty State (now using .hidden class to match JS) -->
@@ -254,9 +255,8 @@
 
   <!-- Footer Legal Info -->
   <footer class="footer-info container mx-auto mb-8" role="contentinfo">
-    <p>© <span id="currentYear">2025</span> <span data-i18n="footer_legal">מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.</span></p>
-    <p id="dataCollectionHebrew">המידע נאסף ממקורות פתוחים ומתעדכן באופן שוטף.</p>
-    <p id="dataCollectionEnglish">Data is collected from open sources and updated continuously.</p>
+  <p>© <span id="currentYear">2025</span> <span data-i18n="footer_legal">מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.</span></p>
+  <p data-i18n="data_collection">המידע נאסף ממקורות פתוחים ומתעדכן באופן שוטף.</p>
     <div class="footer-actions">
       <button id="exportBtn" class="btn btn-outline" type="button">
         <i class="fas fa-file-export" aria-hidden="true"></i>

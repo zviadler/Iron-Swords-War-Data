@@ -650,3 +650,25 @@ html[dir="rtl"] .card *{
   direction:ltr;
   text-align:left;
 }
+/* --- Footer styling (simple, clean) --- */
+.footer-info {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+.footer-info p {
+  margin: 0 0 .5rem 0;
+  color: var(--text-secondary);
+}
+.footer-info p:first-child {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .5rem;
+  margin-top: .5rem;
+}
