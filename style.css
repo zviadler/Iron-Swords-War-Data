@@ -172,7 +172,7 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 
 @media (max-width:500px){
   .card{ padding:var(--space-md); }
-  .card p{ -webkit-line-clamp:2; }
+  .card p{ line-clamp:2; }
 }
 
 /* Simple header */
@@ -224,7 +224,7 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 #dateRangeGroup, .date-range, .date-range-group {
   display: flex; align-items: center; gap: var(--space-sm);
 }
-.date-range input[type="date"]{ inline-size:14ch; }
+.date-range input[type="date"]{ inline-size:18ch; }
 .date-sep { color: var(--text-secondary); margin-inline: var(--space-xs); }
 .loading-text { margin-inline-start: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary); }
 
@@ -328,7 +328,7 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 /* תיאור – עד 3 שורות */
 .card p{
   margin:.5rem 0 0; color:var(--text-secondary);
-  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  display:-webkit-box; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
 }
 
 /* פוטר – תמיד בתחתית הכרטיס (במקום dashed) */
