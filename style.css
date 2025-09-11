@@ -675,8 +675,22 @@ html[dir="rtl"] .card *{
 /* style.css */
 .language-toggle{
   position: fixed;
-  inset-inline-start: auto;   /* מבטל את ההגדרה הקודמת */
-  inset-inline-end: 1rem;     /* מציב בפינת הסוף לפי כיוון הכתיבה */
-  inset-block-start: 1rem;
-  /* שאר הסגנונות נשארים כפי שהם */
+  inset-block-start: max(12px, env(safe-area-inset-top));
+  z-index: 1000;
+  background: #1f2937;
+  color: var(--text);
+  border: 1px solid var(--border-color);
+  padding: .35rem .6rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+/* מקמות לפי כיוון – ללא logical-inset כדי להימנע מהבאג */
+:root[dir="rtl"] .language-toggle{ left:  max(12px, env(safe-area-inset-left));  right: auto; }
+:root[dir="ltr"] .language-toggle{ right: max(12px, env(safe-area-inset-right)); left:  auto; }
+
+/* לפנות מקום לכפתור בצד ה"סיום" של ההדר, בכל שפה */
+.site-header{ padding-inline-end: 6.5rem; }  /* בערך רוחב הכפתור */
+@media (max-width:600px){
+  .site-header{ padding-inline-end: 5rem; }
 }
