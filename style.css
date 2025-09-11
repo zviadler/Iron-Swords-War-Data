@@ -672,3 +672,11 @@ html[dir="rtl"] .card *{
   gap: .5rem;
   margin-top: .5rem;
 }
+/* style.css */
+.language-toggle{
+  position: fixed;
+  inset-inline-start: auto;   /* מבטל את ההגדרה הקודמת */
+  inset-inline-end: 1rem;     /* מציב בפינת הסוף לפי כיוון הכתיבה */
+  inset-block-start: 1rem;
+  /* שאר הסגנונות נשארים כפי שהם */
+}
