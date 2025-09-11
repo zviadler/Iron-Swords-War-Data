@@ -226,7 +226,7 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 }
 .date-range input[type="date"] {
   flex: 0 0 auto;
-  min-inline-size: 18ch; /* אפשר להגדיל ל-20ch אם עדיין נחתך */
+  min-inline-size: 16ch; /* אפשר להגדיל ל-20ch אם עדיין נחתך */
   box-sizing: border-box;
   padding-inline-end: 2.2rem; /* מקום לאייקון */
 }
