@@ -224,7 +224,12 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 #dateRangeGroup, .date-range, .date-range-group {
   display: flex; align-items: center; gap: var(--space-sm);
 }
-.date-range input[type="date"]{ inline-size:14ch; }
+.date-range input[type="date"] {
+  flex: 0 0 auto;
+  min-inline-size: 18ch; /* אפשר להגדיל ל-20ch אם עדיין נחתך */
+  box-sizing: border-box;
+  padding-inline-end: 2.2rem; /* מקום לאייקון */
+}
 .date-sep { color: var(--text-secondary); margin-inline: var(--space-xs); }
 .loading-text { margin-inline-start: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary); }
 
