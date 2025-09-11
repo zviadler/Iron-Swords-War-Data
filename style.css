@@ -680,3 +680,30 @@ html[dir="rtl"] .card *{
   inset-block-start: 1rem;
   /* שאר הסגנונות נשארים כפי שהם */
 }
+/* Stack the Date Range label above the inputs */
+#dateRangeGroup{
+  flex-direction: column;       /* תווית מעל השדות */
+  align-items: stretch;         /* השדות יתפסו את הרוחב הפנוי */
+  gap: var(--space-2xs);
+}
+
+#dateRangeGroup > label{
+  display: block;               /* לוודא שהכיתוב "טווח תאריכים" יהיה בשורה משלו */
+  margin-inline-start: .125rem; /* טיפ-טיפה ריווח אופטי */
+}
+
+/* השורה של שני שדות התאריך + המפריד */
+#dateRangeGroup .date-range{
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;              /* אם צר, ירד שורה יפה */
+}
+
+/* למנוע חיתוך של yyyy ולהשאיר מרווח לאיקון */
+#dateRangeGroup .date-range input[type="date"]{
+  flex: 0 0 auto;
+  min-inline-size: 18ch;        /* אפשר להגדיל ל-20ch אם צריך */
+  box-sizing: border-box;
+  padding-inline-end: 2.2rem;   /* מקום לאיקון הבוחר */
+}
