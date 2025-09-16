@@ -221,10 +221,31 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
 }
 
 /* Date range group */
-#dateRangeGroup, .date-range, .date-range-group {
-  display: flex; align-items: center; gap: var(--space-sm);
+#dateRangeGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.date-range-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 .date-range input[type="date"]{ inline-size:18ch; }
+.date-range button { white-space: nowrap; }
 .date-sep { color: var(--text-secondary); margin-inline: var(--space-xs); }
 .loading-text { margin-inline-start: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary); }
 
@@ -431,7 +452,67 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty { text-align: center; color: var(--text-secondary); padding: var(--space-xl) 0; }
-.empty-state { text-align: center; color: var(--text-secondary); padding: var(--space-xl) 0; }
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--space-xl) var(--space-lg);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background: rgba(15, 23, 42, .35);
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: center;
+  margin-block: var(--space-lg);
+}
+.empty-state p {
+  margin: 0;
+}
+.empty-state i {
+  font-size: 2.4rem;
+  color: var(--muted);
+}
+.empty-state__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+.empty-state .btn {
+  margin-block-start: var(--space-xs);
+}
+
+.error-state {
+  display: none;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl) var(--space-lg);
+  border: 1px solid color-mix(in oklab, var(--danger) 35%, transparent);
+  border-radius: var(--radius-lg);
+  background: rgba(127, 29, 29, .15);
+  color: var(--text);
+  margin-block: var(--space-lg);
+}
+.error-state.hidden { display: none; }
+.error-state:not(.hidden) {
+  display: grid;
+  justify-items: center;
+}
+.error-state i {
+  font-size: 2.2rem;
+  color: color-mix(in oklab, var(--danger) 70%, white 15%);
+}
+.error-state__title {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+}
+.error-state__msg {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.error-state__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
 
 .toast-container {
   position: fixed; inset-inline-end: 1rem; inset-block-end: 1rem;
@@ -494,15 +575,30 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
    ----------------------------- */
 .language-toggle {
   position: fixed; inset-inline-start: 1rem; inset-block-start: 1rem;
+  display: inline-flex; align-items: center; gap: .4rem;
   background: #1f2937; color: var(--text); border: 1px solid var(--border-color);
-  padding: .35rem .6rem; border-radius: var(--radius-md); cursor: pointer; z-index: 100;
+  padding: .35rem .75rem; border-radius: var(--radius-md);
+  cursor: pointer; z-index: 100; box-shadow: var(--shadow-sm);
+}
+.language-toggle i { font-size: .95rem; color: var(--text-secondary); }
+.language-toggle .lang-text { font-weight: 600; }
+.mobile-filters-toggle-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-block: var(--space-sm);
+}
+html[dir="rtl"] .mobile-filters-toggle-wrap {
+  justify-content: flex-start;
 }
 .mobile-filters-toggle {
-  display: inline-flex; align-items: center; gap: .5rem;
+  display: flex; align-items: center; gap: .5rem;
   background: #1f2937; color: var(--text);
   border: 1px solid var(--border-color); border-radius: var(--radius-md);
   padding: .5rem .75rem; cursor: pointer;
+  inline-size: fit-content;
 }
+.mobile-filters-toggle__chevron { transition: transform var(--transition-fast) ease; }
+.mobile-filters-toggle.is-open .mobile-filters-toggle__chevron { transform: rotate(180deg); }
 .results-counter { color: var(--text-secondary); }
 .page-info { color: var(--text-secondary); }
 
@@ -626,13 +722,6 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
   .btn { background: #333 !important; color: #fff !important; }
   .table-container { box-shadow: none; border: 1px solid #999; }
 }
-
-/* -----------------------------
-   20) Project-specific current UX decisions
-   ----------------------------- */
-/* Keep Clear Dates button hidden to match current UI */
-#clearDatesBtn { display: none !important; }
-
 
 .columns-pop{ position:fixed; z-index:1102; }
 .columns-backdrop{ position:fixed; z-index:1101; }

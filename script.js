@@ -40,7 +40,7 @@ const fieldLabels = {
 const labels = {
   reset_filters: {he:"איפוס פילטרים",en:"Reset Filters"},
   export_csv: {he:"ייצא ל-CSV",en:"Export CSV"},
-  search_placeholder: {he:"🔍 חפש שם, מיקום או תיאור…",en:"🔍 Search name, location or description…"},
+  search_placeholder: {he:"חפש שם, מיקום או תיאור…",en:"Search name, location or description…"},
   results_found: {he:"נמצאו {count} תוצאות",en:"{count} results"},
   page: {he:"עמוד {c} מתוך {t}",en:"Page {c} of {t}"},
   export_success: {he:"הנתונים יוצאו בהצלחה!",en:"Data exported successfully!"},
@@ -76,7 +76,7 @@ const I18N = {
     date_from_aria: "תאריך התחלה",
     date_to_aria: "תאריך סיום",
     clear_dates_btn: "נקה תאריכים",
-    search_placeholder: "🔍 חפש שם, מיקום או תיאור…",
+    search_placeholder: "חפש שם, מיקום או תיאור…",
     reset_btn_label: "איפוס פילטרים",
 
     // אזור תוצאות/פייג'ינג
@@ -104,9 +104,14 @@ const I18N = {
 
     // מצבים/כפתורים נוספים
     empty_state_msg: "אין תוצאות התואמות את החיפוש שלך.",
+    empty_state_hint: "נסה לשנות או לנקות פילטרים כדי לקבל תוצאות.",
+    empty_reset_btn: "איפוס פילטרים",
     toast_aria: "התראות מערכת",
     back_to_top: "חזור לראש העמוד",
     export_btn: "ייצא CSV",
+    error_state_title: "אירעה בעיה בטעינת הנתונים",
+    error_state_msg: "נסה לרענן את העמוד או להפעיל את הטעינה מחדש.",
+    retry_btn: "נסה שוב",
 
     // פוטר
     footer_legal: "מאגר זיהוי לוחמים — הנתונים מוצגים לצרכי מידע בלבד.",
@@ -129,7 +134,7 @@ const I18N = {
     date_from_aria: "Start date",
     date_to_aria: "End date",
     clear_dates_btn: "Clear dates",
-    search_placeholder: "🔍 Search name, location or description…",
+    search_placeholder: "Search name, location or description…",
     reset_btn_label: "Reset Filters",
 
     // Results / pagination
@@ -157,9 +162,14 @@ const I18N = {
 
     // Misc
     empty_state_msg: "No results match your search.",
+    empty_state_hint: "Try adjusting or clearing the filters to see results.",
+    empty_reset_btn: "Reset Filters",
     toast_aria: "System notifications",
     back_to_top: "Back to top",
     export_btn: "Export CSV",
+    error_state_title: "We couldn't load the data",
+    error_state_msg: "Refresh the page or retry the load to continue.",
+    retry_btn: "Try again",
 
     // Footer
     footer_legal: "Combatant Identification Database — Data is provided for informational purposes only.",
@@ -466,6 +476,7 @@ const d = id => document.getElementById(id);
 const dom = {
   contentArea: d('contentArea'),
   emptyState: d('emptyState'),
+  dataErrorState: d('dataErrorState'),
   toastContainer: d('toastContainer'),
   loadingOverlay: d('loadingOverlay'),
 
@@ -482,6 +493,7 @@ const dom = {
   viewToggleBtn: d('viewToggleBtn') || d('viewToggle'),
   exportBtn: d('exportBtn') || d('exportCSVButton'),
   resetBtn: d('resetBtn') || d('resetFiltersButton'),
+  emptyResetBtn: d('emptyResetBtn'),
   pageSizeSelect: d('pageSize') || d('pageSizeSelect') || d('pageSizeDropdown'),
 
   // פגינציה/מונה תוצאות
@@ -493,6 +505,7 @@ const dom = {
   // פס פילטרים / מובייל
   mobileFiltersToggle: d('mobileFiltersToggle'),
   filtersBar: d('filtersBar'),
+  retryLoadBtn: d('retryLoadBtn'),
 };
 
 /* =============================
@@ -527,6 +540,23 @@ function showToast(msg, type='success') {
   el.textContent = msg;
   dom.toastContainer.appendChild(el);
   setTimeout(()=>{ el.remove(); }, 3500);
+}
+
+function showDataError(){
+  if (!dom.dataErrorState) return;
+  dom.dataErrorState.classList.remove('hidden');
+  dom.emptyState?.classList.add('hidden');
+  clearContent();
+  dom.resultsCounter?.classList.add('hidden');
+  dom.pageInfo?.classList.add('hidden');
+  dom.contentArea?.classList.add('hidden');
+}
+
+function hideDataError(){
+  dom.dataErrorState?.classList.add('hidden');
+  dom.contentArea?.classList.remove('hidden');
+  dom.resultsCounter?.classList.remove('hidden');
+  dom.pageInfo?.classList.remove('hidden');
 }
 
 function parseInputDate(v, endOfDay=false) {
@@ -597,9 +627,10 @@ function normalizeText(s){
 /* עזרי UI */
 function setLangButtonUI() {
   if (!dom.langBtn) return;
-  const span = dom.langBtn.querySelector('span') || dom.langBtn;
+  const span = dom.langBtn.querySelector('.lang-text') || dom.langBtn;
   span.textContent = labels.lang_switch[state.lang];
   dom.langBtn.setAttribute('aria-label', labels.lang_switch[state.lang]);
+  dom.langBtn.setAttribute('title', labels.lang_switch[state.lang]);
 }
 
 function updateViewToggleUI(){
@@ -654,6 +685,7 @@ function normalizeHeader(h) {
 ==============================*/
 function loadData() {
   showLoading(true);
+  hideDataError();
   const csvDiv = d('dataCSV');
   const url = csvDiv?.dataset?.url;
 
@@ -705,12 +737,16 @@ function loadData() {
           } catch (e3) {
             console.error('[CSV] All strategies failed', e3);
             showToast(labels.csv_error[state.lang], 'error');
+            state.originalData = [];
+            state.filteredData = [];
+            showDataError();
             showLoading(false);
             return;
           }
         }
       }
 
+      hideDataError();
       state.filteredData = state.originalData.slice(0);
       populateFilters();
       syncFiltersUIFromState();
@@ -737,6 +773,7 @@ function loadData() {
     syncFiltersUIFromState();
     applyAll();
     showLoading(false);
+    hideDataError();
   }
 }
 
@@ -899,6 +936,7 @@ function render() {
   if (typeof updateColumnsUI === 'function') updateColumnsUI();
   
   clearContent();
+  dom.contentArea?.classList.remove('hidden');
   if (!dom.contentArea) return;
   dom.contentArea.classList.toggle('table-container', !state.isCardView);
 
@@ -1245,12 +1283,16 @@ function countActiveFilters(){
 
 function updateFiltersBadge(){
   if (!dom.mobileFiltersToggle) return;
-  const base = state.lang==='he' ? labels.open_filters.he : labels.open_filters.en;
+  const isOpen = dom.mobileFiltersToggle.classList.contains('is-open');
+  const base = isOpen
+    ? (state.lang==='he' ? labels.close_filters.he : labels.close_filters.en)
+    : (state.lang==='he' ? labels.open_filters.he : labels.open_filters.en);
   const n = countActiveFilters();
-  const badgeText = n ? (state.lang==='he'
-                         ? labels.active_filters.he.replace('{n}', n)
-                         : labels.active_filters.en.replace('{n}', n))
-                      : '';
+  const badgeText = (!isOpen && n)
+    ? (state.lang==='he'
+        ? labels.active_filters.he.replace('{n}', n)
+        : labels.active_filters.en.replace('{n}', n))
+    : '';
   const span = dom.mobileFiltersToggle.querySelector('span');
   if (span) {
     span.textContent = n ? `${base} ${badgeText}` : base;
@@ -1432,6 +1474,9 @@ function closeFiltersSheet(){
   sheetBackdrop.style.opacity = '0';
   sheetBackdrop.style.visibility = 'hidden';
   document.body.style.overflow = '';
+  dom.mobileFiltersToggle?.classList.remove('is-open');
+  dom.mobileFiltersToggle?.setAttribute('aria-expanded', 'false');
+  updateFiltersBadge();
 
   // החזרת filtersBar לדסקטופ
   if (!state.isMobile && filtersBarAnchor && dom.filtersBar) {
@@ -1485,6 +1530,31 @@ function setupResponsive(){
   updateViewToggleUI();
   updateFiltersBadge();
   renderFilterChips();
+}
+
+
+/* =============================
+   Reset helpers
+==============================*/
+function resetAllFilters(showToastMsg = true) {
+  if (dom.searchInput) dom.searchInput.value = '';
+  if (dom.locationFilter) dom.locationFilter.value = '';
+  if (dom.orgFilter) dom.orgFilter.value = '';
+  if (dom.rankFilter) dom.rankFilter.value = '';
+  if (dom.dateFromInput) dom.dateFromInput.value = '';
+  if (dom.dateToInput) dom.dateToInput.value = '';
+  if (dom.pageSizeSelect) dom.pageSizeSelect.value = String(state.pagination.pageSize);
+
+  state.filters = { location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null };
+  state.sort = { key: null, direction: 'asc' };
+  state.pagination.currentPage = 0;
+
+  populateFilters();
+  syncFiltersUIFromState();
+  state.suppressNextScroll = true;
+  applyAll();
+
+  if (showToastMsg) showToast(labels.reset_filters[state.lang], 'info');
 }
 
 
@@ -1549,7 +1619,12 @@ document.addEventListener('keydown', (e) => {
   // חיפוש (debounce) + Escape
   if (dom.searchInput) {
     dom.searchInput.addEventListener('input', debounce(onSearch, 200));
-    dom.searchInput.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') dom.resetBtn?.click(); });
+    dom.searchInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        resetAllFilters(false);
+      }
+    });
   }
 
   // פילטרים select
@@ -1650,36 +1725,29 @@ document.addEventListener('keydown', (e) => {
     if (state.isMobile) {
       openFiltersSheet();
       dom.mobileFiltersToggle.setAttribute('aria-expanded', 'true');
+      dom.mobileFiltersToggle.classList.add('is-open');
+      updateFiltersBadge();
     } else if (dom.filtersBar) {
       const open = dom.filtersBar.classList.toggle('open');
       dom.mobileFiltersToggle.setAttribute('aria-expanded', String(open));
       labelSpan.textContent = open ? labels.close_filters[state.lang] : labels.open_filters[state.lang];
+      dom.mobileFiltersToggle.classList.toggle('is-open', open);
+      updateFiltersBadge();
     }
   });
 }
-
-
   // --- איפוס פילטרים ---
   if (dom.resetBtn) {
-    dom.resetBtn.addEventListener('click', () => {
-      if (dom.searchInput) dom.searchInput.value = '';
-      ['locationFilter','orgFilter','rankFilter'].forEach(id => {
-        const el = d(id);
-        if (el) el.value = '';
-      });
-      if (dom.dateFromInput) dom.dateFromInput.value = '';
-      if (dom.dateToInput)   dom.dateToInput.value   = '';
-      if (dom.pageSizeSelect) dom.pageSizeSelect.value = String(state.pagination.pageSize);
+    dom.resetBtn.addEventListener('click', () => resetAllFilters(true));
+  }
+  if (dom.emptyResetBtn) {
+    dom.emptyResetBtn.addEventListener('click', () => resetAllFilters(true));
+  }
 
-      state.filters = { location: '', org: '', rank: '', search: '', dateFrom: null, dateTo: null };
-      state.sort = { key: null, direction: 'asc' };
-      state.pagination.currentPage = 0;
-
-      populateFilters();
-      state.suppressNextScroll = true;
-      applyAll();
-
-      showToast(labels.reset_filters[state.lang], 'info');
+  if (dom.retryLoadBtn) {
+    dom.retryLoadBtn.addEventListener('click', () => {
+      hideDataError();
+      loadData();
     });
   }
 }

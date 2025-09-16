@@ -75,7 +75,8 @@
           type="button"
           aria-label="החלף שפה / Switch Language"
           aria-pressed="false">
-    <span aria-hidden="true">English</span>
+    <i class="fas fa-language" aria-hidden="true"></i>
+    <span class="lang-text" aria-hidden="true">English</span>
   </button>
 
   <!-- Main Content -->
@@ -87,20 +88,26 @@
     </header>
 
     <!-- Mobile Filters Toggle -->
-    <button id="mobileFiltersToggle"
-            class="mobile-filters-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="filtersBar">
-      <i class="fas fa-filter" aria-hidden="true"></i>
-      <span>פתח פילטרים</span>
-    </button>
+    <div class="mobile-filters-toggle-wrap">
+      <button id="mobileFiltersToggle"
+              class="mobile-filters-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="filtersBar">
+        <i class="fas fa-filter" aria-hidden="true"></i>
+        <span>פתח פילטרים</span>
+        <i class="fas fa-chevron-down mobile-filters-toggle__chevron" aria-hidden="true"></i>
+      </button>
+    </div>
 <!-- Filters Bar -->
 <section id="filtersBar" class="filters-bar" role="region" aria-label="סרגל פילטרים" data-i18n-aria-label="filters_bar_aria">
   <div class="filters-grid">
     <div class="filter-item fi fi--search">
       <label for="searchBox" data-i18n="search_label">חיפוש חופשי</label>
-      <input id="searchBox" type="text" placeholder="🔍 חפש שם, מיקום או תיאור…" data-i18n-placeholder="search_placeholder">
+      <div class="input-icon">
+        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+        <input id="searchBox" type="text" placeholder="חפש שם, מיקום או תיאור…" data-i18n-placeholder="search_placeholder">
+      </div>
     </div>
 
     <div class="filter-item fi fi--location">
@@ -121,9 +128,11 @@
     <div class="filter-item fi fi--dates" id="dateRangeGroup">
       <label data-i18n="date_range_label">טווח תאריכים</label>
       <div class="date-range">
-        <input id="dateFrom" type="date" aria-label="תאריך התחלה" data-i18n-aria-label="date_from_aria">
-        <span class="date-sep">—</span>
-        <input id="dateTo" type="date" aria-label="תאריך סיום" data-i18n-aria-label="date_to_aria">
+        <div class="date-range-inputs">
+          <input id="dateFrom" type="date" aria-label="תאריך התחלה" data-i18n-aria-label="date_from_aria">
+          <span class="date-sep">—</span>
+          <input id="dateTo" type="date" aria-label="תאריך סיום" data-i18n-aria-label="date_to_aria">
+        </div>
         <button id="clearDatesBtn" type="button" class="btn btn-link" data-i18n="clear_dates_btn">נקה תאריכים</button>
       </div>
     </div>
@@ -183,8 +192,20 @@
   </main>
 
   <!-- Empty State (now using .hidden class to match JS) -->
-  <div id="emptyState" class="empty-state hidden">
+  <div id="emptyState" class="empty-state hidden" role="status" aria-live="polite">
+    <i class="fas fa-search-minus" aria-hidden="true"></i>
     <p data-i18n="empty_state_msg">אין תוצאות התואמות את החיפוש שלך.</p>
+    <p class="empty-state__hint" data-i18n="empty_state_hint">נסה לשנות או לנקות פילטרים כדי לקבל תוצאות.</p>
+    <button id="emptyResetBtn" class="btn btn-outline" type="button" data-i18n="empty_reset_btn">איפוס פילטרים</button>
+  </div>
+
+  <div id="dataErrorState" class="error-state hidden" role="alert">
+    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+    <p class="error-state__title" data-i18n="error_state_title">אירעה בעיה בטעינת הנתונים</p>
+    <p class="error-state__msg" data-i18n="error_state_msg">נסה לרענן את העמוד או להפעיל את הטעינה מחדש.</p>
+    <div class="error-state__actions">
+      <button id="retryLoadBtn" class="btn btn-secondary" type="button" data-i18n="retry_btn">נסה שוב</button>
+    </div>
   </div>
 
   <!-- Toast Container -->
