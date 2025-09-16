@@ -361,10 +361,28 @@ function ensureColumnPicker(){
   function openPop(){ placePopover(); pop.classList.add('is-open'); backdrop.classList.add('is-open'); window.addEventListener('resize', placePopover, {passive:true}); window.addEventListener('scroll', placePopover, {passive:true}); }
   function closePop(){ pop.classList.remove('is-open'); pop.style.display='none'; backdrop.classList.remove('is-open'); window.removeEventListener('resize', placePopover); window.removeEventListener('scroll', placePopover); }
 
-  btn.onclick = ()=> pop.classList.contains('is-open') ? closePop() : openPop();
-  backdrop.onclick = closePop;
-  document.addEventListener('click', (e)=>{ if (pop.classList.contains('is-open') && !pop.contains(e.target) && e.target!==btn) closePop(); });
-  document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closePop(); });
+  // פתיחה/סגירה מהכפתור – עוצרים ביעבוע כדי שהמאזין הגלובלי לא יופעל
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  pop.classList.contains('is-open') ? closePop() : openPop();
+});
+
+// סגירה בלחיצה על הרקע (backdrop)
+backdrop.addEventListener('click', closePop);
+
+// סגירה בלחיצה מחוץ לפופאובר
+document.addEventListener('click', (e) => {
+  if (!pop.classList.contains('is-open')) return;
+  const t = e.target;
+  if (pop.contains(t) || btn.contains(t)) return; // <<< חשוב: contains
+  closePop();
+}, { capture: true });
+
+// סגירה בלחיצה על Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePop();
+});
+
 
   pop.addEventListener('change', (e)=>{
     const el = e.target.closest('input[type="checkbox"][data-col]'); if (!el) return;
