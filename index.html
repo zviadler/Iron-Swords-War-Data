@@ -133,7 +133,6 @@
           <span class="date-sep">—</span>
           <input id="dateTo" type="date" aria-label="תאריך סיום" data-i18n-aria-label="date_to_aria">
         </div>
-        <button id="clearDatesBtn" type="button" class="btn btn-link" data-i18n="clear_dates_btn">נקה תאריכים</button>
       </div>
     </div>
 
@@ -161,6 +160,13 @@
              data-i18n-aria-label="content_area_aria">
       <!-- JS will render table/cards here -->
     </section>
+
+    <div id="emptyState" class="empty-state hidden" role="status" aria-live="polite">
+      <i class="fas fa-search-minus" aria-hidden="true"></i>
+      <p data-i18n="empty_state_msg">אין תוצאות התואמות את החיפוש שלך.</p>
+      <p class="empty-state__hint" data-i18n="empty_state_hint">נסה לשנות או לנקות פילטרים כדי לקבל תוצאות.</p>
+      <button id="emptyResetBtn" class="btn btn-outline" type="button" data-i18n="empty_reset_btn">איפוס פילטרים</button>
+    </div>
 
     <!-- Pagination -->
     <nav class="pagination" aria-label="דפדוף בין עמודים" data-i18n-aria-label="pagination_aria">
@@ -190,14 +196,6 @@
       <p class="loading-text" data-i18n="loading_text">טוען נתונים...</p>
     </div>
   </main>
-
-  <!-- Empty State (now using .hidden class to match JS) -->
-  <div id="emptyState" class="empty-state hidden" role="status" aria-live="polite">
-    <i class="fas fa-search-minus" aria-hidden="true"></i>
-    <p data-i18n="empty_state_msg">אין תוצאות התואמות את החיפוש שלך.</p>
-    <p class="empty-state__hint" data-i18n="empty_state_hint">נסה לשנות או לנקות פילטרים כדי לקבל תוצאות.</p>
-    <button id="emptyResetBtn" class="btn btn-outline" type="button" data-i18n="empty_reset_btn">איפוס פילטרים</button>
-  </div>
 
   <div id="dataErrorState" class="error-state hidden" role="alert">
     <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>

@@ -75,7 +75,6 @@ const I18N = {
     date_range_label: "טווח תאריכים",
     date_from_aria: "תאריך התחלה",
     date_to_aria: "תאריך סיום",
-    clear_dates_btn: "נקה תאריכים",
     search_placeholder: "חפש שם, מיקום או תיאור…",
     reset_btn_label: "איפוס פילטרים",
 
@@ -133,7 +132,6 @@ const I18N = {
     date_range_label: "Date Range",
     date_from_aria: "Start date",
     date_to_aria: "End date",
-    clear_dates_btn: "Clear dates",
     search_placeholder: "Search name, location or description…",
     reset_btn_label: "Reset Filters",
 
@@ -486,7 +484,6 @@ const dom = {
   rankFilter: d('rankFilter'),
   dateFromInput: d('dateFrom'),
   dateToInput: d('dateTo'),
-  clearDatesBtn: d('clearDatesBtn'),
 
   // שליטה
   langBtn: d('langBtn') || d('langToggle'),
@@ -1640,12 +1637,6 @@ document.addEventListener('keydown', (e) => {
   if (dom.dateToInput) dom.dateToInput.addEventListener('change', ()=>{
     state.filters.dateTo = parseInputDate(dom.dateToInput.value, true);  upd();
   });
-  if (dom.clearDatesBtn) dom.clearDatesBtn.addEventListener('click', ()=>{
-    if (dom.dateFromInput) dom.dateFromInput.value = '';
-    if (dom.dateToInput) dom.dateToInput.value = '';
-    state.filters.dateFrom = null; state.filters.dateTo = null; upd();
-  });
-
   // פגינציה
   const gotoPrev = ()=>{
     if (state.pagination.currentPage > 0) {
