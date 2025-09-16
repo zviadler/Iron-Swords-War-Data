@@ -944,10 +944,12 @@ function render() {
   const total = state.filteredData.length;
 
   if (total === 0) {
+    dom.contentArea?.classList.add('is-empty');
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     else if (dom.contentArea) dom.contentArea.innerHTML = `<div class="empty">${labels.no_data[state.lang]}</div>`;
     return;
   } else {
+    dom.contentArea?.classList.remove('is-empty');
     if (dom.emptyState) dom.emptyState.classList.add('hidden');
   }
 
