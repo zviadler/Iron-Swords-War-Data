@@ -1157,14 +1157,6 @@ function scrollTopIfNeeded() {
 /* =============================
    סטטיסטיקות
 ==============================*/
-// NEW: Stats helper function
-function topCounts(arr, key, n=3) {
-  const m = new Map();
-  arr.forEach(r => { const v=(r[key]||'').trim(); if (v) m.set(v,(m.get(v)||0)+1); });
-  return [...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,n)
-    .map(([k,c]) => `${k}: ${nf().format(c)}`).join(' • ');
-}
-
 function updateStats() {
   const fmt = nf();
 
