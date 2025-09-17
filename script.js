@@ -61,7 +61,8 @@ const labels = {
   columns_title: {he:"הצגת עמודות", en:"Visible columns"},
   columns_select_all: {he:"בחר הכול", en:"Select all"},
   columns_clear_all: {he:"נקה הכול", en:"Clear all"},
-  columns_close: {he:"סגור", en:"Close"}
+  columns_close: {he:"סגור", en:"Close"},
+  page_size_label: {he:"תוצאות בעמוד", en:"Results per page"}
 };
 // === I18N: מילון תרגום + מיישם כללי ===
 const I18N = {
@@ -251,6 +252,7 @@ function applyI18n() {
     footerFirst.innerHTML = `© <span id="currentYear">${year}</span> ${I18N[lang].footer_legal}`;
   }
   fixPagerArrows(); // NEW
+  updatePageSizeControl();
 }
 // === Results Toolbar (Top Bar) ===
 function buildResultsToolbar() {
@@ -277,11 +279,27 @@ function buildResultsToolbar() {
 
   // דואגים שתהיה בחירת גודל עמוד (אם אין כבר אלמנט כזה ב-HTML)
   if (!dom.pageSizeSelect) {
+    const wrap = document.createElement('label');
+    wrap.className = 'page-size-control';
+    wrap.id = 'pageSizeControl';
+
+    const text = document.createElement('span');
+    text.className = 'page-size-label';
+    wrap.appendChild(text);
+
     const sel = document.createElement('select');
     sel.id = 'pageSize';
-    sel.title = state.lang === 'he' ? 'שורות בעמוד' : 'Rows per page';
+    sel.className = 'page-size-select';
     dom.pageSizeSelect = sel; // חשוב כדי שה-bindEvents הקיים יתפוס אותו
-    right.appendChild(sel);
+    wrap.appendChild(sel);
+
+    dom.pageSizeWrap = wrap;
+    right.appendChild(wrap);
+  } else {
+    dom.pageSizeSelect.classList.add('page-size-select');
+    const wrap = dom.pageSizeSelect.closest('.page-size-control');
+    dom.pageSizeWrap = wrap || dom.pageSizeWrap;
+    if (wrap && wrap.parentNode !== right) right.appendChild(wrap);
   }
 
   // העבר את כפתור החלפת התצוגה מהפילטרים
@@ -300,6 +318,8 @@ function buildResultsToolbar() {
     });
   });
   right.appendChild(shareBtn);
+
+  updatePageSizeControl();
 
 
   toolbar.appendChild(left);
@@ -405,6 +425,18 @@ function handleColumnsDocClick(e) {
 
 function handleColumnsKeydown(e) {
   if (e.key === 'Escape') closeColumnsPopover();
+}
+
+function updatePageSizeControl(){
+  if (!dom.pageSizeSelect) return;
+  const labelText = labels.page_size_label[state.lang];
+  dom.pageSizeSelect.setAttribute('aria-label', labelText);
+  dom.pageSizeSelect.setAttribute('title', labelText);
+  const wrap = dom.pageSizeSelect.closest('.page-size-control');
+  if (wrap) {
+    const span = wrap.querySelector('.page-size-label');
+    if (span) span.textContent = labelText;
+  }
 }
 
 function ensureColumnPicker(){
@@ -581,11 +613,13 @@ const dom = {
 
   // שליטה
   langBtn: d('langBtn') || d('langToggle'),
+  langBtnRow: document.querySelector('.lang-btn-row'),
   viewToggleBtn: d('viewToggleBtn') || d('viewToggle'),
   exportBtn: d('exportBtn') || d('exportCSVButton'),
   resetBtn: d('resetBtn') || d('resetFiltersButton'),
   emptyResetBtn: d('emptyResetBtn'),
   pageSizeSelect: d('pageSize') || d('pageSizeSelect') || d('pageSizeDropdown'),
+  pageSizeWrap: document.querySelector('.page-size-control'),
 
   // פגינציה/מונה תוצאות
   prevPageBtn: d('prevPageBtn') || d('prevPage'),
@@ -595,6 +629,7 @@ const dom = {
 
   // פס פילטרים / מובייל
   mobileFiltersToggle: d('mobileFiltersToggle'),
+  mobileFiltersWrap: document.querySelector('.mobile-filters-toggle-wrap'),
   filtersBar: d('filtersBar'),
   retryLoadBtn: d('retryLoadBtn'),
 };
@@ -609,6 +644,7 @@ let sheetContent = null;
 let sheetResetBtn = null;
 let sheetCloseBtn = null;
 let chipsWrap = null;
+let langBtnAnchor = null;
 
 /* =============================
    Utilities
@@ -1592,23 +1628,39 @@ function setupResponsive(){
   state.isMobile = isMobile();
 
   if (state.isMobile) {
-  if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
-    filtersBarAnchor = document.createComment('filtersBar-anchor');
-    dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
-  }
-  ensureFilterSheet();
+    if (!langBtnAnchor && dom.langBtn && dom.langBtn.parentNode) {
+      langBtnAnchor = document.createComment('lang-btn-anchor');
+      dom.langBtn.parentNode.insertBefore(langBtnAnchor, dom.langBtn);
+    }
+    if (dom.langBtn && dom.mobileFiltersWrap && dom.langBtn.parentNode !== dom.mobileFiltersWrap) {
+      dom.mobileFiltersWrap.insertBefore(dom.langBtn, dom.mobileFiltersWrap.firstChild || null);
+    }
+    dom.langBtn?.classList.add('language-toggle--mobile');
 
-  // הזזה ל-sheet והסרת ההסתרה
-  if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
-    sheetContent.appendChild(dom.filtersBar);
-  }
-  if (dom.filtersBar) {
-    dom.filtersBar.style.display = 'block';   // <<< חשוב
-    dom.filtersBar.style.maxHeight = 'inherit';
-  }
+    if (!filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode) {
+      filtersBarAnchor = document.createComment('filtersBar-anchor');
+      dom.filtersBar.parentNode.insertBefore(filtersBarAnchor, dom.filtersBar);
+    }
+    ensureFilterSheet();
+
+    // הזזה ל-sheet והסרת ההסתרה
+    if (dom.filtersBar && sheetContent && dom.filtersBar.parentNode !== sheetContent) {
+      sheetContent.appendChild(dom.filtersBar);
+    }
+    if (dom.filtersBar) {
+      dom.filtersBar.style.display = 'block';   // <<< חשוב
+      dom.filtersBar.style.maxHeight = 'inherit';
+    }
 
     if (dom.resetBtn) dom.resetBtn.style.display = 'none';
-} else {
+  } else {
+    if (langBtnAnchor && dom.langBtn && langBtnAnchor.parentNode && dom.langBtn.parentNode !== langBtnAnchor.parentNode) {
+      langBtnAnchor.parentNode.insertBefore(dom.langBtn, langBtnAnchor.nextSibling);
+    } else if (dom.langBtnRow && dom.langBtn && !dom.langBtnRow.contains(dom.langBtn)) {
+      dom.langBtnRow.insertBefore(dom.langBtn, dom.langBtnRow.firstChild || null);
+    }
+    dom.langBtn?.classList.remove('language-toggle--mobile');
+
     // החזרה הבטוחה לדסקטופ
     if (filtersBarAnchor && dom.filtersBar && dom.filtersBar.parentNode !== filtersBarAnchor.parentNode) {
       filtersBarAnchor.parentNode.insertBefore(dom.filtersBar, filtersBarAnchor.nextSibling);
@@ -1684,6 +1736,8 @@ function init() {
    Events
 ==============================*/
 function bindEvents() {
+  updatePageSizeControl();
+
   // Back to Top
   const b2t = d('backToTop');
   if (b2t) b2t.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
@@ -1768,8 +1822,10 @@ document.addEventListener('keydown', (e) => {
         dom.pageSizeSelect.appendChild(opt);
       });
     }
+    dom.pageSizeSelect.classList.add('page-size-select');
     dom.pageSizeSelect.value = String(state.pagination.pageSize);
     dom.pageSizeSelect.addEventListener('change', (e)=> setPageSize(e.target.value));
+    updatePageSizeControl();
   }
 
   // CSV
@@ -1794,6 +1850,7 @@ document.addEventListener('keydown', (e) => {
     updateViewToggleUI();
     applyI18n();
     updateColumnPickerTexts();
+    updatePageSizeControl();
     fixPagerArrows(); // NEW
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);

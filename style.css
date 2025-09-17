@@ -577,22 +577,42 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
 /* -----------------------------
    14) Misc
    ----------------------------- */
+.lang-btn-row {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-md);
+  inline-size: 100%;
+}
+.lang-btn-row .language-toggle {
+  margin-inline-start: auto;
+}
+html[dir="ltr"] .lang-btn-row {
+  justify-content: flex-end;
+}
+html[dir="ltr"] .lang-btn-row .language-toggle {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
 .language-toggle {
-  position: fixed; inset-inline-start: 1rem; inset-block-start: 1rem;
   display: inline-flex; align-items: center; gap: .4rem;
   background: #1f2937; color: var(--text); border: 1px solid var(--border-color);
   padding: .35rem .75rem; border-radius: var(--radius-md);
-  cursor: pointer; z-index: 100; box-shadow: var(--shadow-sm);
+  cursor: pointer; box-shadow: var(--shadow-sm);
 }
 .language-toggle i { font-size: .95rem; color: var(--text-secondary); }
 .language-toggle .lang-text { font-weight: 600; }
 .mobile-filters-toggle-wrap {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-sm);
   margin-block: var(--space-sm);
 }
-html[dir="rtl"] .mobile-filters-toggle-wrap {
-  justify-content: flex-start;
+.mobile-filters-toggle-wrap .language-toggle {
+  flex-shrink: 0;
 }
 .mobile-filters-toggle {
   display: flex; align-items: center; gap: .5rem;
@@ -605,6 +625,31 @@ html[dir="rtl"] .mobile-filters-toggle-wrap {
 .mobile-filters-toggle.is-open .mobile-filters-toggle__chevron { transform: rotate(180deg); }
 .results-counter { color: var(--text-secondary); }
 .page-info { color: var(--text-secondary); }
+
+@media (max-width: 768px) {
+  .lang-btn-row { display: none; }
+  .mobile-filters-toggle-wrap {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  html[dir="rtl"] .mobile-filters-toggle-wrap,
+  html[dir="ltr"] .mobile-filters-toggle-wrap {
+    justify-content: space-between;
+  }
+  .mobile-filters-toggle-wrap .language-toggle {
+    order: -1;
+  }
+  html[dir="ltr"] .mobile-filters-toggle-wrap .language-toggle {
+    order: 1;
+  }
+  html[dir="ltr"] .mobile-filters-toggle {
+    order: 0;
+  }
+  .language-toggle--mobile {
+    box-shadow: none;
+    padding-block: .3rem;
+  }
+}
 
 /* -----------------------------
    15) Results Toolbar (top bar)
@@ -626,7 +671,65 @@ html[dir="rtl"] .mobile-filters-toggle-wrap {
 }
 .results-toolbar .rt-right{ flex-wrap: wrap; }
 .results-toolbar .results-counter{ font-weight:600; }
-.results-toolbar select#pageSize{ min-inline-size:7ch; padding:.4rem .6rem; }
+.page-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: linear-gradient(180deg,#162036 0%,#101828 100%);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-md);
+  padding: .35rem .6rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  position: relative;
+  transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+.page-size-control .page-size-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.page-size-control::after {
+  content: '\f107';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: .75rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  position: absolute;
+  inset-inline-end: .55rem;
+}
+.page-size-control .page-size-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #0f172a;
+  background-image: none;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: .25rem 1.6rem .25rem .5rem;
+  min-inline-size: 5.5ch;
+  text-align: center;
+  cursor: pointer;
+}
+.page-size-control:hover,
+.page-size-control:focus-within {
+  border-color: rgba(37,99,235,0.4);
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+}
+.page-size-control .page-size-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.3);
+}
+html[dir="ltr"] .page-size-control::after {
+  inset-inline-end: .55rem;
+}
+html[dir="rtl"] .page-size-control .page-size-select {
+  padding-inline: .5rem 1.6rem;
+}
 
 @media (max-width: 700px){
   .results-toolbar{ flex-direction:column; align-items:stretch; }
@@ -764,14 +867,6 @@ html[dir="rtl"] .card *{
   justify-content: flex-start;
   gap: .5rem;
   margin-top: .5rem;
-}
-/* style.css */
-.language-toggle{
-  position: fixed;
-  inset-inline-start: auto;   /* מבטל את ההגדרה הקודמת */
-  inset-inline-end: 1rem;     /* מציב בפינת הסוף לפי כיוון הכתיבה */
-  inset-block-start: 1rem;
-  /* שאר הסגנונות נשארים כפי שהם */
 }
 /* Stack the Date Range label above the inputs */
 #dateRangeGroup{
