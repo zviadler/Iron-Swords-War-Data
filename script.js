@@ -56,7 +56,12 @@ const labels = {
   close: {he:"סגור", en:"Close"},
   view_to_cards: {he:"עבור לתצוגת כרטיסים", en:"Switch to Cards"},
   view_to_table: {he:"עבור לתצוגת טבלה",   en:"Switch to Table"},
-  csv_error: {he:"שגיאה בטעינת CSV", en:"Error loading CSV"}
+  csv_error: {he:"שגיאה בטעינת CSV", en:"Error loading CSV"},
+  columns_button: {he:"בחר עמודות", en:"Choose Columns"},
+  columns_title: {he:"הצגת עמודות", en:"Visible columns"},
+  columns_select_all: {he:"בחר הכול", en:"Select all"},
+  columns_clear_all: {he:"נקה הכול", en:"Clear all"},
+  columns_close: {he:"סגור", en:"Close"}
 };
 // === I18N: מילון תרגום + מיישם כללי ===
 const I18N = {
@@ -304,7 +309,104 @@ function buildResultsToolbar() {
   dom.contentArea.parentNode.insertBefore(toolbar, dom.contentArea);
 }
 
-  
+let columnsBtnEl = null;
+let columnsPopEl = null;
+let columnsBackdropEl = null;
+let columnsDocListenersBound = false;
+
+function rebuildColumnPickerList() {
+  const pop = columnsPopEl || document.getElementById('columnsPop');
+  if (!pop) return;
+  const grid = pop.querySelector('.cols-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  FIELDS.forEach((key) => {
+    const config = fieldLabels[key] || {};
+    const label = config[state.lang] || config.he || key;
+    const id = `col-${key}`;
+    const checked = state.visibleColumns.includes(key) ? 'checked' : '';
+    grid.insertAdjacentHTML('beforeend', `<label for="${id}">
+        <input id="${id}" type="checkbox" data-col="${key}" ${checked}><span>${escapeHtml(label)}</span>
+      </label>`);
+  });
+}
+
+function updateColumnPickerTexts() {
+  columnsBtnEl = document.getElementById('columnsBtn') || columnsBtnEl;
+  columnsPopEl = document.getElementById('columnsPop') || columnsPopEl;
+
+  if (columnsBtnEl) {
+    columnsBtnEl.innerHTML = `<i class="fas fa-columns" aria-hidden="true"></i>
+                     <span>${labels.columns_button[state.lang]}</span>`;
+  }
+
+  if (columnsPopEl) {
+    const header = columnsPopEl.querySelector('header');
+    if (header) header.textContent = labels.columns_title[state.lang];
+    const actions = columnsPopEl.querySelector('.actions');
+    if (actions) {
+      const allBtn = actions.querySelector('[data-act="all"]');
+      if (allBtn) allBtn.textContent = labels.columns_select_all[state.lang];
+      const noneBtn = actions.querySelector('[data-act="none"]');
+      if (noneBtn) noneBtn.textContent = labels.columns_clear_all[state.lang];
+      const closeBtn = actions.querySelector('[data-act="close"]');
+      if (closeBtn) closeBtn.textContent = labels.columns_close[state.lang];
+    }
+  }
+
+  rebuildColumnPickerList();
+}
+
+function placeColumnsPopover() {
+  if (!columnsBtnEl || !columnsPopEl) return;
+  const mobile = window.innerWidth <= 768;
+  columnsPopEl.classList.toggle('is-mobile', mobile);
+  columnsPopEl.style.display = 'block';
+  if (mobile) return;
+
+  const rect = columnsBtnEl.getBoundingClientRect();
+  const margin = 8;
+  const width = columnsPopEl.offsetWidth || 320;
+  const height = columnsPopEl.offsetHeight || 260;
+  let left = rect.right - width;
+  left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+  let top = rect.bottom + margin;
+  top = Math.max(margin, Math.min(top, window.innerHeight - height - margin));
+  columnsPopEl.style.left = `${left}px`;
+  columnsPopEl.style.top = `${top}px`;
+  columnsPopEl.style.right = 'auto';
+  columnsPopEl.style.bottom = 'auto';
+}
+
+function openColumnsPopover() {
+  if (!columnsPopEl || !columnsBackdropEl) return;
+  placeColumnsPopover();
+  columnsPopEl.classList.add('is-open');
+  columnsBackdropEl.classList.add('is-open');
+  window.addEventListener('resize', placeColumnsPopover, { passive: true });
+  window.addEventListener('scroll', placeColumnsPopover, { passive: true });
+}
+
+function closeColumnsPopover() {
+  if (!columnsPopEl || !columnsBackdropEl) return;
+  columnsPopEl.classList.remove('is-open');
+  columnsPopEl.style.display = 'none';
+  columnsBackdropEl.classList.remove('is-open');
+  window.removeEventListener('resize', placeColumnsPopover);
+  window.removeEventListener('scroll', placeColumnsPopover);
+}
+
+function handleColumnsDocClick(e) {
+  if (!columnsPopEl?.classList.contains('is-open')) return;
+  const target = e.target;
+  if (columnsPopEl.contains(target) || columnsBtnEl?.contains(target)) return;
+  closeColumnsPopover();
+}
+
+function handleColumnsKeydown(e) {
+  if (e.key === 'Escape') closeColumnsPopover();
+}
+
 function ensureColumnPicker(){
   const toolbarRight = document.querySelector('#resultsToolbar .rt-right');
   const actions = document.querySelector('.fi--actions');
@@ -312,105 +414,95 @@ function ensureColumnPicker(){
   if (!host) return;
 
   // כפתור – צור פעם אחת
-  let btn = document.getElementById('columnsBtn');
-  if (!btn){
-    btn = document.createElement('button');
-    btn.id = 'columnsBtn';
-    btn.type = 'button';
-    btn.className = 'btn btn-outline btn--sm columns-btn';
-    btn.innerHTML = `<i class="fas fa-columns" aria-hidden="true"></i>
-                     <span>${state.lang==='he'?'בחר עמודות':'Columns'}</span>`;
-    host.appendChild(btn);
+  if (!columnsBtnEl) {
+    columnsBtnEl = document.createElement('button');
+    columnsBtnEl.id = 'columnsBtn';
+    columnsBtnEl.type = 'button';
+    columnsBtnEl.className = 'btn btn-outline btn--sm columns-btn';
+    host.appendChild(columnsBtnEl);
+  } else if (!host.contains(columnsBtnEl)) {
+    host.appendChild(columnsBtnEl);
   }
 
-  // Popover + backdrop – מוצמדים ל-body כדי לא להיחתך
-  let pop = document.getElementById('columnsPop');
-  if (!pop){
-    pop = document.createElement('div');
-    pop.id = 'columnsPop';
-    pop.className = 'columns-pop';
-    pop.innerHTML = `
-      <header>${state.lang==='he'?'הצגת עמודות':'Visible columns'}</header>
+  if (!columnsPopEl) {
+    columnsPopEl = document.createElement('div');
+    columnsPopEl.id = 'columnsPop';
+    columnsPopEl.className = 'columns-pop';
+    columnsPopEl.innerHTML = `
+      <header></header>
       <div class="cols-grid"></div>
       <div class="actions">
-        <button type="button" class="btn btn--sm btn--secondary" data-act="all">${state.lang==='he'?'בחר הכול':'Select all'}</button>
-        <button type="button" class="btn btn--sm btn--secondary" data-act="none">${state.lang==='he'?'נקה הכול':'Clear all'}</button>
-        <button type="button" class="btn btn--sm" data-act="close">${state.lang==='he'?'סגור':'Close'}</button>
+        <button type="button" class="btn btn--sm btn--secondary" data-act="all"></button>
+        <button type="button" class="btn btn--sm btn--secondary" data-act="none"></button>
+        <button type="button" class="btn btn--sm" data-act="close"></button>
       </div>`;
-    document.body.appendChild(pop);
+    document.body.appendChild(columnsPopEl);
   }
-  let backdrop = document.querySelector('.columns-backdrop');
-  if (!backdrop){ backdrop = document.createElement('div'); backdrop.className='columns-backdrop'; document.body.appendChild(backdrop); }
 
-  const grid = pop.querySelector('.cols-grid');
-  const rebuildList = () => {
-    grid.innerHTML = '';
-    FIELDS.forEach(k=>{
-      const id=`col-${k}`, lbl=fieldLabels[k][state.lang], checked=state.visibleColumns.includes(k)?'checked':'';
-      grid.insertAdjacentHTML('beforeend', `<label for="${id}">
-        <input id="${id}" type="checkbox" data-col="${k}" ${checked}><span>${escapeHtml(lbl)}</span>
-      </label>`);
-    });
-  };
-  rebuildList();
-
-  function placePopover(){
-    const mobile = window.innerWidth <= 768;
-    pop.classList.toggle('is-mobile', mobile);
-    pop.style.display='block';
-    if (mobile) return; // bottom-sheet מנהל CSS לבד
-
-    // הצמדת מיקום למסך ליד הכפתור – לא לצאת מה־viewport
-    const r = btn.getBoundingClientRect(), margin=8, w=pop.offsetWidth||320, h=pop.offsetHeight||260;
-    let left = r.right - w; left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
-    let top  = r.bottom + margin; top  = Math.max(margin, Math.min(top, window.innerHeight - h - margin));
-    pop.style.left = `${left}px`; pop.style.top = `${top}px`; pop.style.right='auto'; pop.style.bottom='auto';
-  }
-  function openPop(){ placePopover(); pop.classList.add('is-open'); backdrop.classList.add('is-open'); window.addEventListener('resize', placePopover, {passive:true}); window.addEventListener('scroll', placePopover, {passive:true}); }
-  function closePop(){ pop.classList.remove('is-open'); pop.style.display='none'; backdrop.classList.remove('is-open'); window.removeEventListener('resize', placePopover); window.removeEventListener('scroll', placePopover); }
-
-  // פתיחה/סגירה מהכפתור – עוצרים ביעבוע כדי שהמאזין הגלובלי לא יופעל
-btn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  pop.classList.contains('is-open') ? closePop() : openPop();
-});
-
-// סגירה בלחיצה על הרקע (backdrop)
-backdrop.addEventListener('click', closePop);
-
-// סגירה בלחיצה מחוץ לפופאובר
-document.addEventListener('click', (e) => {
-  if (!pop.classList.contains('is-open')) return;
-  const t = e.target;
-  if (pop.contains(t) || btn.contains(t)) return; // <<< חשוב: contains
-  closePop();
-}, { capture: true });
-
-// סגירה בלחיצה על Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closePop();
-});
-
-
-  pop.addEventListener('change', (e)=>{
-    const el = e.target.closest('input[type="checkbox"][data-col]'); if (!el) return;
-    const col = el.dataset.col;
-    if (el.checked){ if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col); }
-    else{
-      if (state.visibleColumns.length<=1){ el.checked=true; return; }
-      state.visibleColumns = state.visibleColumns.filter(c=>c!==col);
-      if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) state.sort.key=null;
+  if (!columnsBackdropEl) {
+    columnsBackdropEl = document.querySelector('.columns-backdrop');
+    if (!columnsBackdropEl) {
+      columnsBackdropEl = document.createElement('div');
+      columnsBackdropEl.className = 'columns-backdrop';
+      document.body.appendChild(columnsBackdropEl);
     }
-    if (!state.isCardView) render();
-  });
-  pop.addEventListener('click', (e)=>{
-    const act = e.target?.dataset?.act; if (!act) return;
-    if (act==='all') state.visibleColumns = FIELDS.slice(0);
-    if (act==='none') state.visibleColumns = [FIELDS[0]];
-    if (act==='close') return closePop();
-    rebuildList();
-    if (!state.isCardView) render();
-  });
+  }
+
+  updateColumnPickerTexts();
+
+  if (columnsBtnEl && !columnsBtnEl.dataset.bound) {
+    columnsBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (columnsPopEl?.classList.contains('is-open')) closeColumnsPopover();
+      else openColumnsPopover();
+    });
+    columnsBtnEl.dataset.bound = '1';
+  }
+
+  if (columnsBackdropEl && !columnsBackdropEl.dataset.bound) {
+    columnsBackdropEl.addEventListener('click', closeColumnsPopover);
+    columnsBackdropEl.dataset.bound = '1';
+  }
+
+  if (columnsPopEl && !columnsPopEl.dataset.bound) {
+    columnsPopEl.addEventListener('change', (e) => {
+      const el = e.target.closest('input[type="checkbox"][data-col]');
+      if (!el) return;
+      const col = el.dataset.col;
+      if (el.checked) {
+        if (!state.visibleColumns.includes(col)) state.visibleColumns.push(col);
+      } else {
+        if (state.visibleColumns.length <= 1) {
+          el.checked = true;
+          return;
+        }
+        state.visibleColumns = state.visibleColumns.filter((c) => c !== col);
+        if (state.sort.key && !state.visibleColumns.includes(state.sort.key)) state.sort.key = null;
+      }
+      if (!state.isCardView) render();
+    });
+
+    columnsPopEl.addEventListener('click', (e) => {
+      const act = e.target?.dataset?.act;
+      if (!act) return;
+      if (act === 'all') state.visibleColumns = FIELDS.slice(0);
+      if (act === 'none') state.visibleColumns = [FIELDS[0]];
+      if (act === 'close') {
+        closeColumnsPopover();
+        return;
+      }
+      rebuildColumnPickerList();
+      if (!state.isCardView) render();
+    });
+
+    columnsPopEl.dataset.bound = '1';
+  }
+
+  if (!columnsDocListenersBound) {
+    document.addEventListener('click', handleColumnsDocClick, { capture: true });
+    document.addEventListener('keydown', handleColumnsKeydown);
+    columnsDocListenersBound = true;
+  }
 
   updateColumnsUI(); // הצג/הסתר לפי מצב תצוגה
 }
@@ -458,12 +550,14 @@ const state = {
   suppressNextScroll: true // אל תקפיץ למעלה ברינדור הראשון/שינויים קלים
 };
 state.visibleColumns = [
-  'name_english','nickname','name_arabic',
-  'organization','rank_role',
-  'location','date',
-  'description_online',
-  'post_id','combatant_id',
-  'casualties_count','notes'
+  'combatant_id',
+  'date',
+  'location',
+  'name_english',
+  'name_arabic',
+  'rank_role',
+  'organization',
+  'casualties_count'
 ].filter(c => FIELDS.includes(c));
 
 
@@ -1699,6 +1793,7 @@ document.addEventListener('keydown', (e) => {
     setLangButtonUI();
     updateViewToggleUI();
     applyI18n();
+    updateColumnPickerTexts();
     fixPagerArrows(); // NEW
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
