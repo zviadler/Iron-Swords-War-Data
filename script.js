@@ -177,9 +177,115 @@ const I18N = {
 
     // Footer
     footer_legal: "Combatant Identification Database — Data is provided for informational purposes only.",
-    data_collection: "Data is collected from open sources and updated continuously."
+  data_collection: "Data is collected from open sources and updated continuously."
   }
 };
+
+function normalizeOrgKey(name) {
+  return String(name || '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/&/g, ' and ')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/["'“”‘’]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function orgInitials(name) {
+  const parts = String(name || '')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const ORG_META = [
+  {
+    key: 'hamas',
+    display: 'Hamas',
+    short: 'HAM',
+    logo: 'assets/org-logos/hamas.svg',
+    color: '#0f5132',
+    aliases: ['hamas', 'islamic resistance movement', 'حماس']
+  },
+  {
+    key: 'fatah',
+    display: 'Fatah',
+    short: 'Fatah',
+    logo: 'assets/org-logos/fatah.webp',
+    color: '#f59e0b',
+    aliases: ['fatah', 'fatah movement', 'فتح']
+  },
+  {
+    key: 'pij',
+    display: 'Palestinian Islamic Jihad',
+    short: 'PIJ',
+    logo: 'assets/org-logos/pij.webp',
+    color: '#b91c1c',
+    aliases: ['pij', 'palestinian islamic jihad', 'islamic jihad movement in palestine', 'saraya al-quds']
+  },
+  {
+    key: 'pflp',
+    display: 'Popular Front for the Liberation of Palestine',
+    short: 'PFLP',
+    logo: 'assets/org-logos/pflp.webp',
+    color: '#b91c1c',
+    aliases: ['pflp', 'popular front for the liberation of palestine']
+  },
+  {
+    key: 'dflp',
+    display: 'Democratic Front for the Liberation of Palestine',
+    short: 'DFLP',
+    logo: 'assets/org-logos/dflp.webp',
+    color: '#991b1b',
+    aliases: ['dflp', 'democratic front for the liberation of palestine']
+  },
+  {
+    key: 'al-mujahideen',
+    display: 'Al-Mujahideen Battalions',
+    short: 'AMB',
+    logo: 'assets/org-logos/al-mujahideen.webp',
+    color: '#1d4ed8',
+    aliases: ['al-mujahideen battalions', 'al mujahideen battalions', 'al-mujahidin brigades']
+  },
+  {
+    key: 'al-nasser',
+    display: 'Al-Nasser Salah al-Din Brigades',
+    short: 'PRC',
+    logo: 'assets/org-logos/al-nasser.webp',
+    color: '#d97706',
+    aliases: ['al-nasser salah al-din brigades', 'al nasser salah al-din brigades', 'popular resistance committees', 'prc']
+  },
+  {
+    key: 'ahmad-abu-rish',
+    display: 'Ahmad Abu Rish Brigades',
+    short: 'AARB',
+    logo: 'assets/org-logos/ahmad-abu-rish.webp',
+    color: '#f97316',
+    aliases: ['ahmad abu rish brigades', 'ahmad abu rish brigades (fatah)', 'al-aqsa martyrs brigades']
+  }
+];
+
+const ORG_META_LOOKUP = new Map();
+for (const meta of ORG_META) {
+  meta.display = meta.display || meta.short;
+  meta.keyClass = `card__org--${meta.key}`;
+  const aliases = new Set([meta.display, meta.short, ...(meta.aliases || [])]);
+  for (const alias of aliases) {
+    if (!alias) continue;
+    ORG_META_LOOKUP.set(normalizeOrgKey(alias), meta);
+  }
+}
+
+function getOrgMeta(name) {
+  if (!name) return null;
+  const meta = ORG_META_LOOKUP.get(normalizeOrgKey(name));
+  return meta || null;
+}
 
 // מספרים מעוצבים לפי שפה
 function nf() {
@@ -1103,9 +1209,21 @@ function renderCards(rows) {
     const loc  = valOrEmpty(r.location);
     const date = valOrEmpty(r.date);
     const desc = valOrEmpty(r.description_online);
+    const activity = valOrEmpty(r.activity);
+    const family = valOrEmpty(r.family_members);
+    const casualties = valOrEmpty(r.casualties_count);
+    const additional = valOrEmpty(r.additional_combatants);
+    const notes = valOrEmpty(r.notes);
+    const orgMeta = getOrgMeta(org);
 
     const card = document.createElement('article');
     card.className = 'card';
+    if (orgMeta) {
+      card.classList.add(`card--org-${orgMeta.key}`);
+      if (orgMeta.color) {
+        card.style.setProperty('--org-color', orgMeta.color);
+      }
+    }
 
     const parts = [];
 
@@ -1117,14 +1235,60 @@ function renderCards(rows) {
       </header>
     `);
 
-    // Tags (org only if exists)
-    parts.push(`
-      ${org ? `<div class="card__tags"><span class="badge">${escapeHtml(org)}</span></div>` : ''}
-    `);
+    if (org) {
+      const orgClass = orgMeta ? ` ${orgMeta.keyClass}` : '';
+      const orgStyle = orgMeta?.color ? ` style="--org-color:${orgMeta.color}"` : '';
+      const initials = escapeHtml(orgMeta?.short || orgInitials(org));
+      const logoHtml = orgMeta?.logo
+        ? `<img src="${orgMeta.logo}" alt="" loading="lazy" decoding="async" onerror="this.dataset.failed='1'">
+           <span class="card__org-initials" aria-hidden="true">${initials}</span>`
+        : `<span class="card__org-initials" aria-hidden="true">${initials}</span>`;
+      const secondary = orgMeta && normalizeOrgKey(orgMeta.display) !== normalizeOrgKey(org)
+        ? `<span class="card__org-alias">${escapeHtml(orgMeta.display)}</span>`
+        : '';
+
+      parts.push(`
+        <div class="card__org${orgClass}"${orgStyle} title="${escapeHtml(orgMeta?.display || org)}">
+          <div class="card__org-logo" aria-hidden="true">
+            ${logoHtml}
+          </div>
+          <div class="card__org-text">
+            <span class="card__org-name">${escapeHtml(org)}</span>
+            ${secondary}
+          </div>
+        </div>
+      `);
+    }
 
     // Description
     if (desc) {
       parts.push(`<p class="mt-sm">${highlight(desc, state.filters.search)}</p>`);    }
+
+    const metaEntries = [];
+    if (activity) metaEntries.push({ icon: 'fa-bullseye', label: fieldLabels.activity[state.lang], value: activity });
+    if (family) metaEntries.push({ icon: 'fa-people-group', label: fieldLabels.family_members[state.lang], value: family });
+    if (casualties) metaEntries.push({ icon: 'fa-skull', label: fieldLabels.casualties_count[state.lang], value: casualties });
+    if (additional) metaEntries.push({ icon: 'fa-user-plus', label: fieldLabels.additional_combatants[state.lang], value: additional });
+    if (!metaEntries.length && notes) {
+      // Show notes only when other meta is empty to avoid overcrowding.
+      metaEntries.push({ icon: 'fa-note-sticky', label: fieldLabels.notes[state.lang], value: notes });
+    } else if (metaEntries.length && notes) {
+      metaEntries.push({ icon: 'fa-note-sticky', label: fieldLabels.notes[state.lang], value: notes });
+    }
+
+    if (metaEntries.length) {
+      const trimmed = metaEntries.slice(0, 4);
+      parts.push(`
+        <div class="card__meta-grid">
+          ${trimmed.map(item => `
+            <div class="card__meta-item" title="${escapeHtml(item.label)}">
+              <i class="fas ${item.icon}" aria-hidden="true"></i>
+              <span class="card__meta-value">${highlight(item.value, state.filters.search)}</span>
+            </div>
+          `).join('')}
+        </div>
+      `);
+    }
 
     // Fixed footer with icons (location + date)
     const items = [];

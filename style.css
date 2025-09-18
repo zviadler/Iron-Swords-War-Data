@@ -328,22 +328,83 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
 /* כרטיס כעמודה גמישה */
 .card{
   display:flex; flex-direction:column; height:100%;
-  background:var(--bg-elev); border:1px solid var(--border-color);
-  border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-xs);
-  transition:transform .2s, box-shadow .2s, border-color .2s;
+  background:color-mix(in oklab, var(--panel) 85%, transparent);
+  border:1px solid color-mix(in srgb, rgba(148,163,184,.14) 80%, var(--border-color));
+  border-radius:var(--radius-lg);
+  padding:var(--space-lg);
+  box-shadow:0 8px 24px rgba(8,12,22,.25);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-.card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-sm);
-  border-color:color-mix(in oklab,var(--primary-500) 22%, var(--border-color));
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 36px rgba(8,12,22,.32);
+  border-color:color-mix(in srgb, var(--org-color, rgba(99,102,241,.35)) 40%, rgba(148,163,184,.45));
 }
 
 /* כותרת: שם עם אליפסיס + badge */
-.card__title{ margin:0 0 .35rem 0; display:flex; align-items:baseline; gap:.5rem; }
-.card__title strong{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card__title{
+  margin:0 0 .35rem 0;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.35rem;
+}
+.card__title strong{
+  flex:1 1 auto;
+  min-width:0;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
 .card__title .badge{ flex:none; }
 
-/* תגיות (ארגון) */
-.card__tags{ display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.25rem; }
-.card__tags .badge{ background:#0c1323; border-color:#142038; }
+/* פרטי ארגון כולל לוגו */
+.card__org{
+  --org-color-fallback: var(--org-color, #1f2937);
+  display:flex;
+  align-items:center;
+  gap:.45rem;
+  margin-top:.25rem;
+  padding:.15rem 0;
+  border-radius:var(--radius-md);
+}
+.card__org-logo{
+  inline-size:1.8rem;
+  block-size:1.8rem;
+  border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--org-color-fallback) 45%, rgba(148,163,184,.25));
+  background:#050a16;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  position:relative;
+}
+.card__org-logo img{
+  inline-size:100%;
+  block-size:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 6px rgba(2,6,23,.35));
+}
+.card__org-logo img[data-failed='1']{ display:none; }
+.card__org-logo img + .card__org-initials{ display:none; }
+.card__org-logo img[data-failed='1'] + .card__org-initials{ display:inline-flex; }
+.card__org-initials{
+  font-weight:600;
+  font-size:var(--font-size-xs);
+  letter-spacing:.06em;
+  color:color-mix(in srgb, var(--org-color-fallback) 60%, #f1f5f9);
+}
+.card__org-text{
+  display:flex;
+  flex-direction:column;
+  gap:.05rem;
+}
+.card__org-name{ font-weight:600; color:var(--text); font-size:var(--font-size-sm); }
+.card__org-alias{ font-size:var(--font-size-2xs, .7rem); color:color-mix(in srgb, var(--text-secondary) 80%, #cbd5f5); }
+@media (max-width:500px){
+  .card__org{ padding:var(--space-xs) 0; gap:.35rem; }
+  .card__org-logo{ inline-size:1.6rem; block-size:1.6rem; }
+}
 
 /* תיאור – עד 3 שורות */
 .card p{
@@ -351,13 +412,63 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   display:-webkit-box; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
 }
 
+/* אייקוני מידע נוסף בכרטיס */
+.card__meta-grid{
+  margin-top:var(--space-sm);
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+}
+.card__meta-item{
+  display:flex;
+  align-items:flex-start;
+  gap:.3rem;
+  padding:0;
+  position:relative;
+  padding-inline-start:1.6rem;
+}
+.card__meta-item i{
+  position:absolute;
+  inset-inline-start:0;
+  font-size:.85rem;
+  line-height:1;
+  color:color-mix(in srgb, var(--org-color, var(--primary-500)) 45%, #a5b4fc);
+  margin-top:.1rem;
+  opacity:.75;
+}
+.card__meta-item::before{
+  content:"";
+  position:absolute;
+  inset-inline-start:1.05rem;
+  inset-block:.15rem;
+  inline-size:1px;
+  background:color-mix(in srgb, rgba(148,163,184,.25) 70%, transparent);
+}
+.card__meta-value{
+  font-size:var(--font-size-sm);
+  color:var(--text);
+  word-break:break-word;
+}
+.card__meta-value mark{ background:color-mix(in srgb,var(--primary-500) 15%, rgba(37,99,235,.05)); }
+
 /* פוטר – תמיד בתחתית הכרטיס (במקום dashed) */
 .card__footer{
-  margin-top:auto; padding-top:var(--space-md);
-  border-top:1px solid var(--border-color);
-  display:flex; gap:var(--space-md); flex-wrap:wrap; align-items:center;
+  margin-top:auto;
+  padding-top:var(--space-md);
+  border-top:1px solid rgba(148,163,184,.16);
+  display:flex;
+  gap:var(--space-md);
+  flex-wrap:wrap;
+  align-items:center;
 }
-.card__footer .meta{ display:inline-flex; align-items:center; gap:.4rem; font-size:var(--font-size-sm); color:var(--text-secondary); }
+.card__footer .meta{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  font-size:var(--font-size-xs);
+  color:color-mix(in srgb, var(--text-secondary) 85%, #cbd5f5);
+}
+.card__footer .meta i{ color:color-mix(in srgb, var(--org-color, var(--primary-500)) 40%, #94a3b8); }
 .card__footer .meta .num{ font-variant-numeric:tabular-nums; }
 
 /* הדגשת חיפוש רכה */
@@ -564,12 +675,13 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: .35rem;
-  padding: .25rem .5rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background: #0f1a2c;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  border: 0;
+  background: color-mix(in srgb, var(--org-color, rgba(79,70,229,.55)) 35%, rgba(15,23,42,.7));
   font-size: var(--font-size-xs);
-  color: var(--text-secondary);
+  font-weight:600;
+  color: color-mix(in srgb, #f8fafc 80%, var(--org-color, #f8fafc));
 }
 .badge--success { background: color-mix(in oklab, var(--success) 20%, #0f1a2c); color: #e7f6eb; }
 .badge--danger  { background: color-mix(in oklab, var(--danger) 20%, #0f1a2c); color: #fde1e1; }
