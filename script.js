@@ -1262,11 +1262,12 @@ function renderCards(rows) {
 
     // Description
     if (desc) {
-      parts.push(`<p class="mt-sm">${highlight(desc, state.filters.search)}</p>`);    }
+      parts.push(`<p class="card__desc mt-sm">${highlight(desc, state.filters.search)}</p>`);
+    }
 
     const metaEntries = [];
     if (activity) metaEntries.push({ icon: 'fa-bullseye', label: fieldLabels.activity[state.lang], value: activity });
-    if (family) metaEntries.push({ icon: 'fa-people-group', label: fieldLabels.family_members[state.lang], value: family });
+    if (family) metaEntries.push({ icon: 'fa-people-roof fa-people-group fa-users', label: fieldLabels.family_members[state.lang], value: family });
     if (casualties) metaEntries.push({ icon: 'fa-skull', label: fieldLabels.casualties_count[state.lang], value: casualties });
     if (additional) metaEntries.push({ icon: 'fa-user-plus', label: fieldLabels.additional_combatants[state.lang], value: additional });
     if (!metaEntries.length && notes) {
@@ -1281,8 +1282,10 @@ function renderCards(rows) {
       parts.push(`
         <div class="card__meta-grid">
           ${trimmed.map(item => `
-            <div class="card__meta-item" title="${escapeHtml(item.label)}">
-              <i class="fas ${item.icon}" aria-hidden="true"></i>
+            <div class="card__meta-item" aria-label="${escapeHtml(item.label)}">
+              <span class="card__meta-icon tooltip-anchor" data-tooltip="${escapeHtml(item.label)}">
+                <i class="fas ${item.icon}" aria-hidden="true"></i>
+              </span>
               <span class="card__meta-value">${highlight(item.value, state.filters.search)}</span>
             </div>
           `).join('')}
@@ -1294,16 +1297,20 @@ function renderCards(rows) {
     const items = [];
     if (loc) {
       items.push(`
-        <div class="meta" title="${fieldLabels.location[state.lang]}">
-          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+        <div class="meta" aria-label="${escapeHtml(fieldLabels.location[state.lang])}">
+          <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.location[state.lang])}">
+            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+          </span>
           <span>${escapeHtml(loc)}</span>
         </div>
       `);
     }
     if (date) {
       items.push(`
-        <div class="meta" title="${fieldLabels.date[state.lang]}">
-          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+        <div class="meta" aria-label="${escapeHtml(fieldLabels.date[state.lang])}">
+          <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.date[state.lang])}">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </span>
           <span class="num">${escapeHtml(date)}</span>
         </div>
       `);
@@ -1318,6 +1325,17 @@ function renderCards(rows) {
 
   frag.appendChild(container);
   dom.contentArea.appendChild(frag);
+
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.card__desc').forEach(descEl => {
+      if (!descEl) return;
+      descEl.classList.add('is-clamped');
+      const fullyVisible = descEl.scrollHeight <= Math.ceil(descEl.clientHeight + 1);
+      if (fullyVisible) {
+        descEl.classList.remove('is-clamped');
+      }
+    });
+  });
 }
 
 

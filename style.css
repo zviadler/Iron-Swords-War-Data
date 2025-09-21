@@ -431,22 +431,22 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   position:relative;
   padding-inline-start:1.6rem;
 }
-.card__meta-item i{
+.card__meta-item .card__meta-icon{
   position:absolute;
   inset-inline-start:0;
-  font-size:.85rem;
-  line-height:1;
+  inline-size:1.35rem;
+  block-size:1.35rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   color:color-mix(in srgb, var(--org-color, var(--primary-500)) 45%, #a5b4fc);
   margin-top:.1rem;
-  opacity:.75;
+  opacity:.78;
+  cursor:help;
 }
-.card__meta-item::before{
-  content:"";
-  position:absolute;
-  inset-inline-start:1.05rem;
-  inset-block:.15rem;
-  inline-size:1px;
-  background:color-mix(in srgb, rgba(148,163,184,.25) 70%, transparent);
+.card__meta-item .card__meta-icon i{
+  font-size:.85rem;
+  line-height:1;
 }
 .card__meta-value{
   font-size:var(--font-size-sm);
@@ -454,6 +454,36 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   word-break:break-word;
 }
 .card__meta-value mark{ background:color-mix(in srgb,var(--primary-500) 15%, rgba(37,99,235,.05)); }
+
+.card__desc{
+  --clamp-lines:4;
+  position:relative;
+  cursor:text;
+}
+.card__desc.is-clamped{
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:var(--clamp-lines);
+  max-height:calc(var(--clamp-lines) * 1.6em);
+}
+.card__desc.is-clamped::after{
+  content:"";
+  position:absolute;
+  inset-inline:0;
+  inset-block-end:0;
+  block-size:2.2rem;
+  background-image:linear-gradient(to bottom, rgba(15,23,42,0), rgba(15,23,42,.92));
+  pointer-events:none;
+  transition:opacity var(--transition-fast);
+}
+.card__desc.is-clamped:hover{
+  -webkit-line-clamp:unset;
+  max-height:none;
+}
+.card__desc.is-clamped:hover::after{
+  opacity:0;
+}
 
 /* פוטר – תמיד בתחתית הכרטיס (במקום dashed) */
 .card__footer{
@@ -472,8 +502,51 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   font-size:var(--font-size-xs);
   color:color-mix(in srgb, var(--text-secondary) 85%, #cbd5f5);
 }
-.card__footer .meta i{ color:color-mix(in srgb, var(--org-color, var(--primary-500)) 40%, #94a3b8); }
+.card__footer .meta .meta__icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  inline-size:1.2rem;
+  block-size:1.2rem;
+  color:color-mix(in srgb, var(--org-color, var(--primary-500)) 40%, #94a3b8);
+  cursor:help;
+}
+.card__footer .meta .meta__icon i{
+  font-size:.85rem;
+  line-height:1;
+}
 .card__footer .meta .num{ font-variant-numeric:tabular-nums; }
+
+.tooltip-anchor{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:auto;
+}
+.tooltip-anchor::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  bottom:calc(100% + .35rem);
+  inset-inline-start:50%;
+  transform:translate(-50%, .25rem);
+  background:rgba(15,23,42,.9);
+  color:var(--text);
+  font-size:var(--font-size-xs);
+  padding:.2rem .45rem;
+  border-radius:var(--radius-sm);
+  white-space:nowrap;
+  box-shadow:var(--shadow-xs);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--transition-fast), transform var(--transition-fast);
+  z-index:60;
+}
+.tooltip-anchor:hover::after,
+.tooltip-anchor:focus-visible::after{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
 
 /* הדגשת חיפוש רכה */
 mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
