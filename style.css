@@ -257,6 +257,22 @@ pre { background: var(--panel); padding: var(--space-md); border-radius: var(--r
   gap: var(--space-xs);
   flex-wrap: wrap;
 }
+/* --- Force single row on mobile for date range --- */
+@media (max-width: 768px){
+  .date-range-inputs{
+    flex-wrap: nowrap;    /* לא לרדת שורה */
+    gap: var(--space-xs);
+  }
+  .date-range-inputs .date-sep{
+    white-space: nowrap;  /* המפריד לא יישבר */
+    flex: 0 0 auto;
+  }
+  .date-range input[type="date"]{
+    flex: 1 1 0;
+    min-width: 0;         /* מונע גלילה אופקית */
+  }
+}
+
 .date-range input[type="date"]{ inline-size:18ch; }
 .date-sep { color: var(--text-secondary); margin-inline: var(--space-xs); }
 .loading-text { margin-inline-start: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary); }
