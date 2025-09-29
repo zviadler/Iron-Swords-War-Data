@@ -1227,11 +1227,11 @@ function renderCards(rows) {
 
     const parts = [];
 
-    // Title
+    // Title - שם בולט + תפקיד מובחן
     parts.push(`
-      <header class="card__title">
-        <strong>${escapeHtml(name)}</strong>
-        ${rank ? `<small class="badge">${escapeHtml(rank)}</small>` : ''}
+      <header class="card__header">
+        <h2 class="card__name">${escapeHtml(name)}</h2>
+        ${rank ? `<div class="badge card__role-badge">${escapeHtml(rank)}</div>` : ''}
       </header>
     `);
 
@@ -1293,31 +1293,30 @@ function renderCards(rows) {
       `);
     }
 
-    // Fixed footer with icons (location + date)
-    const items = [];
-    if (loc) {
-      items.push(`
-        <div class="meta" aria-label="${escapeHtml(fieldLabels.location[state.lang])}">
-          <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.location[state.lang])}">
-            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-          </span>
-          <span>${escapeHtml(loc)}</span>
+    // Fixed footer with location (left/right) and date (right/left)
+    const locationHtml = loc ? `
+      <div class="meta" aria-label="${escapeHtml(fieldLabels.location[state.lang])}">
+        <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.location[state.lang])}">
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+        </span>
+        <div class="tooltip-anchor location-wrapper">
+          <span class="location-text">${escapeHtml(loc)}</span>
+          <div class="tooltip" role="tooltip">${escapeHtml(loc)}</div>
         </div>
-      `);
-    }
-    if (date) {
-      items.push(`
-        <div class="meta" aria-label="${escapeHtml(fieldLabels.date[state.lang])}">
-          <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.date[state.lang])}">
-            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-          </span>
-          <span class="num">${escapeHtml(date)}</span>
-        </div>
-      `);
-    }
-    if (items.length) {
-      parts.push(`<footer class="card__footer">${items.join('')}</footer>`);
-    }
+      </div>
+    ` : '<div class="meta"></div>';
+
+    const dateHtml = date ? `
+      <div class="meta" aria-label="${escapeHtml(fieldLabels.date[state.lang])}">
+        <span class="meta__icon tooltip-anchor" data-tooltip="${escapeHtml(fieldLabels.date[state.lang])}">
+          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+        </span>
+        <span class="num">${escapeHtml(date)}</span>
+      </div>
+    ` : '<div class="meta"></div>';
+    
+    // תמיד נוסיף את הפוטר, גם אם אין מידע
+    parts.push(`<footer class="card__footer">${locationHtml}${dateHtml}</footer>`);
 
     card.innerHTML = parts.join('');
     container.appendChild(card);

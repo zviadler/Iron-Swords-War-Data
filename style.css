@@ -17,6 +17,19 @@
   --accent: #f59e0b;
   --success: #16a34a;
   --danger: #dc2626;
+  
+  /* טיפוגרפיה */
+  --font-size-xl: 1.25rem;
+  --font-size-lg: 1.125rem;
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.75rem;
+  
+  /* מרווחים */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
 
   --bg: #0b0f17;
   --bg-elev: #111827;
@@ -341,25 +354,33 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   border-color:color-mix(in srgb, var(--org-color, rgba(99,102,241,.35)) 40%, rgba(148,163,184,.45));
 }
 
-/* כותרת: שם עם אליפסיס + badge */
-.card__title{
-  margin:0 0 .35rem 0;
-  display:flex;
-  flex-wrap:wrap;
-  align-items:flex-start;
-  gap:.35rem;
+/* כותרת הכרטיסייה - מבנה חדש */
+.card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
-.card__title strong{
-  flex:1 1 auto;
-  min-inline-size:0;
-  max-inline-size:100%;
-  white-space:normal;
-  overflow:visible;
-  text-overflow:clip;
+
+.card__name {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
-.card__title .badge{
-  flex:0 0 auto;
-  margin-inline-start:auto;
+
+.card__role-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(var(--org-color-rgb, 37, 99, 235), 0.1);
+  color: var(--org-color, var(--primary-500));
+  border: 1px solid rgba(var(--org-color-rgb, 37, 99, 235), 0.2);
+  border-radius: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  align-self: flex-start;
 }
 
 /* פרטי ארגון כולל לוגו */
@@ -485,22 +506,79 @@ label { font-size: var(--font-size-sm); color: var(--text-secondary); }
   opacity:0;
 }
 
-/* פוטר – תמיד בתחתית הכרטיס (במקום dashed) */
-.card__footer{
-  margin-top:auto;
-  padding-top:var(--space-md);
-  border-top:1px solid rgba(148,163,184,.16);
-  display:flex;
-  gap:var(--space-md);
-  flex-wrap:wrap;
-  align-items:center;
+/* פוטר – תמיד בתחתית הכרטיס עם קו מפריד קבוע */
+.card__footer {
+  position: relative;
+  margin-top: auto;
+  padding-top: var(--spacing-md);
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
-.card__footer .meta{
-  display:inline-flex;
-  align-items:center;
-  gap:.4rem;
-  font-size:var(--font-size-xs);
-  color:color-mix(in srgb, var(--text-secondary) 85%, #cbd5f5);
+
+.card__footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--space-lg) * -1);
+  right: calc(var(--space-lg) * -1);
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* מיקום שמאל, תאריך ימין בעברית */
+html[dir="rtl"] .card__footer {
+  flex-direction: row-reverse;
+}
+.card__footer .meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.9em;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+}
+
+.location-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.location-wrapper .tooltip {
+  visibility: hidden;
+  position: absolute;
+  z-index: 60;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elev);
+  color: var(--text);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  white-space: normal;
+  max-width: 200px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.location-wrapper:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.card__footer .meta .location-text {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 .card__footer .meta .meta__icon{
   display:inline-flex;
