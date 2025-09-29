@@ -62,7 +62,10 @@ const labels = {
   columns_select_all: {he:"בחר הכול", en:"Select all"},
   columns_clear_all: {he:"נקה הכול", en:"Clear all"},
   columns_close: {he:"סגור", en:"Close"},
-  page_size_label: {he:"תוצאות בעמוד", en:"Results per page"}
+  page_size_label: {he:"תוצאות בעמוד", en:"Results per page"},
+  copy_link: {he:"העתק קישור", en:"Copy link"},
+  link_copied: {he:"הקישור הועתק", en:"Link copied"},
+  results_toolbar_aria: {he:"סרגל תוצאות", en:"Results toolbar"}
 };
 // === I18N: מילון תרגום + מיישם כללי ===
 const I18N = {
@@ -368,8 +371,8 @@ function buildResultsToolbar() {
   const toolbar = document.createElement('div');
   toolbar.id = 'resultsToolbar';
   toolbar.className = 'results-toolbar';
-  toolbar.setAttribute('role', 'region');
-  toolbar.setAttribute('aria-label', state.lang === 'he' ? 'סרגל תוצאות' : 'Results toolbar');
+  toolbar.setAttribute('role', 'toolbar');
+  toolbar.setAttribute('aria-label', labels.results_toolbar_aria[state.lang]);
 
   const left = document.createElement('div');
   left.className = 'rt-left';
@@ -417,10 +420,10 @@ function buildResultsToolbar() {
   // NEW: Add share button
   const shareBtn = document.createElement('button');
   shareBtn.className = 'btn btn-outline btn--sm';
-  shareBtn.innerHTML = `<i class="fas fa-link" aria-hidden="true"></i><span>${state.lang==='he'?'העתק קישור':'Copy link'}</span>`;
+  shareBtn.innerHTML = `<i class="fas fa-link" aria-hidden="true"></i><span>${labels.copy_link[state.lang]}</span>`;
   shareBtn.addEventListener('click', ()=>{
     navigator.clipboard.writeText(location.href).then(()=>{
-      showToast(state.lang==='he'?'קישור הועתק':'Link copied');
+      showToast(labels.link_copied[state.lang]);
     });
   });
   right.appendChild(shareBtn);
@@ -2033,6 +2036,12 @@ document.addEventListener('keydown', (e) => {
     updateColumnPickerTexts();
     updatePageSizeControl();
     fixPagerArrows(); // NEW
+    const toolbar = d('resultsToolbar');
+    if (toolbar) toolbar.setAttribute('aria-label', labels.results_toolbar_aria[state.lang]);
+    const shareBtnSpan = toolbar?.querySelector('.btn > span');
+    if (shareBtnSpan && shareBtnSpan.textContent !== labels.copy_link[state.lang]) {
+      shareBtnSpan.textContent = labels.copy_link[state.lang];
+    }
     if (sheet) {
       sheet.setAttribute('aria-label', labels.filters_title[state.lang]);
       if (sheetResetBtn) sheetResetBtn.textContent = labels.reset_filters[state.lang];
