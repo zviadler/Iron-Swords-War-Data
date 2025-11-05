@@ -716,6 +716,10 @@ const dom = {
   searchInput: d('searchBox'),
   locationFilter: d('locationFilter'),
   orgFilter: d('orgFilter'),
+  orgFilterWrap: document.getElementById('orgFilterWrap'),
+  orgFilterLogo: document.getElementById('orgFilterLogo'),
+  orgFilterMedia: document.getElementById('orgFilterMedia'),
+  orgFilterInitials: document.getElementById('orgFilterInitials'),
   rankFilter: d('rankFilter'),
   dateFromInput: d('dateFrom'),
   dateToInput: d('dateTo'),
@@ -1024,6 +1028,7 @@ function syncFiltersUIFromState(){
   if (dom.dateFromInput) dom.dateFromInput.value = state.filters.dateFrom ? state.filters.dateFrom.toISOString().slice(0,10) : '';
   if (dom.dateToInput)   dom.dateToInput.value   = state.filters.dateTo   ? state.filters.dateTo.toISOString().slice(0,10)   : '';
   if (dom.pageSizeSelect) dom.pageSizeSelect.value = String(state.pagination.pageSize);
+  updateOrgFilterPreview();
   updateFiltersBadge();
   renderFilterChips();
 }
@@ -1104,6 +1109,60 @@ function applyAll() {
   renderFilterChips();
 }
 
+function updateOrgFilterPreview() {
+  if (!dom.orgFilter || !dom.orgFilterWrap) return;
+  const wrap = dom.orgFilterWrap;
+  const media = dom.orgFilterMedia || wrap.querySelector('.select-with-icon__media');
+  const logoEl = dom.orgFilterLogo || media?.querySelector('img');
+  const initialsEl = dom.orgFilterInitials || media?.querySelector('.select-with-icon__initials');
+
+  wrap.classList.remove('is-active', 'has-logo', 'has-initials');
+  wrap.removeAttribute('data-initials');
+  if (media) media.classList.remove('is-text');
+
+  if (logoEl) {
+    logoEl.onload = null;
+    logoEl.onerror = null;
+    logoEl.removeAttribute('src');
+  }
+  if (initialsEl) initialsEl.textContent = '';
+
+  const value = dom.orgFilter.value;
+  if (!value) return;
+
+  const meta = getOrgMeta(value);
+  const initials = meta?.short || orgInitials(value);
+
+  wrap.dataset.initials = initials;
+  wrap.classList.add('is-active');
+  if (initialsEl) initialsEl.textContent = initials;
+
+  if (meta?.logo && logoEl) {
+    logoEl.alt = meta.display || value;
+    logoEl.loading = 'lazy';
+    logoEl.decoding = 'async';
+    logoEl.onerror = () => {
+      wrap.classList.remove('has-logo');
+      wrap.classList.add('has-initials');
+      if (media) media.classList.add('is-text');
+      if (initialsEl) initialsEl.textContent = wrap.dataset.initials || '';
+      logoEl.onerror = null;
+      logoEl.onload = null;
+      logoEl.removeAttribute('src');
+    };
+    logoEl.onload = () => {
+      wrap.classList.add('has-logo');
+      wrap.classList.remove('has-initials');
+      if (media) media.classList.remove('is-text');
+    };
+    logoEl.src = meta.logo;
+    wrap.classList.add('has-logo');
+  } else {
+    wrap.classList.add('has-initials');
+    if (media) media.classList.add('is-text');
+  }
+}
+
 function onSearch(e) {
   state.suppressNextScroll = true;
   state.filters.search = e.target.value || '';
@@ -1131,6 +1190,7 @@ function populateFilters() {
   fill(dom.locationFilter, locs);
   fill(dom.orgFilter, orgs);
   fill(dom.rankFilter, ranks);
+  updateOrgFilterPreview();
 }
 
 /* =============================
@@ -1341,6 +1401,64 @@ function renderCards(rows) {
 }
 
 
+function buildOrgCell(td, rawOrgValue, displayValue) {
+  const val = valOrEmpty(displayValue);
+  if (!val) {
+    td.textContent = '';
+    return;
+  }
+
+  td.setAttribute('dir','auto');
+  td.classList.add('org-cell');
+
+  const meta = getOrgMeta(rawOrgValue) || getOrgMeta(val);
+  const initials = meta?.short || orgInitials(val);
+
+  const logoWrap = document.createElement('span');
+  logoWrap.className = 'org-cell__logo';
+  const initialsSpan = document.createElement('span');
+  initialsSpan.className = 'org-cell__initials';
+  initialsSpan.setAttribute('aria-hidden','true');
+  initialsSpan.textContent = initials;
+  logoWrap.appendChild(initialsSpan);
+
+  if (meta?.logo) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.decoding = 'async';
+    img.loading = 'lazy';
+    img.src = meta.logo;
+    logoWrap.insertBefore(img, initialsSpan);
+    const markAsText = () => {
+      logoWrap.classList.add('is-text');
+      if (img.isConnected) img.remove();
+    };
+    img.addEventListener('error', markAsText, { once: true });
+    img.addEventListener('load', () => {
+      logoWrap.classList.remove('is-text');
+    }, { once: true });
+  } else {
+    logoWrap.classList.add('is-text');
+  }
+
+  const textWrap = document.createElement('span');
+  textWrap.className = 'org-cell__text';
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'org-cell__name';
+  nameSpan.innerHTML = highlight(val, state.filters.search);
+  textWrap.appendChild(nameSpan);
+
+  if (meta && normalizeOrgKey(meta.display) !== normalizeOrgKey(val)) {
+    const aliasSpan = document.createElement('span');
+    aliasSpan.className = 'org-cell__alias';
+    aliasSpan.textContent = meta.display;
+    textWrap.appendChild(aliasSpan);
+  }
+
+  td.textContent = '';
+  td.appendChild(logoWrap);
+  td.appendChild(textWrap);
+}
 
 function renderTable(rows) {
   const cols = (state.visibleColumns && state.visibleColumns.length)
@@ -1376,6 +1494,7 @@ function renderTable(rows) {
   // TBODY
   const tbody = document.createElement('tbody');
   const numericKeys = new Set(['post_id','combatant_id','casualties_count']);
+  const highlightKeys = new Set(['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes']);
 
   rows.forEach(r => {
     const tr = document.createElement('tr');
@@ -1384,7 +1503,9 @@ function renderTable(rows) {
       const raw = r[key];
       const val = valOrEmpty(raw); // hide Unknown / "-" / empty
 
-      if (['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes'].includes(key)) {
+      if (key === 'organization' && val) {
+        buildOrgCell(td, raw, val);
+      } else if (highlightKeys.has(key)) {
         td.setAttribute('dir','auto');
         td.innerHTML = highlight(val, state.filters.search);
       } else {
@@ -1439,8 +1560,11 @@ function renderTableChunked(rows, chunk=150) {
       const tr = document.createElement('tr');
       FIELDS.forEach(key=>{
         const td = document.createElement('td');
-        const val = r[key] || '';
-        if (['name_english','name_arabic','nickname','description_online','location','organization','rank_role','notes'].includes(key)) {
+        const raw = r[key];
+        const val = valOrEmpty(raw);
+        if (key === 'organization' && val) {
+          buildOrgCell(td, raw, val);
+        } else if (['name_english','name_arabic','nickname','description_online','location','rank_role','notes'].includes(key)) {
           td.setAttribute('dir','auto');
           td.innerHTML = highlight(val, state.filters.search);
         } else {
@@ -1961,7 +2085,7 @@ document.addEventListener('keydown', (e) => {
   // פילטרים select
   const upd = () => { state.pagination.currentPage = 0; state.suppressNextScroll = true; applyAll(); };
   if (dom.locationFilter) dom.locationFilter.addEventListener('change', () => { state.filters.location = dom.locationFilter.value; upd(); });
-  if (dom.orgFilter)      dom.orgFilter.addEventListener('change', () => { state.filters.org      = dom.orgFilter.value; upd(); });
+  if (dom.orgFilter)      dom.orgFilter.addEventListener('change', () => { state.filters.org      = dom.orgFilter.value; updateOrgFilterPreview(); upd(); });
   if (dom.rankFilter)     dom.rankFilter.addEventListener('change', () => { state.filters.rank     = dom.rankFilter.value; upd(); });
 
   // טווח תאריכים

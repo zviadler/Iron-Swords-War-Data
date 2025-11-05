@@ -119,7 +119,13 @@
 
     <div class="filter-item fi fi--org">
       <label for="orgFilter" data-i18n="org_label">ארגון</label>
-      <select id="orgFilter"><option value="">הכול</option></select>
+      <div class="select-with-icon" id="orgFilterWrap">
+        <span class="select-with-icon__media" id="orgFilterMedia" aria-hidden="true">
+          <img id="orgFilterLogo" alt="">
+          <span class="select-with-icon__initials" id="orgFilterInitials"></span>
+        </span>
+        <select id="orgFilter"><option value="">הכול</option></select>
+      </div>
     </div>
 
     <div class="filter-item fi fi--rank">

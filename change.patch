@@ -1,0 +1,78 @@
+--- a/style.css
++++ b/style.css
+@@
+ .cards{
+   display:grid;
+   gap:var(--space-lg);
+-  grid-template-columns:repeat(auto-fit, minmax(300px,1fr));
++  /* מעט יותר אלסטי ברוחבים צרים */
++  grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+   align-items:stretch; /* כל כרטיס באותו גובה שורה */
+ }
+@@
+ .card__meta-grid{
+   margin-top:var(--space-sm);
+-  display:flex;
+-  flex-direction:column;
+-  gap:.35rem;
++  display:flex;
++  flex-direction:column;
++  gap:.35rem;
+ }
++
++/* גריד דו-עמודתי למטא במסכים בינוניים ומעלה */
++@media (min-width:520px){
++  .card__meta-grid{
++    display:grid;
++    grid-template-columns:1fr 1fr;
++    gap:.5rem .75rem;
++  }
++}
+@@
+ .card__role-badge {
+-  display: inline-block;
+-  padding: var(--spacing-xs) var(--spacing-sm);
+-  background-color: rgba(var(--org-color-rgb, 37, 99, 235), 0.1);
+-  color: var(--org-color, var(--primary-500));
+-  border: 1px solid rgba(var(--org-color-rgb, 37, 99, 235), 0.2);
+-  border-radius: 4px;
+-  font-size: var(--font-size-sm);
+-  font-weight: 500;
+-  align-self: flex-start;
++  display:inline-block;
++  padding:var(--spacing-xs) var(--spacing-sm);
++  background-color: color-mix(in oklab, var(--org-color, var(--primary-500)) 18%, black);
++  color:#fff;
++  border:1px solid color-mix(in oklab, var(--org-color, var(--primary-500)) 45%, black);
++  border-radius:6px;
++  font-size:var(--font-size-sm);
++  font-weight:600;
++  align-self:flex-start;
+ }
+@@
+ .card__footer {
+   position: relative;
+   margin-top: auto;
+   padding-top: var(--spacing-md);
+   width: 100%;
+   display: flex;
+   flex-wrap: nowrap;
+   justify-content: space-between;
++  /* מבטיח שאליפסיס יעבוד בתוך צאצאים */
++  min-width: 0;
+ }
+@@
+-/* הדגשת חיפוש (אם יש) */
+-mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border-radius:.25rem; padding:0 .15em; }
++/* (הערה) כלל mark כבר מוגדר קודם – נמנעת כפילות */
+@@
+-.columns-pop{ position:fixed; z-index:1102; }
+-.columns-backdrop{ position:fixed; z-index:1101; }
+-.columns-pop.is-mobile{
+-  left:0; right:0; bottom:0; max-height:88vh; border-radius:12px 12px 0 0;
+-}
++/* הוסר: כפילות הגדרות columns-pop/backdrop (קיים בסעיף 16) */
++
++/* טולטיפ כשהכותרת נחתכת */
++.card__name--truncated { cursor: help; }
+git apply change.patch
