@@ -254,7 +254,9 @@
   <script defer src="script.js"></script>
 
   <script>
-    // Service Worker Registration (Optional)
+    // Service Worker Registration disabled for local development.
+    // Re-enable when deploying to production by restoring the block below.
+    /*
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
@@ -262,7 +264,7 @@
           .catch(err => console.warn('[SW] registration failed:', err));
       });
     }
-
+    */
     // Update current year (tiny convenience)
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
