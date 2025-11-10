@@ -1127,8 +1127,11 @@ function updateOrgFilterPreview() {
   }
   if (initialsEl) initialsEl.textContent = '';
 
-  const value = dom.orgFilter.value;
+  const value = String(dom.orgFilter.value || '').trim();
+  const label = String(dom.orgFilter.options?.[dom.orgFilter.selectedIndex]?.textContent || '').trim();
   if (!value) return;
+  // If user selected the explicit Unknown label, do not show a logo/initials
+  if (/^(unknown|לא ידוע)$/i.test(value) || /^(unknown|לא ידוע)$/i.test(label)) return;
 
   const meta = getOrgMeta(value);
   const initials = meta?.short || orgInitials(value);
@@ -1171,6 +1174,7 @@ function onSearch(e) {
 
 function populateFilters() {
   const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+  // Build unique lists from raw values, but display a friendly label later.
   const locs = uniq(state.originalData.map(r=>r.location));
   const orgs = uniq(state.originalData.map(r=>r.organization));
   const ranks= uniq(state.originalData.map(r=>r.rank_role));
@@ -1178,8 +1182,9 @@ function populateFilters() {
   const fill = (select, list) => {
     if (!select) return;
     const prev = select.value || '';
+    const toLabel = (v) => isBlankish(v) ? (state.lang==='he' ? 'לא ידוע' : 'Unknown') : v;
     select.innerHTML = `<option value="">${labels.all_option[state.lang]}</option>` +
-      list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(toLabel(v))}</option>`).join('');
     const want = (select === dom.locationFilter && state.filters.location) ? state.filters.location
                : (select === dom.orgFilter      && state.filters.org)      ? state.filters.org
                : (select === dom.rankFilter     && state.filters.rank)     ? state.filters.rank
@@ -1267,8 +1272,13 @@ function renderCards(rows) {
 
   rows.forEach(r => {
     const name = primaryName(r) || '—';
-    const org  = valOrEmpty(r.organization);
+    let org  = valOrEmpty(r.organization);
+    if (isBlankish(org)) org = state.lang==='he' ? 'לא ידוע' : 'Unknown';
     const rank = valOrEmpty(r.rank_role);
+    if (isBlankish(rank)) {
+      // Replace lone dashes with Unknown label in UI
+      r._rankDisplay = state.lang==='he' ? 'לא ידוע' : 'Unknown';
+    }
     const loc  = valOrEmpty(r.location);
     const date = valOrEmpty(r.date);
     const desc = valOrEmpty(r.description_online);
@@ -1298,7 +1308,7 @@ function renderCards(rows) {
       </header>
     `);
 
-    if (org) {
+    if (org && !/^(unknown|לא ידוע)$/i.test(org)) {
       const orgClass = orgMeta ? ` ${orgMeta.keyClass}` : '';
       const orgStyle = orgMeta?.color ? ` style="--org-color:${orgMeta.color}"` : '';
       const initials = escapeHtml(orgMeta?.short || orgInitials(org));
@@ -1402,7 +1412,9 @@ function renderCards(rows) {
 
 
 function buildOrgCell(td, rawOrgValue, displayValue) {
-  const val = valOrEmpty(displayValue);
+  // When organization equals "Unknown" (or Hebrew "לא ידוע"), don't show a logo/initials
+  const isUnknownOrg = /^(unknown|לא ידוע)$/i.test(String(displayValue||'').trim());
+  const val = isUnknownOrg ? '' : valOrEmpty(displayValue);
   if (!val) {
     td.textContent = '';
     return;
@@ -1411,7 +1423,7 @@ function buildOrgCell(td, rawOrgValue, displayValue) {
   td.setAttribute('dir','auto');
   td.classList.add('org-cell');
 
-  const meta = getOrgMeta(rawOrgValue) || getOrgMeta(val);
+  const meta = isUnknownOrg ? null : (getOrgMeta(rawOrgValue) || getOrgMeta(val));
   const initials = meta?.short || orgInitials(val);
 
   const logoWrap = document.createElement('span');
@@ -1502,14 +1514,15 @@ function renderTable(rows) {
       const td = document.createElement('td');
       const raw = r[key];
       const val = valOrEmpty(raw); // hide Unknown / "-" / empty
+      const displayVal = val || '—';
 
-      if (key === 'organization' && val) {
+      if (key === 'organization' && val && !/^(unknown|לא ידוע)$/i.test(val)) {
         buildOrgCell(td, raw, val);
       } else if (highlightKeys.has(key)) {
         td.setAttribute('dir','auto');
-        td.innerHTML = highlight(val, state.filters.search);
+        td.innerHTML = highlight(displayVal, state.filters.search);
       } else {
-        td.textContent = val;
+        td.textContent = displayVal;
       }
       if (numericKeys.has(key) || key === 'date') td.classList.add('num');
 
