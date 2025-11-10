@@ -37,6 +37,30 @@ const fieldLabels = {
   notes: {he:"הערות", en:"Notes"},
 };
 
+const COLUMN_ICON_PATHS = {
+  post_id: "M4 5h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h12v2H4z",
+  combatant_id: "M4 4h16v14H4zm2 2v10h12V6zm2 2h4v2H8zm0 3h8v2H8z",
+  date: "M7 2v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm10 16H5V9h14z",
+  location: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 3.5c2.48 0 4.5 2.02 4.5 4.5 0 2.98-3 7.64-4.5 9.58-1.5-1.94-4.5-6.6-4.5-9.58 0-2.48 2.02-4.5 4.5-4.5zm0 2.5c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
+  location_details: "M20.5 3l-5.5 2-6-2-6.5 2v16l6.5-2 6 2 5.5-2V3zm-7.5 2.46v13.08l-4-1.33V4.13zM5 5.47l3-1v13.08l-3 1zm14 .06v13l-3 1V6.53z",
+  name_english: "M12 5a4 4 0 1 1-4 4 4 4 0 0 1 4-4zm0 6c-3.31 0-6 1.79-6 4v3h12v-3c0-2.21-2.69-4-6-4z",
+  name_arabic: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zm16.71-9.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0L14.59 5.2l3.75 3.75z",
+  nickname: "M3 12l7.29 7.29a1 1 0 0 0 1.42 0L21 10.99V3H13.01zm5-4a2 2 0 1 1-2 2 2 2 0 0 1 2-2z",
+  description_online: "M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 14H5.17L4 17.17V4h16z",
+  rank_role: "M12 2 9.5 8.5 2.5 9.3l5.3 4.7-1.6 7 5.8-3.5 5.8 3.5-1.6-7 5.3-4.7-7-.8L12 2z",
+  organization: "M12 2 3 7v3h2v9h4v-7h4v7h4v-9h2V7L12 2zm0 2.2 6 3.3v.2H6v-.2l6-3.3z",
+  activity: "M13 2 3 14h6l-2 8 10-12h-6z",
+  family_members: "M16 11c1.66 0 3-1.34 3-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C18 14.17 13.33 13 10 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.94 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
+  casualties_count: "M5 11h6V5h2v6h6v2h-6v6h-2v-6H5z",
+  additional_combatants: "M7 10a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm10 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-10 2c-2.67 0-8 1.34-8 4v2h8zm10 0c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
+  notes: "M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 2H6v16h12V9h-4z"
+};
+
+const textDirectionKeys = new Set([
+  'name_english','name_arabic','nickname','description_online','location','location_details',
+  'rank_role','organization','activity','family_members','additional_combatants','notes'
+]);
+
 const labels = {
   reset_filters: {he:"איפוס פילטרים",en:"Reset Filters"},
   export_csv: {he:"ייצא ל-CSV",en:"Export CSV"},
@@ -204,6 +228,28 @@ function orgInitials(name) {
   if (!parts.length) return '';
   if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function createHeaderIcon(key) {
+  const pathData = COLUMN_ICON_PATHS[key];
+  if (!pathData) return null;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.classList.add('th-icon');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', pathData);
+  path.setAttribute('fill', 'currentColor');
+  svg.appendChild(path);
+  return svg;
+}
+
+const RTL_CHAR_REGEX = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+function getTextDirection(value) {
+  const text = String(value || '').trim();
+  if (!text) return document.documentElement.dir || 'ltr';
+  return RTL_CHAR_REGEX.test(text) ? 'rtl' : 'ltr';
 }
 
 const ORG_META = [
@@ -1420,7 +1466,7 @@ function buildOrgCell(td, rawOrgValue, displayValue) {
     return;
   }
 
-  td.setAttribute('dir','auto');
+  td.setAttribute('dir', getTextDirection(val));
   td.classList.add('org-cell');
 
   const meta = isUnknownOrg ? null : (getOrgMeta(rawOrgValue) || getOrgMeta(val));
@@ -1486,9 +1532,17 @@ function renderTable(rows) {
 
   cols.forEach(key => {
     const th = document.createElement('th');
-    th.textContent = fieldLabels[key][state.lang];
     th.dataset.key = key;
     th.tabIndex = 0;
+    const icon = createHeaderIcon(key);
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'th-label';
+    labelSpan.textContent = fieldLabels[key][state.lang];
+    const headerContent = document.createElement('span');
+    headerContent.className = 'th-content';
+    if (icon) headerContent.appendChild(icon);
+    headerContent.appendChild(labelSpan);
+    th.appendChild(headerContent);
     th.addEventListener('click', () => setSort(key));
     th.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' ') { e.preventDefault(); setSort(key); }});
     if (state.sort.key === key) {
@@ -1519,8 +1573,11 @@ function renderTable(rows) {
       if (key === 'organization' && val && !/^(unknown|לא ידוע)$/i.test(val)) {
         buildOrgCell(td, raw, val);
       } else if (highlightKeys.has(key)) {
-        td.setAttribute('dir','auto');
+        td.setAttribute('dir', getTextDirection(displayVal));
         td.innerHTML = highlight(displayVal, state.filters.search);
+      } else if (textDirectionKeys.has(key)) {
+        td.setAttribute('dir', getTextDirection(displayVal));
+        td.textContent = displayVal;
       } else {
         td.textContent = displayVal;
       }
@@ -1545,9 +1602,17 @@ function renderTableChunked(rows, chunk=150) {
   const trh = document.createElement('tr');
   FIELDS.forEach(key => {
     const th = document.createElement('th');
-    th.textContent = fieldLabels[key][state.lang];
     th.dataset.key = key;
     th.tabIndex = 0;
+    const icon = createHeaderIcon(key);
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'th-label';
+    labelSpan.textContent = fieldLabels[key][state.lang];
+    const headerContent = document.createElement('span');
+    headerContent.className = 'th-content';
+    if (icon) headerContent.appendChild(icon);
+    headerContent.appendChild(labelSpan);
+    th.appendChild(headerContent);
     th.addEventListener('click', () => setSort(key));
     th.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' ') { e.preventDefault(); setSort(key); }});
     if (state.sort.key === key) {
@@ -1575,11 +1640,14 @@ function renderTableChunked(rows, chunk=150) {
         const td = document.createElement('td');
         const raw = r[key];
         const val = valOrEmpty(raw);
-        if (key === 'organization' && val) {
-          buildOrgCell(td, raw, val);
+      if (key === 'organization' && val) {
+        buildOrgCell(td, raw, val);
         } else if (['name_english','name_arabic','nickname','description_online','location','rank_role','notes'].includes(key)) {
-          td.setAttribute('dir','auto');
+          td.setAttribute('dir', getTextDirection(val));
           td.innerHTML = highlight(val, state.filters.search);
+        } else if (textDirectionKeys.has(key)) {
+          td.setAttribute('dir', getTextDirection(val));
+          td.textContent = val;
         } else {
           td.textContent = val;
         }

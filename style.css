@@ -736,10 +736,37 @@ mark{ background:color-mix(in oklab,var(--primary-500) 35%, transparent); border
   z-index: 5; /* keep above rows but below popovers */
   cursor: pointer;
 }
+.data-table thead th:not(:last-child) {
+  border-inline-end: 1px solid color-mix(in srgb, var(--border-color) 80%, rgba(255,255,255,.08));
+}
+.data-table thead th .th-content {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  inline-size: 100%;
+}
+.data-table thead th .th-label {
+  flex: 1;
+  text-align: inherit;
+}
+.th-icon {
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+.data-table thead th:hover .th-icon,
+.data-table thead th:focus-visible .th-icon {
+  color: var(--text);
+}
 .data-table tbody td {
   padding: .6rem .75rem;
   border-bottom: 1px solid var(--border-color);
   vertical-align: top;
+}
+.data-table tbody td:not(:last-child) {
+  border-inline-end: 1px solid color-mix(in srgb, var(--border-color) 80%, rgba(255,255,255,.08));
 }
 .data-table tbody td.org-cell {
   display: flex;
