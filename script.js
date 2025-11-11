@@ -81,6 +81,7 @@ const labels = {
   view_to_cards: {he:"עבור לתצוגת כרטיסים", en:"Switch to Cards"},
   view_to_table: {he:"עבור לתצוגת טבלה",   en:"Switch to Table"},
   csv_error: {he:"שגיאה בטעינת CSV", en:"Error loading CSV"},
+  db_error: {he:"שגיאה בטעינת הנתונים מהמסד", en:"Error loading database"},
   columns_button: {he:"בחר עמודות", en:"Choose Columns"},
   columns_title: {he:"הצגת עמודות", en:"Visible columns"},
   columns_select_all: {he:"בחר הכול", en:"Select all"},
@@ -967,99 +968,157 @@ function normalizeHeader(h) {
 }
 
 /* =============================
-   עיבוד CSV/EMBEDDED
+   עיבוד נתונים (Supabase / CSV)
 ==============================*/
-function loadData() {
-  showLoading(true);
+const DEFAULT_SUPABASE_TABLE = 'iron_swords_war_data';
+let supabaseClient = null;
+
+function getSupabaseConfig() {
+  return window.__SUPABASE_CONFIG__ || null;
+}
+
+function formatCellValue(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'string') return value.trim();
+  return String(value);
+}
+
+function mapRecordsToFields(rows) {
+  return (rows || []).map((rec) => {
+    const norm = {};
+    Object.entries(rec || {}).forEach(([h, v]) => {
+      norm[normalizeHeader(h)] = formatCellValue(v);
+    });
+    const row = {};
+    FIELDS.forEach((k) => { row[k] = norm[k] ?? ''; });
+    return row;
+  });
+}
+
+function applyDataAndRender(records) {
+  state.originalData = records;
+  state.filteredData = records.slice(0);
+  populateFilters();
+  syncFiltersUIFromState();
+  applyAll();
   hideDataError();
-  const csvDiv = d('dataCSV');
-  const url = csvDiv?.dataset?.url;
+}
 
-  if (url) {
-    const csvURL = new URL(url || 'data.csv', document.baseURI).href;
+function ensureSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  const cfg = getSupabaseConfig();
+  if (!cfg?.url || !cfg?.key) return null;
+  if (!window.supabase?.createClient) {
+    console.warn('[Supabase] Client library missing');
+    return null;
+  }
+  supabaseClient = window.supabase.createClient(cfg.url, cfg.key, {
+    auth: { persistSession: false }
+  });
+  return supabaseClient;
+}
 
-    const parseWithPapa = (u, useWorker) =>
-      new Promise((resolve, reject) => {
-        Papa.parse(u, {
-          download: true,
-          header: true,
-          worker: !!useWorker,
-          skipEmptyLines: true,
-          error: reject,
-          complete: (res) => resolve(res?.data || [])
-        });
+async function tryLoadFromSupabase() {
+  const cfg = getSupabaseConfig();
+  const client = ensureSupabaseClient();
+  if (!cfg || !client) return false;
+  const rawName = typeof cfg.table === 'string' ? cfg.table.trim() : '';
+  const tableName = rawName || DEFAULT_SUPABASE_TABLE;
+  try {
+    const { data, error } = await client.from(tableName).select('*');
+    if (error) throw error;
+    applyDataAndRender(mapRecordsToFields(data));
+    console.info('[Data] Loaded records from Supabase table:', tableName);
+    return true;
+  } catch (err) {
+    console.error('[Supabase] Failed to load data', err);
+    if (labels.db_error) showToast(labels.db_error[state.lang], 'error');
+    return false;
+  }
+}
+
+async function parseCsvFromUrl(csvURL, useWorker = true) {
+  if (typeof Papa === 'undefined') throw new Error('PapaParse is not available');
+  const parse = (worker) =>
+    new Promise((resolve, reject) => {
+      Papa.parse(csvURL, {
+        download: true,
+        header: true,
+        worker: !!worker,
+        skipEmptyLines: true,
+        error: reject,
+        complete: (res) => resolve(res?.data || [])
       });
-
-    const mapRows = (rows) =>
-      (rows || []).map((rec) => {
-        const norm = {};
-        Object.entries(rec || {}).forEach(([h, v]) => {
-          norm[normalizeHeader(h)] = (v ?? '').toString().trim();
-        });
-        const r = {};
-        FIELDS.forEach((k) => { r[k] = norm[k] ?? ''; });
-        return r;
-      });
-
-    (async () => {
-      try {
-        const rows = await parseWithPapa(csvURL, true);
-        state.originalData = mapRows(rows);
-      } catch (e1) {
-        console.warn('[CSV] Papa worker failed, retrying without worker', e1);
-        try {
-          const rows = await parseWithPapa(csvURL, false);
-          state.originalData = mapRows(rows);
-        } catch (e2) {
-          console.warn('[CSV] Fallback to fetch+parse', e2);
-          try {
-            const text = await fetch(csvURL).then((r) => {
-              if (!r.ok) throw new Error('HTTP ' + r.status);
-              return r.text();
-            });
-            const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-            const rows = parsed?.data || [];
-            state.originalData = mapRows(rows);
-          } catch (e3) {
-            console.error('[CSV] All strategies failed', e3);
-            showToast(labels.csv_error[state.lang], 'error');
-            state.originalData = [];
-            state.filteredData = [];
-            showDataError();
-            showLoading(false);
-            return;
-          }
-        }
-      }
-
-      hideDataError();
-      state.filteredData = state.originalData.slice(0);
-      populateFilters();
-      syncFiltersUIFromState();
-      applyAll();
-      showLoading(false);
-    })();
-
-  } else {
-    const embedded =
-      window.EMBEDDED_DATA ||
-      window.embeddedData ||
-      window.EMBEDDED ||
-      window.embedded ||
-      [];
-
-    state.originalData = (embedded || []).map((rec) => {
-      const r = {};
-      FIELDS.forEach((k) => { r[k] = (rec?.[k] ?? '').toString().trim(); });
-      return r;
     });
 
-    state.filteredData = state.originalData.slice(0);
-    populateFilters();
-    syncFiltersUIFromState();
-    applyAll();
+  try {
+    return await parse(useWorker);
+  } catch (err) {
+    if (useWorker) {
+      console.warn('[CSV] Papa worker failed, retrying without worker', err);
+      return parseCsvFromUrl(csvURL, false);
+    }
+    throw err;
+  }
+}
+
+async function tryLoadFromCSVorEmbedded() {
+  const csvDiv = d('dataCSV');
+  const url = csvDiv?.dataset?.url;
+  if (url) {
+    const csvURL = new URL(url || 'data.csv', document.baseURI).href;
+    try {
+      let rows;
+      try {
+        rows = await parseCsvFromUrl(csvURL, true);
+      } catch (err) {
+        console.warn('[CSV] Fallback to fetch+parse', err);
+        const text = await fetch(csvURL).then((r) => {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.text();
+        });
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        rows = parsed?.data || [];
+      }
+      applyDataAndRender(mapRecordsToFields(rows));
+      console.info('[Data] Loaded records from CSV:', csvURL);
+      return true;
+    } catch (err) {
+      console.error('[CSV] All strategies failed', err);
+      showToast(labels.csv_error[state.lang], 'error');
+      state.originalData = [];
+      state.filteredData = [];
+      showDataError();
+      return false;
+    }
+  }
+
+  const embedded =
+    window.EMBEDDED_DATA ||
+    window.embeddedData ||
+    window.EMBEDDED ||
+    window.embedded ||
+    [];
+
+  applyDataAndRender(mapRecordsToFields(embedded));
+  console.info('[Data] Loaded records from embedded data array');
+  return true;
+}
+
+async function loadData() {
+  showLoading(true);
+  hideDataError();
+  try {
+    let loaded = await tryLoadFromSupabase();
+    if (!loaded) {
+      loaded = await tryLoadFromCSVorEmbedded();
+    }
+    if (!loaded) {
+      showDataError();
+    }
+  } finally {
     showLoading(false);
-    hideDataError();
   }
 }
 
