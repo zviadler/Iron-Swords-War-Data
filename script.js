@@ -968,14 +968,9 @@ function normalizeHeader(h) {
 }
 
 /* =============================
-   עיבוד נתונים (Supabase / CSV)
+   עיבוד נתונים (API / CSV)
 ==============================*/
-const DEFAULT_SUPABASE_TABLE = 'iron_swords_war_data';
-let supabaseClient = null;
-
-function getSupabaseConfig() {
-  return window.__SUPABASE_CONFIG__ || null;
-}
+const DATA_API_ENDPOINT = '/api/combatants';
 
 function formatCellValue(value) {
   if (value === null || value === undefined) return '';
@@ -1005,35 +1000,18 @@ function applyDataAndRender(records) {
   hideDataError();
 }
 
-function ensureSupabaseClient() {
-  if (supabaseClient) return supabaseClient;
-  const cfg = getSupabaseConfig();
-  if (!cfg?.url || !cfg?.key) return null;
-  if (!window.supabase?.createClient) {
-    console.warn('[Supabase] Client library missing');
-    return null;
-  }
-  supabaseClient = window.supabase.createClient(cfg.url, cfg.key, {
-    auth: { persistSession: false }
-  });
-  return supabaseClient;
-}
-
-async function tryLoadFromSupabase() {
-  const cfg = getSupabaseConfig();
-  const client = ensureSupabaseClient();
-  if (!cfg || !client) return false;
-  const rawName = typeof cfg.table === 'string' ? cfg.table.trim() : '';
-  const tableName = rawName || DEFAULT_SUPABASE_TABLE;
+async function tryLoadFromApi() {
   try {
-    const { data, error } = await client.from(tableName).select('*');
-    if (error) throw error;
-    applyDataAndRender(mapRecordsToFields(data));
-    console.info('[Data] Loaded records from Supabase table:', tableName);
+    const res = await fetch(DATA_API_ENDPOINT, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const payload = await res.json();
+    const rows = Array.isArray(payload?.data) ? payload.data : (payload || []);
+    applyDataAndRender(mapRecordsToFields(rows));
+    console.info('[Data] Loaded records from API source:', payload?.source || 'unknown');
     return true;
   } catch (err) {
-    console.error('[Supabase] Failed to load data', err);
-    if (labels.db_error) showToast(labels.db_error[state.lang], 'error');
+    console.error('[API] Failed to load data', err);
+    showToast(labels.db_error[state.lang], 'error');
     return false;
   }
 }
@@ -1110,7 +1088,7 @@ async function loadData() {
   showLoading(true);
   hideDataError();
   try {
-    let loaded = await tryLoadFromSupabase();
+    let loaded = await tryLoadFromApi();
     if (!loaded) {
       loaded = await tryLoadFromCSVorEmbedded();
     }
